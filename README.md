@@ -39,6 +39,39 @@ a crowd dominated by one operator collapses toward one
 
 Getting this right required attributing flow to the addresses behind public edges. Deposits expose the depositor by design — the same publicity that makes the pool leaky is what makes the crowd measurable. **The adversary can compute this. Shoal computes it first.**
 
+
+## What it looks like
+
+`npm run demo` — a pool with realistic bursty traffic:
+
+```
+THE POOL LOOKS LIKE THIS
+  914 public edges
+  914 distinct operators
+  158 distinct (asset, denomination, window) cells
+
+THE CROWD YOU ARE ACTUALLY IN
+  median effective set across cells .......... 2.0
+  cells offering a crowd of 1 (you, alone) ... 74 of 158
+  largest crowd anywhere in the pool ......... 18.0
+
+ROUTING: move 2,000 USDC
+  naive, right now .......... crowd of 1.0
+  routed .................... crowd of 18.0  (18.0x)
+        1000  ->  window 57 (block 41040)  crowd 18.0
+        1000  ->  window 58 (block 41760)  crowd 18.0
+
+ROUTING: move 50,000 of a thin asset
+  naive, right now .......... crowd of 1.0
+  routed .................... crowd of 1.0  (1.0x)
+  ! No denomination of this asset has been used by more than one operator.
+    There is no crowd to route into; the asset itself is the identifier.
+```
+
+Nine hundred and fourteen operators, and the median user is hiding among two. The crowd exists — 18 people, in a window a few hours out — you are simply never standing in it. Routing is what puts you there.
+
+The second case matters as much as the first: when there is no crowd, Shoal says so instead of inventing a number. A privacy tool that reports comfort it cannot justify is worse than no tool.
+
 ## Why this compounds, and why it cannot be forked
 
 Every other moat in crypto can be copied over a weekend. Liquidity can be incentivised across venues. Mechanisms get forked. Anonymity cannot.

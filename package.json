@@ -2,14 +2,22 @@
   "name": "shoal",
   "private": true,
   "version": "0.1.0",
-  "description": "Anonymity aggregation. You do not pick a pool — you pick to be indistinguishable.",
+  "description": "Anonymity aggregation. You do not pick a pool \u2014 you pick to be indistinguishable.",
   "type": "module",
-  "workspaces": ["packages/*"],
-  "engines": { "node": ">=24" },
-  "scripts": {
-    "build": "tsc -b packages/oracle packages/engine",
-    "test": "node --test --experimental-strip-types packages/oracle/test/*.test.ts",
-    "typecheck": "tsc -b --noEmit packages/oracle packages/engine"
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24"
   },
-  "devDependencies": { "typescript": "^5.7.2", "@types/node": "^22.10.0" }
+  "scripts": {
+    "build": "tsc -b packages/oracle packages/router",
+    "test": "node --test --experimental-strip-types packages/oracle/test/*.test.ts packages/router/test/*.test.ts",
+    "typecheck": "tsc -b packages/oracle packages/router",
+    "demo": "npm run build && node examples/the-crowd-you-are-in.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "@types/node": "^22.10.0"
+  }
 }
