@@ -1,0 +1,16 @@
+[package]
+name = "conclave"
+version = "0.1.0"
+edition = "2024_07"
+description = "Private shared state on the STRK20 pool: sealed inputs, atomic settlement."
+
+[dependencies]
+starknet = "2.20.0"
+openzeppelin = "3.0.0"
+privacy = { git = "https://github.com/starkware-libs/starknet-privacy.git" }
+
+[[target.starknet-contract]]
+casm = true
+
+[tool.fmt]
+sort-module-level-items = true
