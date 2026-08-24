@@ -72,6 +72,40 @@ Nine hundred and fourteen operators, and the median user is hiding among two. Th
 
 The second case matters as much as the first: when there is no crowd, Shoal says so instead of inventing a number. A privacy tool that reports comfort it cannot justify is worse than no tool.
 
+
+## The live pool, measured
+
+`node examples/live-mainnet.mjs` — the real STRK20 pool on Starknet mainnet, block 13,770,005. Public `Deposit` and `Withdrawal` events only. No keys, no funds, no permission.
+
+```
+STRK20 PRIVACY POOL — STARKNET MAINNET
+  5495 public edges total
+  31 anonymizer contracts, 3 infrastructure sinks -> excluded
+  1489 participant edges  (945 deposits, 544 withdrawals)
+  570 distinct addresses
+  20 assets
+
+THE CROWD, MEASURED
+  (asset, denomination, 6h window) cells ..... 1286
+  median effective anonymity set ............. 1.00
+  cells where you stand alone ............... 1232 of 1286  (96%)
+  largest crowd anywhere in the pool ........ 10.00
+```
+
+**The median user of a live privacy pool is hiding among one person.** In 96% of cells there is nobody else at all, and the largest crowd anywhere in the entire pool is ten.
+
+### Why we trust this number
+
+The first version of this measurement was wrong, and the way it was wrong is instructive. Raw event data showed 4,550 withdrawals against 945 deposits — an anomaly worth attacking rather than publishing. It turned out **68.8% of all withdrawals went to a single address**: a deployed contract that never deposits and receives across 13 assets. A private swap withdraws to an anonymizer, not to a person. Counting that as a participant invents a crowd out of plumbing.
+
+So infrastructure is now classified from chain state rather than a maintained list: anonymizers come from the pool's own `ExternalContractInvoked` events, and sinks are identified as deployed contracts that receive across several assets and never deposit. Only an EOA-or-depositor survives as a participant. The headline held after removing 34 such addresses — which is the only reason it is worth stating.
+
+### What this is not
+
+This is not a flaw in STRK20. The cryptography does what it claims, and the protocol's own documentation is candid that patterns leak. The pool is also young: **small sets are a consequence of low volume, not bad design.**
+
+That is precisely the point. Anonymity is the one property you cannot ship on your own — it has to be *accumulated*, and every new pool, asset and app splits it further. No amount of cryptographic quality fixes a crowd of one. Somebody has to aggregate the crowd, and nobody is.
+
 ## Why this compounds, and why it cannot be forked
 
 Every other moat in crypto can be copied over a weekend. Liquidity can be incentivised across venues. Mechanisms get forked. Anonymity cannot.
