@@ -118,9 +118,24 @@ That layer treats every pool as an interchangeable venue. Which inverts the usua
 
 ## What Shoal does
 
-1. **Measure** — the effective anonymity set for every (asset, denomination, window) cell, from public chain data. `packages/oracle`
+1. **Measure** — the effective anonymity set for every (asset, denomination, window) cell, from public chain data. `packages/oracle`, `packages/chain`
 2. **Route** — choose the path that lands you in the largest crowd, rather than the fastest one. `packages/router`
-3. **Settle** — sealed inputs, frozen input sets, provable value conservation. `contracts/`
+3. **Schedule** — when each leg may be proven and when its proof dies, against the pool's live constants. `packages/execute`
+4. **Settle** — sealed inputs, frozen input sets, provable value conservation. `contracts/`
+
+### What the crowd costs
+
+Three constants read from the live pool, not assumed:
+
+| | | |
+|---|---|---|
+| `proof_validity_blocks` | **450** | a proof dies 450 blocks after its anchor |
+| `fee_amount` | **6 STRK** | charged per *transaction*, not per leg |
+| note maturity | **10 blocks** | before a note can be spent |
+
+The first has a consequence people miss: **you cannot pre-prove a leg scheduled hours out.** Proving is not done once at planning time and replayed — each leg has a window that opens when its proof would still be alive at submission. A scheduler ignoring this emits later legs that are dead on arrival.
+
+The second puts a price on privacy, and the tension runs both ways at once: fees push toward batching (one transaction, one fee, one observation), anonymity pushes toward spreading. Shoal refuses to hide that behind a single number — a schedule reports what the crowd cost, so the choice belongs to whoever pays for it.
 
 Routing creates the flywheel: every routed user converges on shared assets, denominations and windows, so the cells grow, so the routing gets better, so more users route. The product improves by being used, and it improves *for everyone*, which is the only kind of privacy improvement that is real.
 

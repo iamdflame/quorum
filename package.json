@@ -11,11 +11,12 @@
     "node": ">=24"
   },
   "scripts": {
-    "build": "tsc -b packages/oracle packages/router packages/chain",
-    "test": "node --test --experimental-strip-types packages/oracle/test/*.test.ts packages/router/test/*.test.ts",
-    "typecheck": "tsc -b packages/oracle packages/router packages/chain",
+    "build": "tsc -b packages/oracle packages/router packages/chain packages/execute",
+    "test": "node --test --experimental-strip-types packages/oracle/test/*.test.ts packages/router/test/*.test.ts packages/execute/test/*.test.ts",
+    "typecheck": "tsc -b packages/oracle packages/router packages/chain packages/execute",
     "demo": "npm run build && node examples/the-crowd-you-are-in.mjs",
-    "live": "npm run build && node examples/live-mainnet.mjs"
+    "live": "npm run build && node examples/live-mainnet.mjs",
+    "pipeline": "npm run build && node examples/pipeline.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
