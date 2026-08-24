@@ -1,0 +1,391 @@
+<title>Crowd of One</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300&display=swap">
+
+<style>
+:root{
+  --ground:#F1F4F5; --surface:#E4EAEC; --ink:#0A0F12; --dim:#3E4C53; --muted:#6B7D86;
+  --rule:#C3CFD4; --crowd:#2C7A8C; --alone:#C25D18; --glow:rgba(44,122,140,.10);
+}
+:root:not([data-theme="light"]){ }
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0A0F12; --surface:#111A1E; --ink:#E6EDF0; --dim:#A9BAC2; --muted:#6E828C;
+    --rule:#1E2A30; --crowd:#4E9DAE; --alone:#E07B39; --glow:rgba(78,157,174,.16);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0A0F12; --surface:#111A1E; --ink:#E6EDF0; --dim:#A9BAC2; --muted:#6E828C;
+  --rule:#1E2A30; --crowd:#4E9DAE; --alone:#E07B39; --glow:rgba(78,157,174,.16);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"Newsreader",Georgia,"Times New Roman",serif;
+  font-weight:300; font-size:19px; line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace}
+
+/* The page hangs off a single measurement axis running its full height. */
+.axis{
+  max-width:1140px; margin:0 auto; padding:0 28px 0 0;
+  position:relative;
+}
+@media(min-width:860px){
+  .axis{padding-left:150px}
+  .axis::before{
+    content:""; position:absolute; left:96px; top:0; bottom:0;
+    width:1px; background:var(--rule);
+  }
+}
+
+.tick{
+  font-family:"IBM Plex Mono",monospace; font-size:10.5px; font-weight:500;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--muted);
+  position:relative; margin:0 0 22px;
+}
+@media(min-width:860px){
+  .tick{margin-left:-150px; width:150px; padding-right:36px; text-align:right;
+        position:absolute; margin-top:.55em}
+  .tick::after{content:""; position:absolute; right:-1px; top:.52em; width:18px;
+               height:1px; background:var(--rule)}
+  .band{position:relative; padding-left:0}
+}
+
+/* ---------- hero ---------- */
+.hero{position:relative; min-height:100svh; display:flex; align-items:center;
+      overflow:hidden; border-bottom:1px solid var(--rule)}
+#field{position:absolute; inset:0; width:100%; height:100%; display:block}
+.hero-inner{position:relative; z-index:2; width:100%;
+            padding:120px 0 80px; pointer-events:none}
+.eyebrow{font-family:"IBM Plex Mono",monospace; font-size:11px; font-weight:500;
+         letter-spacing:.2em; text-transform:uppercase; color:var(--muted);
+         margin:0 0 40px}
+.eyebrow b{color:var(--crowd); font-weight:600}
+
+.numeral{
+  font-family:"IBM Plex Mono",monospace; font-weight:300;
+  font-size:clamp(112px,21vw,232px); line-height:.78; letter-spacing:-.05em;
+  color:var(--ink); margin:0; font-variant-numeric:tabular-nums;
+}
+.numeral em{font-style:normal; color:var(--alone)}
+.claim{
+  max-width:31ch; margin:34px 0 0; font-size:clamp(21px,2.5vw,29px);
+  line-height:1.34; text-wrap:balance; color:var(--ink);
+}
+.claim i{font-style:italic; color:var(--alone)}
+.sub{max-width:52ch; margin:24px 0 0; color:var(--dim); font-size:17.5px}
+
+.readout{
+  position:absolute; z-index:3; left:0; right:0; bottom:26px;
+  font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.05em;
+  color:var(--muted); display:flex; gap:26px; flex-wrap:wrap; align-items:baseline;
+  pointer-events:none;
+}
+.readout .hl{color:var(--ink)}
+.readout .amb{color:var(--alone)}
+
+/* ---------- sections ---------- */
+section{padding:104px 0; border-bottom:1px solid var(--rule)}
+section:last-of-type{border-bottom:0}
+h2{font-family:"IBM Plex Mono",monospace; font-weight:400; font-size:clamp(25px,3.1vw,36px);
+   line-height:1.18; letter-spacing:-.025em; margin:0 0 30px; max-width:22ch;
+   text-wrap:balance}
+p{max-width:63ch; margin:0 0 22px}
+p:last-child{margin-bottom:0}
+.lead{font-size:22px; line-height:1.5; color:var(--ink)}
+strong{font-weight:400; color:var(--ink); background:var(--glow);
+       padding:.05em .28em; margin:0 -.1em; border-radius:2px}
+a{color:var(--crowd); text-decoration:none; border-bottom:1px solid var(--rule)}
+a:hover,a:focus-visible{border-bottom-color:var(--crowd)}
+a:focus-visible{outline:2px solid var(--crowd); outline-offset:3px}
+
+/* ---------- histogram ---------- */
+.hist{margin:6px 0 0; display:flex; flex-direction:column; gap:11px;
+      font-family:"IBM Plex Mono",monospace; font-size:12.5px}
+.hrow{display:grid; grid-template-columns:104px 1fr 74px; align-items:center; gap:16px}
+.hlab{color:var(--muted); letter-spacing:.03em; text-align:right}
+.hbarwrap{height:26px; background:var(--surface); position:relative; overflow:hidden}
+.hbar{height:100%; width:0; transition:width 1.5s cubic-bezier(.16,1,.3,1)}
+.hval{color:var(--dim); font-variant-numeric:tabular-nums}
+.hrow.solo .hlab,.hrow.solo .hval{color:var(--alone)}
+
+/* ---------- table ---------- */
+.tablewrap{overflow-x:auto; margin-top:8px}
+table{border-collapse:collapse; width:100%; min-width:460px;
+      font-family:"IBM Plex Mono",monospace; font-size:13px}
+th{text-align:right; font-weight:500; font-size:10.5px; letter-spacing:.14em;
+   text-transform:uppercase; color:var(--muted); padding:0 0 12px; border-bottom:1px solid var(--rule)}
+th:first-child,td:first-child{text-align:left}
+td{padding:11px 0; border-bottom:1px solid var(--rule); text-align:right;
+   font-variant-numeric:tabular-nums; color:var(--dim)}
+td:first-child{color:var(--ink)}
+.pct{color:var(--alone)}
+
+.note{font-size:16px; color:var(--muted); max-width:60ch; font-style:italic}
+footer{padding:64px 0 88px; font-family:"IBM Plex Mono",monospace;
+       font-size:11.5px; letter-spacing:.05em; color:var(--muted)}
+footer a{border:0; color:var(--muted)}
+footer a:hover{color:var(--crowd)}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important; transition:none!important}
+}
+</style>
+
+<div class="hero">
+  <canvas id="field" aria-hidden="true"></canvas>
+  <div class="axis">
+    <div class="hero-inner">
+      <p class="eyebrow">STRK20 privacy pool &nbsp;/&nbsp; Starknet mainnet &nbsp;/&nbsp; block <b id="blk"></b></p>
+      <h1 class="numeral"><em>1</em></h1>
+      <p class="claim">The median user of a live privacy pool is hiding among <i>one person.</i></p>
+      <p class="sub">Every point is a real cell of the pool — one asset, one denomination, one six-hour window. Amber points contain exactly one participant.</p>
+    </div>
+  </div>
+  <div class="axis readout" id="readout"></div>
+</div>
+
+<div class="axis">
+
+<section>
+  <div class="band">
+    <p class="tick">The finding</p>
+    <h2>Privacy is not encryption. It is the number of people you could have been.</h2>
+    <p class="lead">A shielded pool encrypts amounts, breaks the link between sender and receiver, and proves it in zero knowledge. None of that helps if you are the only person who did something that looked like what you did.</p>
+    <p>Cryptography gives you a hiding place. It does not give you a crowd — and the crowd is a separate problem that nobody owns.</p>
+    <div class="hist" id="hist"></div>
+    <p class="note" style="margin-top:26px">Of <span id="c1"></span> cells measured on mainnet, <span id="c2"></span> contain exactly one participant. The largest crowd anywhere in the entire pool is ten.</p>
+  </div>
+</section>
+
+<section>
+  <div class="band">
+    <p class="tick">Why it fragments</p>
+    <h2>The set splits three ways at once, and none of them are visible to you.</h2>
+    <p>An anonymity set does not fragment once. It fragments along three axes simultaneously, and a user relying on it sees none of them.</p>
+    <p><strong>Asset.</strong> STRK20 groups notes into per-token subchannels, so your crowd is whoever else shielded that token — not whoever else uses the pool.</p>
+    <p><strong>Denomination.</strong> Deposits and withdrawals carry plaintext amounts. Your crowd is whoever else moved roughly that much.</p>
+    <p><strong>Time.</strong> Every edge is stamped by its block. Your crowd is whoever else was moving in that window.</p>
+    <p>Intersect the three and a pool with hundreds of users offers a crowd of one.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Asset</th><th>Cells</th><th>Alone</th><th>Best crowd</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="band">
+    <p class="tick">Method</p>
+    <h2>The first measurement was wrong. That is why this one is worth stating.</h2>
+    <p>Raw event data showed 4,550 withdrawals against 945 deposits — an anomaly worth attacking rather than publishing. <strong>68.8% of all withdrawals went to a single address:</strong> a deployed contract that never deposits and receives across thirteen assets.</p>
+    <p>A private swap withdraws to an anonymizer, not to a person. Counting that as a participant invents a crowd out of plumbing.</p>
+    <p>So infrastructure is now classified from chain state rather than a maintained list. Anonymizers come from the pool's own <span class="mono" style="font-size:.88em">ExternalContractInvoked</span> events; sinks are deployed contracts that receive across several assets and never deposit. Only an ordinary account or a depositor survives as a participant — erring toward inclusion, so no real person is deleted from the crowd.</p>
+    <p>The finding held after removing thirty-four such addresses.</p>
+    <p class="note">Counting people is itself the wrong measure. A hundred operators where one accounts for 99% of the flow is not a crowd of a hundred. These figures are perplexity — 2<sup>H</sup> over the flow distribution — which equals the headcount when flow is even and collapses toward one as it concentrates.</p>
+  </div>
+</section>
+
+<section>
+  <div class="band">
+    <p class="tick">Not a flaw</p>
+    <h2>The pool is young. Small sets follow from low volume, not bad design.</h2>
+    <p>This is not a break in STRK20. The cryptography does what it claims, and the protocol's own documentation is candid that patterns leak.</p>
+    <p class="lead">Which is precisely the point. Anonymity is the one property you cannot ship on your own — it has to be <em>accumulated</em>, and every new pool, asset and app splits it further.</p>
+    <p>No amount of cryptographic quality fixes a crowd of one. Somebody has to aggregate the crowd, and nobody is.</p>
+  </div>
+</section>
+
+<section>
+  <div class="band">
+    <p class="tick">Shoal</p>
+    <h2>You don't pick a pool. You pick to be indistinguishable.</h2>
+    <p>Shoal measures the crowd you are actually standing in, then routes value so that crowd is as large as it can be — choosing denominations the pool genuinely uses and windows that are already busy, rather than the fastest path.</p>
+    <p>Two rules govern it, and both are conjunctive. A plan is only as anonymous as its weakest leg, so its crowd is the <em>minimum</em> across legs and never the average. And every additional leg is another observation to correlate, so splitting is priced rather than assumed good.</p>
+    <p>That is also the flywheel: routed flow converges on shared denominations and windows, so cells grow, so routing improves, so more flow routes. The product gets better by being used — and it gets better for everyone in the cell, not only the person who routed. It is the one moat in this field that cannot be forked, because <strong>forking an anonymity set splits it and makes both halves worse.</strong></p>
+  </div>
+</section>
+
+<footer>
+  Measured from public <span class="mono">Deposit</span> and <span class="mono">Withdrawal</span> events. No keys, no funds, no permission &nbsp;·&nbsp;
+  <a href="https://github.com/iamdflame/shoal">github.com/iamdflame/shoal</a>
+</footer>
+</div>
+
+<script>
+const D = {"block":13770138,"cells":1286,"alone":1232,"addresses":570,"assets":20,"edges":1489,"total":5495,"anon":31,"sinks":3,"max":10,"hist":{"1":1232,"2":34,"3":14,"4":3,"5":2,"10":1},"byToken":{"STRK":{"cells":620,"alone":599,"best":4.999999999999999,"participants":652},"USDC":{"cells":460,"alone":434,"best":9.999949027287897,"participants":505},"ETH":{"cells":65,"alone":64,"best":2,"participants":66},"0x787150\u2026":{"cells":56,"alone":50,"best":4.999999999755715,"participants":66},"0x3fe2b9\u2026":{"cells":26,"alone":26,"best":1,"participants":26},"0x1e70ae\u2026":{"cells":12,"alone":12,"best":1,"participants":12},"0x3b405a\u2026":{"cells":10,"alone":10,"best":1,"participants":10},"0x28d709\u2026":{"cells":6,"alone":6,"best":1,"participants":6},"USDT":{"cells":6,"alone":6,"best":1,"participants":6},"0x75afe6\u2026":{"cells":6,"alone":6,"best":1,"participants":6},"0x6a567e\u2026":{"cells":5,"alone":5,"best":1,"participants":5},"0x2ab526\u2026":{"cells":4,"alone":4,"best":1,"participants":4},"0x47751b\u2026":{"cells":3,"alone":3,"best":1,"participants":3},"0x4daa17\u2026":{"cells":2,"alone":2,"best":1,"participants":2},"0x593e03\u2026":{"cells":1,"alone":1,"best":1,"participants":1},"0x124aeb\u2026":{"cells":1,"alone":1,"best":1,"participants":1},"0x42b8f0\u2026":{"cells":1,"alone":1,"best":1,"participants":1},"0x579127\u2026":{"cells":1,"alone":1,"best":1,"participants":1},"0x40e81c\u2026":{"cells":1,"alone":1,"best":1,"participants":1}},"pts":[["USDC",16350,1],["STRK",16351,1],["STRK",16351,1],["STRK",16352,1],["USDC",16372,1],["USDC",16373,1],["STRK",16373,1],["STRK",16373,1],["ETH",16373,1],["0x3fe2b9\u2026",16375,1],["USDC",16377,2],["USDC",16379,1],["STRK",16380,1],["STRK",16380,1],["0x28d709\u2026",16381,1],["0x6a567e\u2026",16382,1],["ETH",16383,1],["ETH",16383,1],["ETH",16383,1],["STRK",16384,1],["0x787150\u2026",16388,1],["0x787150\u2026",16388,2],["0x787150\u2026",16389,5],["USDC",16389,1],["0x787150\u2026",16390,3],["USDC",16390,1],["STRK",16392,1],["USDC",16392,1],["STRK",16394,1],["STRK",16394,1],["STRK",16394,1],["STRK",16398,1],["USDC",16403,2],["USDC",16403,1],["STRK",16419,1],["ETH",16420,1],["ETH",16420,1],["ETH",16421,2],["ETH",16421,1],["STRK",16422,1],["ETH",16422,1],["ETH",16422,1],["0x787150\u2026",16422,1],["STRK",16428,1],["USDC",16430,1],["USDC",16431,1],["STRK",16431,1],["STRK",16432,1],["STRK",16432,1],["USDC",16432,1],["USDC",16432,1],["USDC",16435,1],["USDC",16438,1],["STRK",16440,1],["STRK",16440,1],["USDC",16441,1],["STRK",16441,1],["USDC",16441,1],["STRK",16442,1],["USDC",16442,1],["USDC",16443,1],["STRK",16443,1],["USDC",16444,1],["STRK",16444,1],["USDC",16444,1],["USDC",16444,1],["ETH",16444,1],["STRK",16445,1],["USDC",16445,1],["STRK",16446,1],["STRK",16446,1],["USDC",16446,1],["USDC",16446,1],["STRK",16446,1],["STRK",16447,1],["STRK",16448,1],["STRK",16448,1],["ETH",16452,1],["0x787150\u2026",16452,1],["USDC",16452,1],["ETH",16453,1],["STRK",16453,1],["STRK",16454,1],["USDC",16456,1],["STRK",16458,1],["ETH",16462,1],["USDC",16466,1],["STRK",16475,1],["STRK",16479,1],["STRK",16481,1],["STRK",16485,1],["STRK",16485,1],["STRK",16485,1],["USDC",16490,1],["USDC",16490,1],["USDC",16490,1],["USDC",16491,2],["USDC",16491,1],["USDC",16492,1],["USDC",16492,1],["STRK",16492,1],["STRK",16492,1],["STRK",16492,1],["USDC",16496,1],["USDC",16496,1],["USDC",16497,1],["USDC",16500,1],["USDC",16501,1],["USDC",16502,1],["ETH",16502,1],["ETH",16502,1],["USDC",16505,1],["USDC",16505,1],["STRK",16508,1],["USDC",16508,1],["USDC",16513,1],["STRK",16514,1],["STRK",16514,1],["STRK",16514,1],["STRK",16514,1],["USDC",16516,1],["USDC",16516,1],["0x3b405a\u2026",16516,1],["STRK",16519,1],["0x47751b\u2026",16521,1],["STRK",16521,1],["STRK",16539,1],["STRK",16539,1],["STRK",16539,1],["0x787150\u2026",16539,1],["STRK",16539,1],["STRK",16541,1],["STRK",16541,3],["STRK",16541,1],["STRK",16544,1],["USDT",16545,1],["STRK",16546,1],["USDT",16546,1],["USDC",16546,1],["USDC",16546,3],["USDC",16546,1],["USDC",16546,2],["USDC",16546,1],["USDC",16547,3],["USDC",16547,1],["USDC",16547,1],["USDC",16547,1],["USDC",16547,1],["STRK",16550,1],["STRK",16551,1],["USDC",16552,1],["USDC",16553,1],["USDC",16555,1],["USDC",16555,1],["USDC",16556,1],["STRK",16557,1],["USDC",16560,1],["STRK",16561,1],["USDC",16562,1],["USDC",16565,1],["USDC",16565,10],["STRK",16565,1],["STRK",16565,1],["USDC",16565,4],["USDC",16565,2],["STRK",16566,1],["0x787150\u2026",16566,1],["STRK",16574,1],["STRK",16574,1],["USDC",16574,1],["STRK",16575,1],["USDC",16575,1],["USDC",16577,1],["ETH",16577,1],["USDC",16591,1],["STRK",16595,1],["STRK",16595,1],["STRK",16596,1],["STRK",16597,1],["STRK",16601,1],["USDC",16601,1],["0x593e03\u2026",16604,1],["USDC",16604,1],["USDC",16606,1],["USDC",16606,1],["USDC",16606,1],["USDC",16606,1],["STRK",16606,1],["STRK",16614,1],["STRK",16615,1],["USDC",16616,1],["USDC",16622,1],["USDC",16622,1],["USDC",16624,1],["STRK",16642,1],["0x787150\u2026",16644,1],["STRK",16645,1],["STRK",16651,1],["USDC",16664,1],["USDC",16664,1],["USDC",16664,1],["USDC",16664,1],["USDC",16665,1],["USDC",16665,1],["USDC",16672,1],["USDC",16672,1],["STRK",16676,1],["USDC",16705,1],["ETH",16708,1],["STRK",16708,1],["STRK",16710,1],["ETH",16711,1],["STRK",16712,1],["STRK",16712,1],["STRK",16712,1],["STRK",16713,1],["STRK",16713,1],["USDC",16721,1],["USDC",16722,1],["STRK",16730,1],["0x787150\u2026",16739,1],["USDC",16763,1],["STRK",16765,1],["STRK",16765,1],["STRK",16765,1],["STRK",16765,1],["STRK",16765,1],["STRK",16769,1],["STRK",16769,1],["USDC",16770,1],["USDC",16770,1],["USDC",16770,1],["USDC",16770,3],["USDC",16770,3],["USDC",16770,1],["USDC",16770,1],["USDC",16770,4],["USDC",16770,1],["USDC",16771,1],["USDC",16771,1],["USDC",16772,1],["STRK",16773,1],["STRK",16774,1],["STRK",16774,1],["USDC",16774,1],["USDC",16774,1],["USDC",16778,1],["STRK",16779,1],["STRK",16779,1],["STRK",16781,1],["STRK",16781,1],["STRK",16782,1],["STRK",16782,1],["USDC",16784,1],["STRK",16786,1],["ETH",16786,1],["STRK",16787,1],["STRK",16787,1],["STRK",16787,1],["USDC",16788,1],["STRK",16791,1],["STRK",16791,1],["0x3fe2b9\u2026",16793,1],["USDC",16814,1],["STRK",16822,1],["STRK",16823,1],["USDC",16823,1],["STRK",16824,1],["STRK",16825,1],["STRK",16825,1],["STRK",16825,1],["STRK",16826,1],["STRK",16826,1],["STRK",16826,1],["STRK",16827,1],["STRK",16827,1],["0x787150\u2026",16828,1],["STRK",16828,1],["0x3fe2b9\u2026",16828,1],["STRK",16829,1],["STRK",16829,1],["0x124aeb\u2026",16830,1],["0x3b405a\u2026",16830,1],["STRK",16830,1],["STRK",16833,1],["STRK",16835,1],["STRK",16836,1],["USDC",16836,1],["USDC",16839,1],["STRK",16839,1],["USDC",16842,1],["USDC",16844,1],["ETH",16851,1],["ETH",16851,1],["0x3fe2b9\u2026",16854,1],["0x3fe2b9\u2026",16854,1],["0x6a567e\u2026",16873,1],["STRK",16874,1],["STRK",16878,1],["STRK",16879,1],["USDC",16881,1],["USDC",16881,1],["0x1e70ae\u2026",16883,1],["0x1e70ae\u2026",16883,1],["STRK",16884,1],["STRK",16885,1],["STRK",16885,1],["STRK",16886,1],["0x787150\u2026",16886,1],["STRK",16886,1],["USDC",16886,1],["STRK",16886,1],["STRK",16886,1],["STRK",16886,1],["USDC",16887,1],["STRK",16887,1],["STRK",16887,1],["ETH",16888,1],["STRK",16888,1],["ETH",16888,1],["0x3fe2b9\u2026",16888,1],["USDC",16888,1],["USDC",16888,1],["STRK",16889,1],["STRK",16889,1],["STRK",16889,2],["STRK",16889,2],["STRK",16889,1],["STRK",16891,1],["0x3fe2b9\u2026",16891,1],["0x3fe2b9\u2026",16891,1],["ETH",16892,1],["ETH",16893,1],["ETH",16893,1],["ETH",16895,1],["USDC",16895,1],["STRK",16896,1],["STRK",16897,1],["USDC",16898,1],["USDT",16898,1],["USDC",16898,1],["USDC",16898,1],["ETH",16899,1],["USDC",16900,1],["USDC",16900,1],["STRK",16904,1],["STRK",16905,1],["0x787150\u2026",16906,1],["USDC",16908,1],["USDC",16908,1],["STRK",16908,1],["USDC",16908,1],["USDC",16908,1],["STRK",16922,1],["STRK",16925,1],["STRK",16925,1],["STRK",16929,1],["0x42b8f0\u2026",16929,1],["USDC",16929,1],["USDC",16930,1],["USDC",16931,1],["STRK",16932,1],["STRK",16933,1],["STRK",16933,1],["STRK",16933,2],["STRK",16933,1],["STRK",16933,5],["USDC",16933,2],["0x787150\u2026",16933,1],["USDC",16933,1],["0x787150\u2026",16934,1],["0x787150\u2026",16938,1],["USDC",16938,1],["0x3fe2b9\u2026",16939,1],["0x3fe2b9\u2026",16939,1],["0x1e70ae\u2026",16939,1],["0x3fe2b9\u2026",16939,1],["USDC",16940,1],["USDC",16940,1],["USDC",16941,1],["USDC",16941,1],["0x28d709\u2026",16942,1],["0x3b405a\u2026",16942,1],["0x1e70ae\u2026",16942,1],["0x1e70ae\u2026",16942,1],["0x75afe6\u2026",16955,1],["STRK",16955,1],["STRK",16955,1],["USDC",16963,1],["USDC",16963,1],["ETH",16971,1],["0x28d709\u2026",16974,1],["STRK",16988,1],["ETH",16989,1],["ETH",16989,1],["STRK",16990,1],["STRK",16991,1],["USDC",16994,1],["STRK",16997,1],["USDC",16997,1],["STRK",16998,1],["ETH",17001,1],["STRK",17001,1],["STRK",17001,1],["STRK",17002,1],["STRK",17002,1],["STRK",17002,1],["STRK",17011,1],["USDC",17017,1],["USDC",17039,1],["USDC",17049,1],["STRK",17050,1],["USDC",17053,1],["USDC",17053,1],["0x787150\u2026",17068,1],["0x787150\u2026",17069,1],["0x787150\u2026",17069,1],["USDT",17069,1],["0x47751b\u2026",17077,1],["USDC",17078,1],["USDC",17108,1],["STRK",17108,1],["USDC",17110,1],["USDC",17112,1],["USDC",17114,2],["USDC",17114,1],["USDC",17115,1],["USDC",17115,1],["USDC",17115,1],["USDC",17123,1],["STRK",17124,1],["0x787150\u2026",17124,1],["STRK",17125,1],["USDC",17125,1],["USDC",17127,1],["STRK",17131,1],["STRK",17131,1],["0x787150\u2026",17131,1],["0x787150\u2026",17152,1],["0x787150\u2026",17153,1],["STRK",17159,1],["USDC",17160,1],["STRK",17160,1],["STRK",17160,1],["0x75afe6\u2026",17162,1],["0x75afe6\u2026",17162,1],["STRK",17164,1],["STRK",17164,1],["STRK",17166,1],["STRK",17166,1],["STRK",17166,1],["STRK",17166,1],["STRK",17166,1],["USDC",17167,2],["STRK",17167,1],["0x4daa17\u2026",17167,1],["0x6a567e\u2026",17167,1],["STRK",17168,1],["USDC",17168,1],["USDC",17169,1],["USDC",17169,1],["USDC",17169,1],["USDC",17170,1],["STRK",17171,1],["STRK",17173,1],["STRK",17174,1],["STRK",17175,1],["USDC",17175,1],["USDC",17176,1.89],["USDC",17176,1],["USDC",17176,1],["USDC",17176,1],["USDC",17176,1],["STRK",17177,1],["USDC",17177,1],["STRK",17179,1],["STRK",17179,1],["STRK",17180,1],["STRK",17180,1],["STRK",17180,1],["STRK",17180,1],["USDC",17182,1],["USDC",17182,1],["USDC",17205,1],["STRK",17216,1],["USDC",17216,1],["USDC",17216,1],["USDC",17216,1],["USDC",17219,1],["USDC",17221,1],["USDC",17223,1],["0x3fe2b9\u2026",17223,1],["STRK",17223,1],["USDC",17223,1],["ETH",17223,1],["STRK",17224,3],["USDC",17224,1],["STRK",17226,3],["USDC",17227,1],["STRK",17227,1],["USDC",17228,1],["USDC",17228,1],["USDC",17228,1],["STRK",17229,1],["USDC",17232,1],["ETH",17232,1],["ETH",17232,1],["STRK",17232,1],["USDC",17232,1],["USDC",17233,1],["USDC",17234,1],["STRK",17235,1],["STRK",17235,1],["STRK",17235,1],["USDC",17235,1],["USDC",17235,1],["STRK",17240,1],["STRK",17240,1],["STRK",17240,1],["STRK",17240,1],["STRK",17240,1],["STRK",17240,1],["STRK",17240,1],["STRK",17240,1],["STRK",17241,1],["USDC",17241,1],["STRK",17242,1],["USDC",17243,1],["0x787150\u2026",17243,1],["ETH",17247,1],["STRK",17250,1],["STRK",17250,1],["STRK",17251,1],["USDC",17254,1],["USDC",17258,1],["STRK",17278,1],["USDC",17278,1],["USDC",17284,1],["USDC",17284,1],["STRK",17284,1],["STRK",17284,1],["USDC",17284,1],["STRK",17284,1],["STRK",17285,1],["STRK",17286,1],["0x6a567e\u2026",17286,1],["STRK",17287,1],["STRK",17287,1],["USDC",17287,1],["STRK",17287,1],["USDC",17287,1],["USDC",17287,1],["STRK",17287,1],["USDC",17288,1],["0x6a567e\u2026",17288,1],["USDC",17288,1],["USDC",17290,1],["STRK",17291,1],["USDC",17293,1],["USDC",17294,1],["STRK",17294,1],["STRK",17295,1],["STRK",17295,1],["STRK",17296,1],["STRK",17296,1],["STRK",17296,1],["0x3fe2b9\u2026",17299,1],["STRK",17300,1],["0x787150\u2026",17300,1],["USDC",17301,1],["STRK",17302,1],["STRK",17303,1],["0x28d709\u2026",17303,1],["0x28d709\u2026",17303,1],["USDC",17304,1],["USDC",17304,1],["0x787150\u2026",17305,1],["STRK",17305,1],["STRK",17305,1],["STRK",17309,1],["STRK",17310,1],["STRK",17311,1],["0x28d709\u2026",17311,1],["USDC",17311,1],["STRK",17311,1],["USDC",17311,1],["USDC",17311,1],["USDC",17311,1],["USDC",17312,1],["USDC",17312,1],["USDC",17322,1],["STRK",17326,1],["USDC",17337,1],["STRK",17338,1],["USDC",17338,2],["STRK",17338,1],["STRK",17338,1],["STRK",17338,4],["USDC",17338,1],["USDC",17339,2],["STRK",17339,1],["STRK",17339,1],["STRK",17339,1],["STRK",17339,1],["ETH",17340,1],["STRK",17350,1],["0x3fe2b9\u2026",17352,1],["USDC",17355,1],["STRK",17356,1],["STRK",17360,1],["STRK",17360,1],["USDC",17361,1],["USDC",17362,1],["STRK",17363,1],["0x1e70ae\u2026",17364,1],["0x1e70ae\u2026",17364,1],["USDC",17368,1],["USDC",17368,2],["USDC",17368,1],["USDC",17368,3],["USDC",17368,1],["USDC",17368,1],["USDC",17369,3],["USDC",17369,1],["USDC",17369,1],["USDC",17373,1],["0x787150\u2026",17375,1],["USDC",17376,1],["STRK",17380,1],["STRK",17381,1],["0x3fe2b9\u2026",17381,1],["STRK",17383,1],["0x75afe6\u2026",17386,1],["0x75afe6\u2026",17387,1],["STRK",17388,1],["USDC",17389,1],["STRK",17396,1],["STRK",17396,1],["STRK",17396,1],["USDC",17399,1],["USDC",17399,1],["0x787150\u2026",17409,1],["STRK",17426,1],["USDC",17428,1],["USDC",17429,1],["USDC",17429,1],["USDC",17429,1],["0x1e70ae\u2026",17429,1],["0x1e70ae\u2026",17429,1],["USDC",17435,1],["USDC",17435,1],["STRK",17435,1],["USDC",17436,1],["USDC",17437,1],["USDC",17437,1],["USDC",17437,1],["USDC",17439,1],["USDC",17439,1],["USDC",17441,1],["USDC",17441,1],["USDC",17441,1],["USDC",17442,1],["USDC",17443,1],["USDC",17445,1],["USDC",17445,1],["USDC",17446,1],["ETH",17447,1],["STRK",17447,1],["STRK",17455,1],["STRK",17455,1],["STRK",17457,1],["USDC",17459,1],["STRK",17461,1],["STRK",17468,1],["STRK",17468,1],["USDC",17470,1],["0x787150\u2026",17471,1],["USDC",17499,1],["USDC",17500,1],["0x75afe6\u2026",17504,1],["STRK",17504,1],["USDC",17521,1],["USDC",17528,1],["USDC",17528,1],["USDC",17535,1],["STRK",17541,1],["0x787150\u2026",17543,1],["USDC",17544,1],["0x787150\u2026",17570,1],["USDC",17571,1],["USDC",17572,1],["USDC",17597,1],["USDC",17601,2],["USDC",17602,1],["USDC",17607,1],["0x3fe2b9\u2026",17607,1],["USDC",17612,1],["STRK",17616,1],["USDC",17638,1],["0x787150\u2026",17640,1],["STRK",17640,1],["STRK",17641,1],["STRK",17642,1],["STRK",17644,1],["STRK",17645,1],["STRK",17646,1],["STRK",17646,3],["USDC",17647,1],["USDC",17647,1],["USDC",17647,1],["STRK",17647,1],["USDC",17650,1],["STRK",17650,1],["USDC",17651,1],["USDC",17652,1],["USDC",17654,1],["USDC",17655,1],["STRK",17657,1],["STRK",17657,1],["STRK",17662,1],["USDC",17663,1],["USDC",17664,1],["0x787150\u2026",17667,1],["0x787150\u2026",17667,1],["ETH",17678,1],["ETH",17678,1],["STRK",17679,1],["STRK",17679,1],["USDC",17680,1],["0x3fe2b9\u2026",17693,1],["USDC",17707,1],["USDC",17711,1],["USDC",17714,1],["USDC",17715,1],["STRK",17717,1],["USDC",17718,1],["STRK",17720,1],["USDC",17721,1],["USDC",17722,1],["USDC",17722,1],["USDC",17722,1],["USDC",17722,1],["STRK",17723,1],["USDC",17723,1],["STRK",17724,1],["USDC",17724,1],["0x787150\u2026",17724,1],["STRK",17724,1],["STRK",17725,1],["USDC",17726,1],["USDC",17727,2],["USDC",17729,1],["STRK",17735,1],["USDC",17735,1],["STRK",17735,1],["USDC",17735,1],["STRK",17738,1],["ETH",17740,1],["STRK",17740,1],["STRK",17740,1],["USDC",17742,1],["ETH",17747,1],["STRK",17749,2],["ETH",17749,1],["STRK",17749,1],["STRK",17749,1],["STRK",17752,1],["STRK",17772,1],["STRK",17776,2],["STRK",17780,1],["USDC",17781,1],["USDC",17784,1],["STRK",17788,1],["USDC",17798,1],["USDC",17799,1],["STRK",17807,1],["0x787150\u2026",17807,1],["STRK",17808,1],["STRK",17808,1],["STRK",17810,1],["STRK",17810,1],["USDC",17811,1],["ETH",17812,1],["ETH",17812,1],["USDC",17815,1],["USDC",17820,1],["USDC",17822,1],["ETH",17828,1],["0x3fe2b9\u2026",17841,1],["USDC",17843,1],["STRK",17845,1],["USDC",17848,1],["USDC",17855,1],["USDC",17855,1],["USDC",17857,1],["STRK",17859,2],["USDC",17860,1],["USDC",17864,1],["STRK",17866,1],["USDC",17878,1],["STRK",17882,1.89],["STRK",17882,1],["STRK",17882,1],["USDC",17890,1],["STRK",17902,1],["STRK",17902,1],["STRK",17902,1],["ETH",17902,1],["ETH",17902,1],["USDC",17914,1],["STRK",17914,1],["USDC",17914,1],["USDC",17918,1],["USDC",17918,1],["USDC",17924,1],["STRK",17925,1],["STRK",17925,1],["USDC",17929,1],["USDC",17929,1],["0x787150\u2026",17930,1],["USDC",17931,1],["STRK",17936,1],["STRK",17937,1],["STRK",17937,1],["STRK",17945,1],["STRK",17946,1],["STRK",17946,1],["STRK",17947,1],["STRK",17947,1],["USDC",17948,1],["STRK",17955,1],["STRK",17955,1.89],["STRK",17959,1],["USDC",17963,1],["USDC",17963,1],["0x787150\u2026",18031,1],["USDC",18035,1],["USDC",18037,1],["USDC",18082,1],["STRK",18085,1],["USDC",18096,2],["USDC",18096,2],["USDC",18102,1],["STRK",18104,1],["STRK",18110,1],["USDC",18110,1],["USDC",18111,1],["USDC",18127,1],["0x787150\u2026",18136,1],["STRK",18136,1],["0x787150\u2026",18136,1],["STRK",18139,1.89],["0x787150\u2026",18139,1],["STRK",18140,1],["STRK",18140,1],["USDC",18140,1],["USDC",18142,1],["USDC",18142,1],["USDC",18144,1],["USDC",18145,1],["USDC",18145,1],["USDC",18150,1],["USDC",18153,1],["USDC",18155,1],["STRK",18156,1],["USDC",18156,1],["USDC",18157,1],["USDC",18157,1],["USDC",18158,1],["USDC",18159,1],["USDC",18160,1],["USDC",18160,1],["STRK",18165,1],["STRK",18169,1],["STRK",18169,1],["USDC",18170,1],["STRK",18171,1],["STRK",18171,1],["USDC",18205,1],["STRK",18219,1],["USDC",18219,1],["USDC",18220,1],["USDC",18220,1],["STRK",18225,1],["STRK",18230,1],["STRK",18230,1],["STRK",18230,1],["STRK",18235,1],["STRK",18235,1],["STRK",18235,1],["USDC",18235,1],["STRK",18236,1],["USDC",18238,1],["0x579127\u2026",18238,1],["USDC",18238,1],["STRK",18239,1],["ETH",18239,1],["STRK",18244,1],["USDC",18250,1],["USDC",18251,1],["USDC",18286,1],["STRK",18291,1],["STRK",18293,1],["STRK",18294,1],["USDC",18303,1],["USDC",18305,1],["USDC",18313,1],["USDC",18318,1],["USDC",18321,1],["USDC",18358,1],["USDC",18362,1],["0x3fe2b9\u2026",18364,1],["0x3fe2b9\u2026",18365,1],["USDC",18368,1],["USDC",18371,1],["STRK",18373,1],["STRK",18373,1],["0x4daa17\u2026",18373,1],["STRK",18373,1],["ETH",18373,1],["USDC",18373,1],["ETH",18374,1],["USDC",18375,1],["STRK",18383,1],["USDC",18384,1],["USDC",18385,1],["USDC",18386,1],["USDC",18393,1],["0x787150\u2026",18401,1],["USDC",18404,1],["STRK",18414,1],["STRK",18435,1],["USDC",18444,1],["USDT",18445,1],["STRK",18446,1],["0x3fe2b9\u2026",18451,1],["ETH",18453,1],["ETH",18455,1],["USDC",18456,1],["0x3fe2b9\u2026",18456,1],["0x3fe2b9\u2026",18456,1],["ETH",18461,1],["STRK",18462,1],["STRK",18464,1],["STRK",18464,1],["0x787150\u2026",18468,1],["0x787150\u2026",18468,1],["STRK",18470,1],["STRK",18470,1],["0x787150\u2026",18471,1],["0x787150\u2026",18471,1],["STRK",18471,1],["STRK",18472,1],["STRK",18502,1],["STRK",18503,1],["STRK",18507,1],["USDC",18513,1],["STRK",18517,1],["STRK",18519,1],["STRK",18519,1],["STRK",18519,1],["STRK",18520,1],["STRK",18521,1],["STRK",18521,1],["STRK",18526,1],["STRK",18526,1],["STRK",18529,1],["STRK",18529,1],["STRK",18529,1],["STRK",18531,1],["STRK",18532,1],["STRK",18532,1],["STRK",18532,1],["USDC",18539,1],["USDC",18539,1],["USDC",18539,1],["USDC",18540,1],["STRK",18541,1],["STRK",18546,1],["STRK",18551,1],["STRK",18552,1],["USDC",18577,1],["USDC",18579,1],["STRK",18584,1],["STRK",18589,1],["STRK",18590,1],["STRK",18591,1],["0x787150\u2026",18599,1],["STRK",18604,1],["STRK",18604,1],["USDC",18607,1],["USDC",18608,1],["USDC",18608,1],["USDC",18608,1],["STRK",18609,1],["ETH",18628,1],["STRK",18628,1],["ETH",18629,1],["USDC",18645,1],["STRK",18649,1],["STRK",18649,1],["USDC",18649,1],["STRK",18649,1],["STRK",18649,1],["STRK",18650,1],["STRK",18650,1],["STRK",18650,1],["STRK",18651,1],["STRK",18651,1],["STRK",18652,1.89],["STRK",18653,1],["STRK",18653,1],["STRK",18653,1],["STRK",18656,1],["STRK",18659,1],["USDC",18660,1],["STRK",18662,1],["STRK",18662,1],["STRK",18662,1],["USDC",18665,1],["STRK",18666,1],["USDC",18669,1],["STRK",18677,1],["STRK",18680,1],["USDC",18682,1],["STRK",18683,1],["USDC",18683,1],["USDC",18683,1],["0x787150\u2026",18708,1],["STRK",18715,1],["USDC",18718,1],["USDC",18718,1],["USDC",18718,1],["STRK",18718,1],["STRK",18718,1],["STRK",18721,1],["STRK",18721,1],["STRK",18721,1],["STRK",18722,1],["STRK",18725,1],["STRK",18726,1],["STRK",18726,1],["STRK",18727,1],["USDC",18731,1],["STRK",18733,1],["USDC",18737,1],["USDC",18737,1],["USDC",18737,1],["USDC",18740,1],["STRK",18743,1],["STRK",18743,1],["STRK",18743,1],["STRK",18744,1],["STRK",18744,1],["STRK",18746,1],["STRK",18750,1],["USDC",18752,1],["USDC",18753,1],["STRK",18753,1],["USDC",18754,1],["USDC",18754,1],["STRK",18754,1],["USDC",18755,1],["STRK",18758,1],["STRK",18758,1],["STRK",18758,1],["0x2ab526\u2026",18758,1],["0x2ab526\u2026",18758,1],["USDC",18761,1],["STRK",18764,1],["STRK",18774,1],["0x3fe2b9\u2026",18778,1],["0x787150\u2026",18783,1.89],["0x787150\u2026",18783,1],["0x787150\u2026",18784,2],["0x40e81c\u2026",18784,1],["0x787150\u2026",18784,2],["0x787150\u2026",18784,1],["0x787150\u2026",18784,1],["USDC",18784,1],["STRK",18786,1],["STRK",18787,1],["STRK",18787,1],["STRK",18787,1],["STRK",18787,1],["STRK",18787,1],["STRK",18787,1],["STRK",18791,1],["STRK",18791,1],["STRK",18791,1],["USDC",18794,1],["STRK",18799,1],["USDC",18799,1],["STRK",18799,1],["STRK",18799,1],["STRK",18800,1],["STRK",18803,1],["STRK",18803,1],["USDC",18806,1],["STRK",18806,1],["STRK",18810,1],["ETH",18811,1],["STRK",18817,1],["STRK",18817,1],["STRK",18817,1],["STRK",18818,1],["ETH",18824,1],["STRK",18829,1],["0x3fe2b9\u2026",18845,1],["USDC",18853,1],["USDC",18855,1],["STRK",18861,1],["STRK",18861,1],["STRK",18862,1],["STRK",18862,1],["STRK",18880,1],["STRK",18884,1],["STRK",18888,1],["STRK",18889,2.83],["USDC",18889,1],["STRK",18889,1],["STRK",18889,1],["0x787150\u2026",18889,1],["STRK",18889,1],["0x47751b\u2026",18889,1],["STRK",18890,1],["USDC",18890,1],["ETH",18890,1],["STRK",18894,1],["STRK",18894,1],["ETH",18896,1],["STRK",18899,1],["ETH",18906,1],["STRK",18907,1],["STRK",18909,1],["STRK",18925,1],["STRK",18925,1],["STRK",18928,1],["STRK",18929,1],["USDC",18929,1],["USDT",18930,1],["STRK",18935,1],["USDC",18937,1],["0x1e70ae\u2026",18937,1],["0x1e70ae\u2026",18937,1],["STRK",18939,1],["USDC",18940,1],["USDC",18942,1],["STRK",18944,1],["STRK",18945,1],["USDC",18947,1],["USDC",18948,1],["STRK",18948,1],["STRK",18948,1],["STRK",18948,1],["STRK",18948,1],["STRK",18948,1],["STRK",18949,1],["STRK",18951,1],["STRK",18951,1],["STRK",18951,1],["STRK",18952,1],["STRK",18952,1],["STRK",18953,1],["STRK",18953,1],["0x2ab526\u2026",18953,1],["STRK",18953,1],["STRK",18954,2],["STRK",18954,1],["STRK",18954,1],["STRK",18954,3],["STRK",18954,1],["STRK",18954,1],["STRK",18954,1],["STRK",18961,2],["STRK",18961,1],["STRK",18961,1],["STRK",18965,1],["USDC",18968,1],["USDC",18968,1],["STRK",18971,1],["USDC",18971,1],["STRK",18972,1],["STRK",18973,1],["STRK",18974,1],["STRK",18974,1],["USDC",18974,1],["STRK",18974,1],["STRK",18975,1],["USDC",18976,1],["STRK",18976,1],["STRK",18976,1],["USDC",18976,1],["USDC",18977,1],["USDC",18978,1],["USDC",18978,1],["STRK",18979,1],["USDC",18980,1],["STRK",18990,1],["STRK",18994,1],["STRK",18995,1],["ETH",18996,1],["USDC",18996,1],["USDC",18997,1],["USDC",18998,3],["0x1e70ae\u2026",19000,1],["STRK",19000,1],["STRK",19000,1],["STRK",19000,1],["0x2ab526\u2026",19003,1],["STRK",19004,1],["STRK",19004,1],["STRK",19004,1],["STRK",19005,1],["STRK",19005,1],["STRK",19008,1],["STRK",19011,1],["STRK",19011,1],["STRK",19011,1],["STRK",19011,1],["STRK",19011,1],["STRK",19011,1],["STRK",19011,1],["STRK",19014,1],["STRK",19014,1],["STRK",19014,1],["STRK",19015,1],["STRK",19015,1],["0x3fe2b9\u2026",19015,1],["ETH",19016,1],["STRK",19019,1],["STRK",19033,1],["STRK",19034,1],["STRK",19036,1],["STRK",19040,1],["STRK",19044,1],["STRK",19045,1],["STRK",19046,1],["STRK",19046,1],["STRK",19051,1],["STRK",19051,1],["STRK",19054,1],["ETH",19054,1],["STRK",19060,1],["0x787150\u2026",19064,1],["STRK",19065,1],["STRK",19073,1],["STRK",19074,1],["STRK",19074,1],["STRK",19076,1],["STRK",19076,1],["STRK",19076,1],["USDC",19078,1],["STRK",19079,1],["STRK",19081,1],["STRK",19081,1],["STRK",19082,1],["STRK",19082,1],["STRK",19088,1],["STRK",19088,1],["0x3b405a\u2026",19088,1],["0x3b405a\u2026",19088,1],["STRK",19088,1],["0x3b405a\u2026",19089,1],["0x3b405a\u2026",19089,1],["0x3b405a\u2026",19089,1],["0x3b405a\u2026",19089,1],["USDC",19089,1],["0x3b405a\u2026",19089,1],["STRK",19089,1],["STRK",19097,1],["STRK",19097,1],["STRK",19099,1],["STRK",19099,1],["USDC",19106,1],["STRK",19107,1],["STRK",19109,1],["STRK",19110,1],["STRK",19112,1],["STRK",19113,1.89],["STRK",19114,1],["USDC",19114,1],["STRK",19114,1],["STRK",19114,1],["STRK",19116,1],["USDC",19117,1]]};
+
+const nf = new Intl.NumberFormat("en-US");
+document.getElementById("blk").textContent = nf.format(D.block);
+document.getElementById("c1").textContent = nf.format(D.cells);
+document.getElementById("c2").textContent = nf.format(D.alone);
+
+/* ---- histogram: let the 1232 dominate, because that IS the finding ---- */
+const hist = document.getElementById("hist");
+const maxH = Math.max(...Object.values(D.hist));
+const order = Object.keys(D.hist).map(Number).sort((a,b)=>a-b);
+for (const k of order){
+  const v = D.hist[k];
+  const row = document.createElement("div");
+  row.className = "hrow" + (k === 1 ? " solo" : "");
+  const pct = (v / maxH) * 100;
+  row.innerHTML =
+    '<div class="hlab">' + (k===1 ? "alone" : "crowd of " + k) + '</div>' +
+    '<div class="hbarwrap"><div class="hbar" data-w="' + pct + '" style="background:' +
+      (k===1 ? "var(--alone)" : "var(--crowd)") + '"></div></div>' +
+    '<div class="hval">' + nf.format(v) + ' cell' + (v===1?"":"s") + '</div>';
+  hist.appendChild(row);
+}
+const io = new IntersectionObserver((es)=>{
+  for (const e of es) if (e.isIntersecting){
+    hist.querySelectorAll(".hbar").forEach((b,i)=>{
+      setTimeout(()=>{ b.style.width = b.dataset.w + "%"; }, i*90);
+    });
+    io.disconnect();
+  }
+},{threshold:.3});
+io.observe(hist);
+
+/* ---- per-asset table ---- */
+const tb = document.getElementById("tbody");
+for (const [name,v] of Object.entries(D.byToken)){
+  if (v.cells < 5) continue;
+  const tr = document.createElement("tr");
+  const pct = Math.round((v.alone / v.cells) * 100);
+  tr.innerHTML = "<td>"+name+"</td><td>"+nf.format(v.cells)+"</td>" +
+    '<td><span class="pct">'+nf.format(v.alone)+" &middot; "+pct+"%</span></td>" +
+    "<td>"+v.best.toFixed(1)+"</td>";
+  tb.appendChild(tr);
+}
+
+/* ---- the field: 1,286 real cells, drifting ---- */
+const cv = document.getElementById("field");
+const ctx = cv.getContext("2d");
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const css = getComputedStyle(document.documentElement);
+let COL = {};
+function readTokens(){
+  COL.alone = css.getPropertyValue("--alone").trim();
+  COL.crowd = css.getPropertyValue("--crowd").trim();
+  COL.rule  = css.getPropertyValue("--rule").trim();
+}
+readTokens();
+
+const lanes = [...new Set(D.pts.map(p=>p[0]))];
+const wmin = Math.min(...D.pts.map(p=>p[1]));
+const wmax = Math.max(...D.pts.map(p=>p[1]));
+let P = [], W = 0, H = 0, dpr = 1;
+
+function build(){
+  const r = cv.getBoundingClientRect();
+  dpr = Math.min(devicePixelRatio || 1, 2);
+  W = r.width; H = r.height;
+  cv.width = W * dpr; cv.height = H * dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  // Position by window (x) and asset lane (y) — real coordinates, jittered so
+  // identical cells do not stack invisibly on top of one another.
+  P = D.pts.map((p,i)=>{
+    const lane = lanes.indexOf(p[0]);
+    const fx = (p[1]-wmin)/Math.max(1,(wmax-wmin));
+    const fy = (lane + .5)/lanes.length;
+    const seed = (i*2654435761)%1000/1000;
+    const seed2 = (i*40503)%997/997;
+    return {
+      bx: fx*W*1.06 - W*.03,
+      by: fy*H*.82 + H*.09 + (seed-.5)*(H*.10),
+      x:0, y:0,
+      ph: seed*Math.PI*2, sp:.25+seed2*.5,
+      amp: 4 + seed2*9,
+      e: p[2], t: p[0], solo: p[2] < 1.5,
+      r: p[2] < 1.5 ? 1.5 : 1.9 + Math.min(p[2],10)*.52
+    };
+  });
+}
+build();
+addEventListener("resize", build);
+
+let mx = -9999, my = -9999;
+cv.addEventListener("pointermove", e=>{
+  const r = cv.getBoundingClientRect(); mx = e.clientX-r.left; my = e.clientY-r.top;
+},{passive:true});
+cv.addEventListener("pointerleave", ()=>{ mx=my=-9999; });
+
+const ro = document.getElementById("readout");
+function setReadout(near){
+  if (near){
+    ro.innerHTML = '<span class="hl">'+near.t+'</span>' +
+      '<span>window '+near.wRaw+'</span>' +
+      '<span class="'+(near.solo?"amb":"hl")+'">crowd of '+near.e.toFixed(near.solo?0:1)+'</span>';
+  } else {
+    ro.innerHTML = '<span>'+nf.format(D.cells)+' cells</span>' +
+      '<span>'+nf.format(D.addresses)+' addresses</span>' +
+      '<span>'+D.assets+' assets</span>' +
+      '<span class="amb">'+Math.round(D.alone/D.cells*100)+'% alone</span>' +
+      '<span style="opacity:.6">move across the field</span>';
+  }
+}
+D.pts.forEach((p,i)=>{ if(P[i]) P[i].wRaw = p[1]; });
+setReadout(null);
+
+let t = 0, raf = 0, lastNear = null;
+function frame(){
+  t += reduce ? 0 : .0055;
+  ctx.clearRect(0,0,W,H);
+
+  let near = null, nd = 46*46;
+  for (const p of P){
+    // Solitary points drift further and slower — visibly adrift. Crowded points
+    // hold station, because a crowd is what keeps you in place.
+    const wander = p.solo ? p.amp : p.amp*.35;
+    p.x = p.bx + Math.cos(t*p.sp + p.ph)*wander;
+    p.y = p.by + Math.sin(t*p.sp*.82 + p.ph*1.3)*wander*.62;
+    const dx = p.x-mx, dy = p.y-my, d2 = dx*dx+dy*dy;
+    if (d2 < nd){ nd = d2; near = p; }
+  }
+
+  // Threads between members of a real crowd: the only connections on the page.
+  ctx.lineWidth = 1;
+  for (let i=0;i<P.length;i++){
+    const a = P[i]; if (a.solo) continue;
+    for (let j=i+1;j<P.length;j++){
+      const b = P[j]; if (b.solo || b.t !== a.t) continue;
+      const dx=a.x-b.x, dy=a.y-b.y, d=Math.hypot(dx,dy);
+      if (d < 108){
+        ctx.strokeStyle = COL.crowd;
+        ctx.globalAlpha = (1-d/108)*.20;
+        ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+      }
+    }
+  }
+  ctx.globalAlpha = 1;
+
+  for (const p of P){
+    const hot = p === near;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, hot ? p.r+2.6 : p.r, 0, 6.2832);
+    ctx.fillStyle = p.solo ? COL.alone : COL.crowd;
+    ctx.globalAlpha = hot ? 1 : (p.solo ? .50 : .80);
+    ctx.fill();
+    if (hot){
+      ctx.globalAlpha = .30; ctx.lineWidth = 1;
+      ctx.strokeStyle = p.solo ? COL.alone : COL.crowd;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r+11,0,6.2832); ctx.stroke();
+    }
+  }
+  ctx.globalAlpha = 1;
+
+  if (near !== lastNear){ setReadout(near); lastNear = near; }
+  raf = requestAnimationFrame(frame);
+}
+frame();
+
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", ()=>{
+  readTokens();
+});
+</script>
