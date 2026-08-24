@@ -150,6 +150,20 @@ Routing creates the flywheel: every routed user converges on shared assets, deno
 
 The third is load-bearing: a settler who lies about the outcome still cannot extract more value than went in. **A false outcome misdirects; it cannot create.** That is what makes mis-settlement unprofitable rather than merely detectable.
 
+A claim like that is worth nothing untested, so the adversarial cases are the point of the suite and the happy path is almost incidental. Nineteen tests under `snforge`, each holding against a settler **who knows the secret** and is trying to steal:
+
+```
+a_malicious_settler_cannot_pay_out_more_than_was_escrowed  PASS
+a_settler_cannot_strand_value_by_underpaying               PASS
+a_settler_cannot_pay_in_an_asset_the_conclave_never_held   PASS
+splitting_a_payout_still_has_to_add_up                     PASS
+the_root_depends_on_order_not_just_membership              PASS
+settling_without_the_secret_is_rejected                    PASS
+a_conclave_cannot_be_settled_twice                         PASS
+```
+
+The order test earns its place: the same two commitments folded in the opposite order must produce a different root, or an adversary could permute submissions to change an outcome that depends on arrival order and the seal would never notice.
+
 What the contract does *not* verify on-chain is that a new state root is the correct transition under the conclave's program. That is attested by the STARK proof of the client-side `privacy_compute` execution — the same pairing StarkWare's own privacy-bridge uses to bind an attested message to a private note in one transaction. Stating that boundary precisely is the difference between engineering and a whitepaper.
 
 Unaudited. Own the review if you build on it.
@@ -157,7 +171,8 @@ Unaudited. Own the review if you build on it.
 ## Run it
 
 ```bash
-npm install && npm run build && npm test    # 27 tests
+npm install && npm run build && npm test    # 47 tests
+cd contracts && snforge test                # 19 invariant tests
 cd contracts && scarb build                 # Sierra + CASM
 ```
 
