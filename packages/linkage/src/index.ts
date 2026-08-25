@@ -98,6 +98,8 @@ const norm = (a: string): string => {
   try { return BigInt(a).toString(16); } catch { return a.toLowerCase(); }
 };
 
+export * from "./cluster.ts";
+
 export function analyseLinkage(
   txs: readonly PoolTransaction[], opts: LinkageOptions = {},
 ): LinkageReport {
@@ -117,6 +119,21 @@ export function analyseLinkage(
     const ev = tx.events;
     const viaAnonymizer = has(ev, "ExternalContractInvoked");
     const isInfra = (a: string) => infra.has(norm(a));
+
+    /*
+     * Every pool transaction pays a fee, and the fee is settled by paying the
+     * collector — which emits a `Withdrawal` naming it. So *every* transaction
+     * carries a withdrawal leg that has nothing to do with the user exiting the
+     * pool.
+     *
+     * This is the single most misleading thing about reading this contract, and
+     * it is why a naive pass reports hundreds of users "shielding and
+     * unshielding atomically" when not one of them did. A withdrawal only means
+     * a person left the pool if its destination is a person.
+     */
+    const humanWithdrawals = pick(ev, "Withdrawal")
+      .filter((w) => w.keys[1] !== undefined && !isInfra(w.keys[1]));
+    const leftThePool = humanWithdrawals.length > 0;
     const record = (
       kind: LinkageKind, addresses: string[], notes: string[], detail: string,
     ) => {
@@ -146,15 +163,15 @@ export function analyseLinkage(
         `created in the same transaction; each note is attributable to the address that funded it.`);
     }
 
-    if (has(ev, "Deposit") && has(ev, "Withdrawal")) {
-      const to = pick(ev, "Withdrawal").map((w) => w.keys[1])
+    if (has(ev, "Deposit") && leftThePool) {
+      const to = humanWithdrawals.map((w) => w.keys[1])
         .filter((a): a is string => a !== undefined);
       record("round-trip", [...depositors, ...to], noteIds,
         `Shielded and unshielded in one transaction. Both the entry and the exit are public ` +
         `legs of the same atomic action, so the pool hop between them protected nothing.`);
     }
 
-    if (has(ev, "ViewingKeySet") && (has(ev, "Deposit") || has(ev, "Withdrawal"))) {
+    if (has(ev, "ViewingKeySet") && (has(ev, "Deposit") || leftThePool)) {
       const users = pick(ev, "ViewingKeySet").map((v) => v.keys[1])
         .filter((a): a is string => a !== undefined);
       record("onboarding", [...users, ...depositors], noteIds,
@@ -162,8 +179,8 @@ export function analyseLinkage(
         `docs name this exactly and advise spreading setup and movement over time.`);
     }
 
-    if (has(ev, "NoteUsed") && has(ev, "Withdrawal")) {
-      const to = pick(ev, "Withdrawal").map((w) => w.keys[1])
+    if (has(ev, "NoteUsed") && leftThePool) {
+      const to = humanWithdrawals.map((w) => w.keys[1])
         .filter((a): a is string => a !== undefined);
       const nullifiers = pick(ev, "NoteUsed").map((n) => n.keys[1])
         .filter((n): n is string => n !== undefined);

@@ -112,7 +112,9 @@ test("infrastructure addresses are excluded from attribution", () => {
 
   const clean = analyseLinkage([tx([NOTE_USED, w])], { infrastructure: new Set([SINK]) });
   assert.equal(clean.exposedAddresses.size, 0, "filtered, the sink is not a person");
-  assert.equal(clean.byKind.exit.user, 1, "the failure is still counted, just not attributed");
+  // Once the only withdrawal is a fee leg, nobody left the pool, so there is no
+  // exit failure to count either. The whole transaction was internal.
+  assert.equal(clean.byKind.exit.user, 0, "a fee payment is not an exit");
 });
 
 test("infrastructure matching survives felt zero-padding", () => {
@@ -120,4 +122,29 @@ test("infrastructure matching survives felt zero-padding", () => {
   const w = ev("Withdrawal", ["sel", "0x127021", TOKEN], ["0x0", "0x64"]);
   const r = analyseLinkage([tx([NOTE_USED, w])], { infrastructure: new Set([SINK_PADDED]) });
   assert.equal(r.exposedAddresses.size, 0, "0x127021 and 0x0000127021 are one address");
+});
+
+test("a fee leg is not a user leaving the pool", () => {
+  // Every pool transaction pays a fee by paying the collector, which emits a
+  // Withdrawal naming it. Counting that as an exit reports hundreds of users
+  // "shielding and unshielding atomically" when none of them did.
+  const FEE = "0x127021";
+  const feeLeg = ev("Withdrawal", ["sel", FEE, TOKEN], ["0x0", "0x53444835ec580000"]);
+  const infrastructure = new Set([FEE]);
+
+  const naive = analyseLinkage([tx([DEPOSIT, feeLeg])]);
+  assert.equal(naive.byKind["round-trip"].user, 1, "unfiltered, the fee looks like an exit");
+
+  const real = analyseLinkage([tx([DEPOSIT, feeLeg])], { infrastructure });
+  assert.equal(real.byKind["round-trip"].user, 0, "nobody left the pool here");
+});
+
+test("a genuine exit alongside a fee leg is still counted", () => {
+  const FEE = "0x127021";
+  const feeLeg = ev("Withdrawal", ["sel", FEE, TOKEN], ["0x0", "0x64"]);
+  const realExit = ev("Withdrawal", ["sel", "0xhuman", TOKEN], ["0x0", "0x64"]);
+  const r = analyseLinkage([tx([DEPOSIT, feeLeg, realExit])],
+    { infrastructure: new Set([FEE]) });
+  assert.equal(r.byKind["round-trip"].user, 1, "a real destination still registers");
+  assert.ok(r.exposedAddresses.has("0xhuman"));
 });

@@ -116,7 +116,7 @@ Each pool event is carefully anonymous alone. A nullifier reveals nothing. An en
 This is invisible if you read the pool one selector at a time, which is how every explorer reads it.
 
 ```
-STRK20 POOL LINKAGE — mainnet, block 13,864,517
+STRK20 POOL LINKAGE — mainnet, block 13,864,930
   904 pool transactions analysed
 
 ALREADY LINKED, NO CRYPTOGRAPHY BROKEN
@@ -125,29 +125,30 @@ ALREADY LINKED, NO CRYPTOGRAPHY BROKEN
 
 FAILURES                          users   via anonymizer
   deposit bound to note creation     302              0
-  shield + unshield in ONE tx        334              0
+  shield + unshield in ONE tx          0              0
   registration alongside a move      129              0
-  nullifier + public withdrawal      334            246
+  nullifier + public withdrawal      164              4
 
 MOST EXPOSED ADDRESSES
    35 notes traceable   0x33701da66e8416dd283d3bff2173605d…
    15 notes traceable   0x18c902f77b753ba2edb6ef1d1ecce75f…
 ```
 
-Four independent failures, each sufficient on its own:
-
-- **binding** — a `Deposit` names `user_addr` in the clear; any `EncNoteCreated` in the same transaction is that address's note
-- **round-trip** — 334 transactions shield *and* unshield atomically. Entry and exit are both public legs of one action; the pool hop between them protected nothing
-- **onboarding** — 129 transactions register a viewing key alongside value movement. This is precisely the "channel-open linkability" the STRK20 docs name, and the docs' advice — *spread setup and movement over time* — is the mitigation nothing implements
-- **exit** — a nullifier published beside a public withdrawal ties the spent note to a destination
+- **binding** — a `Deposit` names `user_addr` in the clear; any `EncNoteCreated` in the same transaction is that address's note. 302 of them
+- **onboarding** — 129 transactions register a viewing key alongside value movement. Precisely the "channel-open linkability" the STRK20 docs name, where their own advice — *spread setup and movement over time* — is a mitigation nothing implements
+- **exit** — a nullifier published beside a genuine public withdrawal ties the spent note to a destination
 
 None are protocol flaws. All are things wallets and users do because nothing tells them not to.
 
-### The control, again
+### The fee leg, and a claim we had to withdraw
 
-The first run of this named `0x127021a1…` as the most exposed address in the pool, holding 808 notes. It is a fee sink. The per-transaction anonymizer check missed it because those transactions *pay* a helper rather than *invoke* one — a second contamination of the same family as the first, caught the same way. Filtering plumbing identified from chain state drops the figure from 821 notes to 554, and the worst real address from 808 notes to 35.
+An earlier version of this README reported **334 transactions that "shield and unshield atomically, so the pool hop protected nothing."** That number is now zero, and the claim was wrong.
 
-Every number here survived that filter. That is the only reason they are printed.
+Every pool transaction pays a fee, and the fee is settled by paying the collector — which emits a `Withdrawal` naming it. So *every* transaction carries a withdrawal leg that has nothing to do with anyone exiting the pool. All 334 were fee payments. Not one was a user round-tripping.
+
+This is the single most misleading thing about reading this contract, and it is why a casual pass over its events produces confident nonsense. **A withdrawal only means a person left the pool if its destination is a person.** Correcting it also cut the exit count from 334 to 164.
+
+It was the third contamination of the same family. The first put 68.8% of withdrawals in the anonymity set as if they were people. The second named a fee sink as the pool's most exposed address, holding 808 notes. Each was caught by asking why a number looked better than it should, and the numbers that remain are the ones that survived being attacked.
 
 ## Why this compounds, and why it cannot be forked
 

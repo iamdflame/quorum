@@ -17,7 +17,8 @@
     "demo": "npm run build && node examples/the-crowd-you-are-in.mjs",
     "live": "npm run build && node examples/live-mainnet.mjs",
     "pipeline": "npm run build && node examples/pipeline.mjs",
-    "linkage": "npm run build && node examples/linkage.mjs"
+    "linkage": "npm run build && node examples/linkage.mjs",
+    "entities": "npm run build && node examples/entities.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
