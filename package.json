@@ -11,14 +11,15 @@
     "node": ">=24"
   },
   "scripts": {
-    "build": "tsc -b packages/oracle packages/router packages/chain packages/execute packages/linkage",
+    "build": "tsc -b packages/oracle packages/router packages/chain packages/execute packages/linkage packages/sdk-bridge",
     "test": "node --test --experimental-strip-types packages/oracle/test/*.test.ts packages/router/test/*.test.ts packages/execute/test/*.test.ts packages/linkage/test/*.test.ts",
-    "typecheck": "tsc -b packages/oracle packages/router packages/chain packages/execute packages/linkage",
+    "typecheck": "tsc -b packages/oracle packages/router packages/chain packages/execute packages/linkage packages/sdk-bridge",
     "demo": "npm run build && node examples/the-crowd-you-are-in.mjs",
     "live": "npm run build && node examples/live-mainnet.mjs",
     "pipeline": "npm run build && node examples/pipeline.mjs",
     "linkage": "npm run build && node examples/linkage.mjs",
-    "entities": "npm run build && node examples/entities.mjs"
+    "entities": "npm run build && node examples/entities.mjs",
+    "test:bridge": "node --test --experimental-strip-types packages/sdk-bridge/test/*.test.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
