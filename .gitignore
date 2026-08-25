@@ -5,3 +5,8 @@ dist/
 .env.local
 target/
 
+
+# Never commit account keys (they live in ~/.starknet_accounts, but be explicit)
+starknet_open_zeppelin_accounts.json
+accounts.json
+*.key
