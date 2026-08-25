@@ -1,4 +1,4 @@
-import type { PublicEdge, PoolObservation, Address } from "@shoal/oracle";
+import type { PublicEdge, PoolObservation, Address, BlockNumber } from "@shoal/oracle";
 
 /**
  * Live STRK20 pool reader.
@@ -309,4 +309,88 @@ export function excludeInfrastructure(
   return edges.filter(
     (e) => e.operator === undefined || !infra.all.has(e.operator.toString(16)),
   );
+}
+
+/** Every event the pool emits, by `starknet_keccak(name)`. */
+export const ALL_SELECTORS = {
+  Deposit: SELECTORS.Deposit,
+  Withdrawal: SELECTORS.Withdrawal,
+  OpenNoteDeposited: "0x25b6da03c4858d11cb0708d5cb6be79b190fb32eb7a7ce83804e07cbbb9bead",
+  OpenNoteCreated: "0x22330482fd296a27cf9096807b4a3622cd619d31cce42c1e55655914e8459ee",
+  EncNoteCreated: "0x23c20207be8b1ef4430c25eef8ce779c9745ebe04139555ae81bd4f8fdd6ec5",
+  NoteUsed: "0x247fc60d782e0094e7f98c47f277d92a3345d07a436f1f56b27a9b62be2322e",
+  ViewingKeySet: "0x1321a492485b4f19851fb787ab3800a0030b595332cba93cd5fe40dfb5a4daf",
+  ExternalContractInvoked: EXTERNAL_INVOKED_SELECTOR,
+} as const;
+
+export type EventKind = keyof typeof ALL_SELECTORS | "Unknown";
+
+const KIND_BY_SELECTOR = new Map<string, EventKind>(
+  Object.entries(ALL_SELECTORS).map(([k, v]) => [BigInt(v).toString(16), k as EventKind]),
+);
+
+export function eventKind(e: RawEvent): EventKind {
+  const k0 = e.keys[0];
+  if (k0 === undefined) return "Unknown";
+  return KIND_BY_SELECTOR.get(BigInt(k0).toString(16)) ?? "Unknown";
+}
+
+export interface PoolEvent {
+  readonly kind: EventKind;
+  readonly keys: readonly string[];
+  readonly data: readonly string[];
+}
+
+/**
+ * One pool transaction and every event it emitted.
+ *
+ * Grouping by transaction is the whole point. Each event on its own is
+ * carefully anonymous; a *set* of them sharing a transaction hash is not,
+ * because everything in one transaction was caused by one actor. That is where
+ * the pool's real linkage lives, and it is invisible if you read event streams
+ * one selector at a time.
+ */
+export interface PoolTransaction {
+  readonly hash: string;
+  readonly block: BlockNumber;
+  readonly events: readonly PoolEvent[];
+}
+
+/** Fetch every pool event in a range, grouped by transaction. */
+export async function fetchTransactions(
+  fromBlock: number,
+  toBlock: number,
+  opts: { pool?: string; rpcs?: readonly string[]; chunkSize?: number; maxPages?: number } = {},
+): Promise<PoolTransaction[]> {
+  const pool = opts.pool ?? MAINNET_POOL;
+  const rpcs = opts.rpcs ?? DEFAULT_RPCS;
+  const chunkSize = opts.chunkSize ?? 1000;
+  const maxPages = opts.maxPages ?? 400;
+
+  const grouped = new Map<string, { block: number; events: PoolEvent[] }>();
+  let token: string | undefined;
+  for (let page = 0; page < maxPages; page++) {
+    // No key filter: co-occurrence is the signal, so every event matters.
+    const filter: Record<string, unknown> = {
+      from_block: { block_number: fromBlock },
+      to_block: { block_number: toBlock },
+      address: pool,
+      chunk_size: chunkSize,
+    };
+    if (token !== undefined) filter["continuation_token"] = token;
+
+    const res: { events: RawEvent[]; continuation_token?: string } = await withFailover(
+      rpcs, (r) => call(r, "starknet_getEvents", [filter]),
+    );
+    for (const e of res.events) {
+      const entry = grouped.get(e.transaction_hash)
+        ?? { block: e.block_number, events: [] as PoolEvent[] };
+      entry.events.push({ kind: eventKind(e), keys: e.keys, data: e.data });
+      grouped.set(e.transaction_hash, entry);
+    }
+    if (!res.continuation_token) break;
+    token = res.continuation_token;
+  }
+  return [...grouped.entries()].map(([hash, v]) => ({ hash, block: v.block, events: v.events }))
+    .sort((a, b) => a.block - b.block);
 }

@@ -106,6 +106,49 @@ This is not a flaw in STRK20. The cryptography does what it claims, and the prot
 
 That is precisely the point. Anonymity is the one property you cannot ship on your own — it has to be *accumulated*, and every new pool, asset and app splits it further. No amount of cryptographic quality fixes a crowd of one. Somebody has to aggregate the crowd, and nobody is.
 
+
+## What is already linked
+
+The anonymity set asks *how many people could I have been*. There is a harder question underneath it: **which private notes are already tied to a public address, right now, with nothing broken?**
+
+Each pool event is carefully anonymous alone. A nullifier reveals nothing. An encrypted note reveals nothing. But every event sharing a transaction hash was caused by **one actor**, and some of those events name a public address in the clear. Join on transaction hash and the pool gives up its own linkage — no viewing key, no proof broken, no cryptography touched.
+
+This is invisible if you read the pool one selector at a time, which is how every explorer reads it.
+
+```
+STRK20 POOL LINKAGE — mainnet, block 13,864,517
+  904 pool transactions analysed
+
+ALREADY LINKED, NO CRYPTOGRAPHY BROKEN
+  public addresses bound to private notes ... 214
+  private notes attributable to an address .. 554
+
+FAILURES                          users   via anonymizer
+  deposit bound to note creation     302              0
+  shield + unshield in ONE tx        334              0
+  registration alongside a move      129              0
+  nullifier + public withdrawal      334            246
+
+MOST EXPOSED ADDRESSES
+   35 notes traceable   0x33701da66e8416dd283d3bff2173605d…
+   15 notes traceable   0x18c902f77b753ba2edb6ef1d1ecce75f…
+```
+
+Four independent failures, each sufficient on its own:
+
+- **binding** — a `Deposit` names `user_addr` in the clear; any `EncNoteCreated` in the same transaction is that address's note
+- **round-trip** — 334 transactions shield *and* unshield atomically. Entry and exit are both public legs of one action; the pool hop between them protected nothing
+- **onboarding** — 129 transactions register a viewing key alongside value movement. This is precisely the "channel-open linkability" the STRK20 docs name, and the docs' advice — *spread setup and movement over time* — is the mitigation nothing implements
+- **exit** — a nullifier published beside a public withdrawal ties the spent note to a destination
+
+None are protocol flaws. All are things wallets and users do because nothing tells them not to.
+
+### The control, again
+
+The first run of this named `0x127021a1…` as the most exposed address in the pool, holding 808 notes. It is a fee sink. The per-transaction anonymizer check missed it because those transactions *pay* a helper rather than *invoke* one — a second contamination of the same family as the first, caught the same way. Filtering plumbing identified from chain state drops the figure from 821 notes to 554, and the worst real address from 808 notes to 35.
+
+Every number here survived that filter. That is the only reason they are printed.
+
 ## Why this compounds, and why it cannot be forked
 
 Every other moat in crypto can be copied over a weekend. Liquidity can be incentivised across venues. Mechanisms get forked. Anonymity cannot.
