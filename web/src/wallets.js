@@ -103,27 +103,91 @@ export async function connectWallet(wallet) {
 
 const CHAIN = "starknet:SN_MAIN";
 
-/** Find legacy wallets injected on `window` as `starknet*` objects. */
+/**
+ * Keys Starknet wallets are known to inject under.
+ *
+ * Probed by name because enumeration is not enough: extensions commonly install
+ * themselves with `Object.defineProperty(window, key, { enumerable: false })`,
+ * which makes them invisible to `Object.keys` while `window[key]` returns the
+ * object perfectly well. Scanning with `Object.keys` reports an empty machine
+ * on a machine that has a wallet — which is exactly what happened here.
+ */
+export const KNOWN_WALLET_KEYS = [
+  "starknet",
+  "starknet_ready",
+  "starknet_argentX",
+  "starknet_braavos",
+  "starknet_okxwallet",
+  "starknet_keplr",
+  "starknet_metamask",
+  "starknet_fordefi",
+  "starknet_xverse",
+  "ready",
+];
+
+const looksLikeWallet = (o) =>
+  !!o && typeof o === "object" && typeof o.request === "function";
+
+/** Every `starknet*`-shaped key present, enumerable or not. */
+export function candidateKeys() {
+  if (typeof window === "undefined") return [];
+  const keys = new Set(KNOWN_WALLET_KEYS);
+  // getOwnPropertyNames sees non-enumerable properties; Object.keys does not.
+  try {
+    for (const k of Object.getOwnPropertyNames(window)) {
+      if (/^starknet/i.test(k)) keys.add(k);
+    }
+  } catch { /* cross-origin or exotic window */ }
+  try {
+    for (const k in window) {
+      if (/^starknet/i.test(k)) keys.add(k);
+    }
+  } catch { /* ignore */ }
+  return [...keys];
+}
+
+/** Find legacy wallets injected on `window`, however they were defined. */
 export function legacyWallets() {
   if (typeof window === "undefined") return [];
   const out = [];
   const seen = new Set();
-  for (const key of Object.keys(window)) {
-    if (!/^starknet/i.test(key)) continue;
+  for (const key of candidateKeys()) {
     let obj;
     try {
       obj = window[key];
     } catch {
       continue; // some injected getters throw on access
     }
-    if (!obj || typeof obj !== "object") continue;
-    if (typeof obj.request !== "function") continue;
+    if (!looksLikeWallet(obj)) continue;
     const id = obj.id ?? obj.name ?? key;
     if (seen.has(id)) continue;
     seen.add(id);
     out.push(obj);
   }
   return out;
+}
+
+/** Everything we can see, verbatim — for reporting a failure precisely. */
+export function diagnostics() {
+  const present = [];
+  for (const key of candidateKeys()) {
+    let obj, note;
+    try {
+      obj = window[key];
+      note = obj === undefined ? "undefined"
+        : typeof obj !== "object" ? typeof obj
+        : typeof obj.request !== "function" ? "object, no request()"
+        : `wallet: ${obj.name ?? obj.id ?? "unnamed"} v${obj.version ?? "?"}`;
+    } catch (err) {
+      note = `threw on access: ${String(err?.message ?? err).slice(0, 60)}`;
+    }
+    if (note !== "undefined") present.push(`${key} -> ${note}`);
+  }
+  return {
+    walletStandard: allWallets().map((w) => `${w?.name ?? "unnamed"} [${Object.keys(w?.features ?? {}).join("|")}]`),
+    windowProbe: present,
+    usable: usableWallets().map((w) => w.name),
+  };
 }
 
 /** Wrap a legacy `StarknetWindowObject` so `WalletAccountV6` accepts it. */

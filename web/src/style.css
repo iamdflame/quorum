@@ -93,3 +93,9 @@ footer a { border:0; color:var(--muted) } footer a:hover { color:var(--crowd) }
 .btnrow { display:flex; gap:12px; flex-wrap:wrap; align-items:center }
 .btn.ghost { background:transparent; color:var(--muted); border:1px solid var(--rule) }
 .btn.ghost:hover { color:var(--ink); border-color:var(--ink); opacity:1 }
+
+.diag {
+  font-family:"IBM Plex Mono",monospace; font-size:11.5px; line-height:1.55;
+  background:var(--surface); border:1px solid var(--rule); padding:16px;
+  margin-top:18px; overflow-x:auto; color:var(--dim); max-width:100%;
+}

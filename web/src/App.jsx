@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { usableWallets, connectWallet, describeEnvironment } from "./wallets.js";
+import { usableWallets, connectWallet, describeEnvironment, diagnostics } from "./wallets.js";
 import { WalletAccountV6, RpcProvider } from "starknet";
 import { probeStrk20, shieldOnly, POOL_FEE_STRK, CONCLAVE, POOL } from "./strk20.js";
 import Field from "./Field.jsx";
@@ -14,6 +14,7 @@ export default function App() {
   const [amount, setAmount] = useState("10");
   const [status, setStatus] = useState(null);
   const [txHash, setTxHash] = useState(null);
+  const [diag, setDiag] = useState(null);
 
   useEffect(() => {
     fetch(`${import.meta.env.BASE_URL}pool.json`).then((r) => r.json()).then(setPool).catch(() => {});
@@ -53,7 +54,9 @@ export default function App() {
       const candidates = usableWallets();
       if (candidates.length === 0) {
         const env = describeEnvironment();
-        console.warn("[shoal] no starknet-capable wallet", env);
+        const diag = diagnostics();
+        console.warn("[shoal] no starknet-capable wallet", diag);
+        setDiag(diag);
         setStatus({
           kind: "error",
           text:
@@ -158,6 +161,15 @@ export default function App() {
           <button className="btn ghost" onClick={onReset}>Reset connection</button>
         </div>
         {status && <p className={`status ${status.kind}`}>{status.text}</p>}
+        {diag && (
+          <pre className="diag">
+{`wallet-standard:
+${diag.walletStandard.length ? diag.walletStandard.map((s) => "  " + s).join("\n") : "  (none)"}
+
+window probe:
+${diag.windowProbe.length ? diag.windowProbe.map((s) => "  " + s).join("\n") : "  (nothing found)"}`}
+          </pre>
+        )}
 
         {!wallet ? null : (
           <div className="panel">
