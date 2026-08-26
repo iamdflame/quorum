@@ -10,3 +10,6 @@ target/
 starknet_open_zeppelin_accounts.json
 accounts.json
 *.key
+web/node_modules/
+web/dist/
+
