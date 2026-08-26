@@ -1,0 +1,158 @@
+import { toFelt } from "./commit.ts";
+import type { CampaignCalldata } from "./campaign.ts";
+
+/**
+ * Turning campaign operations into STRK20 wallet actions.
+ *
+ * Every operation is one pool transaction, and the shape is always the same
+ * sandwich: move value in, mint an open note where the result should land, then
+ * invoke QuorumMachine and let it decide. The `${openNoteIds[0]}` and
+ * `${poolAddress}` placeholders are filled in by the wallet as it assembles the
+ * actions, so the dapp never learns the note id — which is exactly the part that
+ * would otherwise let a campaign's organiser deanonymise their own participants.
+ */
+
+/** `QuorumOp`, matching the Cairo enum's variant order. */
+export const OP = { Create: 0, Commit: 1, Fire: 2, Reclaim: 3 } as const;
+
+/** Wallet-resolved placeholders. The dapp never sees the real values. */
+export const OPEN_NOTE_0 = "${openNoteIds[0]}";
+export const POOL_ADDRESS = "${poolAddress}";
+
+const felt = toFelt;
+
+/** Serialise `Span<OpenNoteDeposit>`: a length, then each element flattened. */
+function span(deposits: readonly { noteId: string; token: string; amount: bigint }[]): string[] {
+  const out = [felt(deposits.length)];
+  for (const d of deposits) out.push(felt(d.noteId), felt(d.token), felt(d.amount));
+  return out;
+}
+
+/**
+ * Calldata for `privacy_invoke`, in the order the Cairo signature declares.
+ *
+ * Written as one builder rather than four so the argument order lives in exactly
+ * one place. A silent mismatch here does not throw — it deserialises into the
+ * wrong parameters and the contract rejects something confusing, or worse,
+ * accepts it.
+ */
+function invoke(args: {
+  op: number;
+  campaignId: string;
+  terms?: string;
+  token?: string;
+  threshold?: number;
+  expiryBlock?: number;
+  fireCommitment?: string;
+  commitment?: string;
+  amount?: bigint;
+  secret?: string;
+  noteId?: string;
+  outcome?: string;
+  payouts?: readonly { noteId: string; token: string; amount: bigint }[];
+}): string[] {
+  return [
+    felt(args.op),
+    felt(args.campaignId),
+    felt(args.terms ?? 0),
+    felt(args.token ?? 0),
+    felt(args.threshold ?? 0),
+    felt(args.expiryBlock ?? 0),
+    felt(args.fireCommitment ?? 0),
+    felt(args.commitment ?? 0),
+    felt(args.amount ?? 0n),
+    felt(args.secret ?? 0),
+    felt(args.noteId ?? 0),
+    felt(args.outcome ?? 0),
+    ...span(args.payouts ?? []),
+  ];
+}
+
+export interface Strk20Action {
+  readonly type: "deposit" | "transfer" | "withdraw" | "invoke";
+  readonly [k: string]: unknown;
+}
+
+/** Open a campaign. Costs the pool fee and nothing else; no value is escrowed. */
+export function createActions(machine: string, c: CampaignCalldata): Strk20Action[] {
+  return [
+    {
+      type: "invoke",
+      contract: machine,
+      calldata: invoke({
+        op: OP.Create,
+        campaignId: c.id,
+        terms: c.terms,
+        token: c.token,
+        threshold: c.threshold,
+        expiryBlock: c.expiryBlock,
+        fireCommitment: c.fireCommitment,
+      }),
+    },
+  ];
+}
+
+/**
+ * Pledge into a campaign.
+ *
+ * Deposit moves public tokens into the pool; the invoke hands the machine a
+ * commitment and an amount. No open note is minted, because a pledge credits
+ * nothing back — the value parks in the contract until the campaign resolves,
+ * one way or the other.
+ */
+export function commitActions(
+  machine: string, campaignId: string, token: string, amount: bigint, commitment: string,
+): Strk20Action[] {
+  return [
+    { type: "deposit", token, amount: felt(amount) },
+    {
+      type: "invoke",
+      contract: machine,
+      calldata: invoke({ op: OP.Commit, campaignId, commitment, amount }),
+    },
+  ];
+}
+
+/**
+ * Fire a campaign that reached quorum.
+ *
+ * Payouts must sum to exactly what was escrowed; the contract enforces it and
+ * rejects anything else, so a plan that does not balance fails on-chain rather
+ * than partially succeeding.
+ */
+export function fireActions(
+  machine: string,
+  campaignId: string,
+  secret: string,
+  outcome: string,
+  payouts: readonly { noteId: string; token: string; amount: bigint }[],
+): Strk20Action[] {
+  return [
+    {
+      type: "invoke",
+      contract: machine,
+      calldata: invoke({ op: OP.Fire, campaignId, secret, outcome, payouts }),
+    },
+  ];
+}
+
+/**
+ * Take a pledge back from a campaign that expired without reaching quorum.
+ *
+ * This mints an open note first: the refund has to land somewhere, and the
+ * wallet fills in its id. It is the only operation that credits value back to
+ * the caller, and the only one a participant can perform entirely alone —
+ * deliberately, since it is the guarantee that makes pledging safe.
+ */
+export function reclaimActions(
+  machine: string, campaignId: string, token: string, secret: string,
+): Strk20Action[] {
+  return [
+    { type: "transfer", token, amount: "OPEN", recipient: POOL_ADDRESS },
+    {
+      type: "invoke",
+      contract: machine,
+      calldata: invoke({ op: OP.Reclaim, campaignId, secret, noteId: OPEN_NOTE_0 }),
+    },
+  ];
+}
