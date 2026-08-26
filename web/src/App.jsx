@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { connect } from "@starknet-io/get-starknet";
+import { connect, disconnect } from "@starknet-io/get-starknet";
 import { WalletAccountV6, RpcProvider } from "starknet";
 import { probeStrk20, shieldOnly, POOL_FEE_STRK, CONCLAVE, POOL } from "./strk20.js";
 import Field from "./Field.jsx";
@@ -18,6 +18,41 @@ export default function App() {
   useEffect(() => {
     fetch(`${import.meta.env.BASE_URL}pool.json`).then((r) => r.json()).then(setPool).catch(() => {});
   }, []);
+
+  /**
+   * Forget everything about a previous connection.
+   *
+   * get-starknet remembers the last wallet under the `gsw-last` localStorage
+   * key. A stale entry makes `connect()` resolve against a wallet that is no
+   * longer authorised, so no picker appears and nothing happens — which looks
+   * exactly like the page being broken. Clearing it forces a clean pick.
+   *
+   * This cannot revoke the site's permission inside the extension; only the
+   * wallet can do that. So it says so rather than implying a full reset.
+   */
+  async function onReset() {
+    setWallet(null);
+    setProbe(null);
+    setTxHash(null);
+    setStatus({ kind: "work", text: "Clearing…" });
+    try {
+      await disconnect({ clearLastWallet: true });
+    } catch (err) {
+      console.warn("[shoal] disconnect threw, clearing storage anyway", err);
+    }
+    try {
+      for (const k of Object.keys(localStorage)) {
+        if (/^gsw-|starknet/i.test(k)) localStorage.removeItem(k);
+      }
+    } catch (err) {
+      console.warn("[shoal] could not clear localStorage", err);
+    }
+    setStatus({
+      kind: "ok",
+      text: "Cleared. If Ready still auto-approves, remove this site under its " +
+            "Connected apps — only the wallet can revoke that.",
+    });
+  }
 
   async function onConnect() {
     setStatus({ kind: "work", text: "Opening the wallet picker…" });
@@ -115,9 +150,15 @@ export default function App() {
           still unpublished, which blocks the SDK route for every team.
         </p>
 
-        {!wallet ? (
-          <button className="btn" onClick={onConnect}>Connect a wallet</button>
-        ) : (
+        <div className="btnrow">
+          <button className="btn" onClick={onConnect}>
+            {wallet ? "Reconnect" : "Connect a wallet"}
+          </button>
+          <button className="btn ghost" onClick={onReset}>Reset connection</button>
+        </div>
+        {status && <p className={`status ${status.kind}`}>{status.text}</p>}
+
+        {!wallet ? null : (
           <div className="panel">
             <div className="row"><span>wallet</span><b>{wallet.name}</b></div>
             <div className="row"><span>address</span><b className="mono">{wallet.address?.slice(0, 18)}…</b></div>
@@ -151,7 +192,6 @@ export default function App() {
               </>
             )}
 
-            {status && <p className={`status ${status.kind}`}>{status.text}</p>}
             {txHash && (
               <p className="status ok">
                 <a href={`https://voyager.online/tx/${txHash}`} target="_blank" rel="noreferrer">

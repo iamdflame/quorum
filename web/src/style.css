@@ -89,3 +89,7 @@ footer { padding:52px 0 76px; display:flex; flex-wrap:wrap; gap:22px;
 footer a { border:0; color:var(--muted) } footer a:hover { color:var(--crowd) }
 
 @media (prefers-reduced-motion:reduce) { * { animation:none!important; transition:none!important } }
+
+.btnrow { display:flex; gap:12px; flex-wrap:wrap; align-items:center }
+.btn.ghost { background:transparent; color:var(--muted); border:1px solid var(--rule) }
+.btn.ghost:hover { color:var(--ink); border-color:var(--ink); opacity:1 }
