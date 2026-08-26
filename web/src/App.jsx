@@ -93,19 +93,79 @@ export default function App() {
     }
   }
 
+  /**
+   * Parse a decimal STRK amount into wei without going through float64.
+   *
+   * `Number("5") * 1e18` is 5e18, which is far past Number.MAX_SAFE_INTEGER, so
+   * the arithmetic is only accidentally exact and silently is not for other
+   * values. Splitting on the decimal point and padding keeps it integral.
+   */
+  function toWei(text) {
+    const t = String(text).trim();
+    if (!/^\d*\.?\d*$/.test(t) || t === "" || t === ".") throw new Error(`"${text}" is not an amount.`);
+    const [whole, frac = ""] = t.split(".");
+    const padded = (frac + "0".repeat(18)).slice(0, 18);
+    const wei = BigInt(whole || "0") * 10n ** 18n + BigInt(padded || "0");
+    if (wei <= 0n) throw new Error("Amount must be greater than zero.");
+    return wei;
+  }
+
+  /** Wallet errors arrive in several shapes; none of them survive String(). */
+  function describeError(err) {
+    const parts = [];
+    if (err?.message) parts.push(err.message);
+    if (err?.code !== undefined) parts.push(`code ${err.code}`);
+    if (err?.data) parts.push(typeof err.data === "string" ? err.data : JSON.stringify(err.data));
+    if (parts.length === 0) {
+      try { parts.push(JSON.stringify(err)); } catch { parts.push(String(err)); }
+    }
+    const text = parts.join(" · ");
+    return text === "{}" || text === "" ? "The wallet rejected the call without giving a reason." : text;
+  }
+
   async function onShield() {
     if (!wallet) return;
-    setStatus({ kind: "work", text: "Wallet is proving the transaction. This takes a while." });
     setTxHash(null);
+    let units;
     try {
-      const units = BigInt(Math.round(Number(amount) * 1e18));
+      units = toWei(amount);
+    } catch (err) {
+      setStatus({ kind: "error", text: describeError(err) });
+      return;
+    }
+
+    try {
       const actions = shieldOnly(units);
-      const { call, proof } = await wallet.account.strk20PrepareInvoke(actions);
-      const res = await wallet.account.executeWithProof(call, proof);
-      setTxHash(res.transaction_hash);
+      console.info("[shoal] actions", actions);
+
+      setStatus({ kind: "work", text: "Asking the wallet to build and prove the transaction. This is slow — the wallet is generating a STARK proof." });
+      const prepared = await wallet.account.strk20PrepareInvoke(actions);
+      console.info("[shoal] prepared", prepared);
+      if (!prepared?.call) throw new Error("The wallet returned no call to submit.");
+
+      setStatus({ kind: "work", text: "Proof ready. Submitting to Starknet…" });
+      let res;
+      try {
+        res = await wallet.account.executeWithProof(prepared.call, prepared.proof);
+      } catch (inner) {
+        // The documented alternative: submit the call with the proof spread
+        // into execution options. Wallets differ on which they accept.
+        console.warn("[shoal] executeWithProof failed, trying execute()", inner);
+        setStatus({ kind: "work", text: "Retrying submission through the standard execute path…" });
+        res = await wallet.account.execute(prepared.call, {
+          proof: prepared.proof?.data,
+          proofFacts: prepared.proof?.proof_facts,
+        });
+      }
+      console.info("[shoal] submitted", res);
+
+      const hash = res?.transaction_hash;
+      if (!hash) throw new Error("Submitted, but the wallet returned no transaction hash.");
+      setTxHash(hash);
       setStatus({ kind: "ok", text: "Submitted. It touches the pool, so it counts." });
     } catch (err) {
-      setStatus({ kind: "error", text: String(err?.message ?? err).slice(0, 300) });
+      console.error("[shoal] shield failed", err);
+      setStatus({ kind: "error", text: `Shield failed: ${describeError(err)}` });
     }
   }
 
