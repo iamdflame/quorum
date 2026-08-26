@@ -50,13 +50,14 @@ export function starknetWallets() {
 /** What is installed, for telling the user something true when nothing matches. */
 export function describeEnvironment() {
   const all = allWallets();
+  const legacy = legacyWallets();
   return {
     total: all.length,
     names: all.map((w) => w?.name ?? "unnamed"),
     starknetCapable: starknetWallets().map((w) => w.name),
-    missingFeatures: all
-      .filter((w) => w?.features && !(STARKNET_FEATURE in w.features))
-      .map((w) => w.name),
+    legacyNames: legacy.map((w) => w?.name ?? w?.id ?? "unnamed"),
+    windowKeys: typeof window === "undefined"
+      ? [] : Object.keys(window).filter((k) => /^starknet/i.test(k)),
   };
 }
 
@@ -73,4 +74,123 @@ export async function connectWallet(wallet) {
     throw new Error(`${wallet.name} connected but exposed no account. Unlock it and retry.`);
   }
   return { wallet, address: account.address, account };
+}
+
+/* ------------------------------------------------------------------ *
+ * Legacy wallets
+ * ------------------------------------------------------------------ */
+
+/**
+ * Not every Starknet wallet registers with Wallet Standard.
+ *
+ * Ready injects the older `StarknetWindowObject` on `window` — `{id, name,
+ * version, icon, request, on, off}` — and never announces itself to the
+ * Wallet Standard registry. Meanwhile Phantom and MetaMask register properly
+ * but do not speak Starknet. So on a real machine the registry is full of
+ * wallets that cannot help and missing the one that can.
+ *
+ * The two are closer than they look. `WalletAccountV6` only ever touches three
+ * features, and each maps onto something the legacy object already does:
+ *
+ *   starknet:walletApi.request  -> swo.request        (identical JSON-RPC)
+ *   standard:connect.connect    -> wallet_requestAccounts
+ *   standard:events.on("change")-> swo.on("accountsChanged")
+ *
+ * So we adapt rather than ask the user to install a different wallet. This is a
+ * shim over a transitional gap in the ecosystem, not a workaround for anything
+ * anyone decided.
+ */
+
+const CHAIN = "starknet:SN_MAIN";
+
+/** Find legacy wallets injected on `window` as `starknet*` objects. */
+export function legacyWallets() {
+  if (typeof window === "undefined") return [];
+  const out = [];
+  const seen = new Set();
+  for (const key of Object.keys(window)) {
+    if (!/^starknet/i.test(key)) continue;
+    let obj;
+    try {
+      obj = window[key];
+    } catch {
+      continue; // some injected getters throw on access
+    }
+    if (!obj || typeof obj !== "object") continue;
+    if (typeof obj.request !== "function") continue;
+    const id = obj.id ?? obj.name ?? key;
+    if (seen.has(id)) continue;
+    seen.add(id);
+    out.push(obj);
+  }
+  return out;
+}
+
+/** Wrap a legacy `StarknetWindowObject` so `WalletAccountV6` accepts it. */
+export function adaptLegacy(swo) {
+  const icon = typeof swo.icon === "string" ? swo.icon : (swo.icon?.dark ?? swo.icon?.light ?? "");
+  return {
+    name: swo.name ?? swo.id ?? "Starknet wallet",
+    icon,
+    version: "1.0.0",
+    chains: [CHAIN],
+    accounts: [],
+    __legacy: swo,
+    features: {
+      [CONNECT_FEATURE]: {
+        version: "1.0.0",
+        connect: async () => {
+          const res = await swo.request({ type: "wallet_requestAccounts" });
+          const addresses = Array.isArray(res) ? res : (res?.accounts ?? []);
+          return {
+            accounts: addresses.filter(Boolean).map((address) => ({
+              address,
+              publicKey: new Uint8Array(),
+              chains: [CHAIN],
+              features: [STARKNET_FEATURE],
+            })),
+          };
+        },
+      },
+      [EVENTS_FEATURE]: {
+        version: "1.0.0",
+        // starknet.js expects `{ accounts: [{ address, chains }] }`; the legacy
+        // event hands over a bare array of addresses.
+        on: (event, callback) => {
+          if (event !== "change" || typeof swo.on !== "function") return () => {};
+          const handler = (addresses) => {
+            const list = Array.isArray(addresses) ? addresses : [addresses];
+            callback({
+              accounts: list.filter(Boolean).map((address) => ({ address, chains: [CHAIN] })),
+            });
+          };
+          try {
+            swo.on("accountsChanged", handler);
+          } catch (err) {
+            console.warn("[shoal] wallet does not support accountsChanged", err);
+            return () => {};
+          }
+          return () => { try { swo.off?.("accountsChanged", handler); } catch { /* ignore */ } };
+        },
+      },
+      [STARKNET_FEATURE]: {
+        version: "1.0.0",
+        request: (call) => swo.request(call),
+        walletVersion: swo.version ?? "unknown",
+      },
+    },
+  };
+}
+
+/**
+ * Every wallet that can drive a `WalletAccountV6`, native or adapted.
+ * Native registrations win; a wallet appearing both ways is listed once.
+ */
+export function usableWallets() {
+  const native = starknetWallets();
+  const nativeNames = new Set(native.map((w) => (w.name ?? "").toLowerCase()));
+  const adapted = legacyWallets()
+    .map(adaptLegacy)
+    .filter((w) => !nativeNames.has((w.name ?? "").toLowerCase()));
+  return [...native, ...adapted];
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { starknetWallets, connectWallet, describeEnvironment } from "./wallets.js";
+import { usableWallets, connectWallet, describeEnvironment } from "./wallets.js";
 import { WalletAccountV6, RpcProvider } from "starknet";
 import { probeStrk20, shieldOnly, POOL_FEE_STRK, CONCLAVE, POOL } from "./strk20.js";
 import Field from "./Field.jsx";
@@ -50,17 +50,18 @@ export default function App() {
     setStatus({ kind: "work", text: "Looking for a Starknet wallet…" });
     setProbe(null);
     try {
-      const candidates = starknetWallets();
+      const candidates = usableWallets();
       if (candidates.length === 0) {
         const env = describeEnvironment();
         console.warn("[shoal] no starknet-capable wallet", env);
         setStatus({
           kind: "error",
-          text: env.total === 0
-            ? "No wallet extension announced itself. Install Ready, then reload the page — " +
-              "extensions register on load, so a wallet installed after this tab opened will not appear."
-            : `Found ${env.total} wallet(s) — ${env.names.join(", ")} — but none expose the ` +
-              `Starknet wallet API. Ready is the one known to implement it.`,
+          text:
+            `No Starknet wallet found. Wallet Standard reported ${env.total || "none"}` +
+            `${env.names.length ? ` (${env.names.join(", ")})` : ""}, and no legacy Starknet ` +
+            `object was injected on window${env.windowKeys.length ? ` (saw: ${env.windowKeys.join(", ")})` : ""}. ` +
+            `If Ready is installed, reload the page — extensions attach on load, so one installed ` +
+            `after this tab opened is invisible until refresh.`,
         });
         return;
       }
