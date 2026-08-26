@@ -20,16 +20,37 @@ export default function App() {
   }, []);
 
   async function onConnect() {
-    setStatus(null);
+    setStatus({ kind: "work", text: "Opening the wallet picker…" });
+    setProbe(null);
     try {
       const swo = await connect({ modalMode: "alwaysAsk" });
-      if (!swo) return;
+      if (!swo) {
+        setStatus({ kind: "error", text: "No wallet selected. Pick one from the list to continue." });
+        return;
+      }
+
+      // get-starknet hands back the window object; the address is a separate
+      // request, and WalletAccountV6 requires it up front. Constructing without
+      // it yields an account whose address is undefined, which then fails
+      // silently on the first call rather than at construction.
+      setStatus({ kind: "work", text: "Waiting for the wallet to authorise this site…" });
+      const accounts = await swo.request({ type: "wallet_requestAccounts" });
+      const address = Array.isArray(accounts) ? accounts[0] : accounts?.[0];
+      if (!address) throw new Error("The wallet returned no account. Unlock it and try again.");
+
       const provider = new RpcProvider({ nodeUrl: RPC });
-      const account = new WalletAccountV6({ provider, walletProvider: swo });
-      setWallet({ account, name: swo.name ?? "wallet", address: account.address });
-      setProbe(await probeStrk20(account));
+      const account = new WalletAccountV6({ provider, walletProvider: swo, address });
+
+      setWallet({ account, name: swo.name ?? swo.id ?? "wallet", address });
+      setStatus({ kind: "work", text: "Checking whether this wallet speaks STRK20…" });
+      const p = await probeStrk20(account);
+      setProbe(p);
+      setStatus(p.supported
+        ? { kind: "ok", text: "Connected. This wallet can shield." }
+        : { kind: "error", text: p.reason });
     } catch (err) {
-      setStatus({ kind: "error", text: String(err?.message ?? err) });
+      console.error("[shoal] connect failed", err);
+      setStatus({ kind: "error", text: `Connect failed: ${String(err?.message ?? err).slice(0, 260)}` });
     }
   }
 
