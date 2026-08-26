@@ -99,3 +99,5 @@ footer a { border:0; color:var(--muted) } footer a:hover { color:var(--crowd) }
   background:var(--surface); border:1px solid var(--rule); padding:16px;
   margin-top:18px; overflow-x:auto; color:var(--dim); max-width:100%;
 }
+
+.setup { border-left:2px solid var(--alone); padding-left:18px; margin-top:20px }

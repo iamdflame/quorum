@@ -32,15 +32,40 @@ export const POOL_FEE_STRK = 6n;
 export async function probeStrk20(walletAccount) {
   try {
     const balances = await walletAccount.strk20Balances([STRK]);
-    return { supported: true, balances };
+    return { supported: true, registered: true, balances };
   } catch (err) {
     const msg = String(err?.message ?? err);
-    return {
-      supported: false,
-      reason: /not implemented|unsupported|unknown method|-32601/i.test(msg)
-        ? "This wallet does not implement the STRK20 methods yet."
-        : msg.slice(0, 200),
-    };
+
+    /*
+     * NOT_REGISTERED is the pool talking, not the wallet refusing.
+     *
+     * It means this address has never registered a viewing key, which is the
+     * one-time setup every STRK20 user does before they can hold a note. The
+     * wallet answered the call and relayed a protocol error — which is proof it
+     * implements the methods, the opposite of what a naive read says.
+     *
+     * Treating every error as "unsupported" turns a setup step into a dead end,
+     * so the two are separated deliberately.
+     */
+    if (/not[_\s-]?registered/i.test(msg)) {
+      return {
+        supported: true,
+        registered: false,
+        reason:
+          "This wallet speaks STRK20, but the address has not registered a viewing key yet. " +
+          "Registration is a one-time setup, and it is itself a pool transaction.",
+      };
+    }
+
+    if (/not implemented|unsupported|unknown method|-32601/i.test(msg)) {
+      return {
+        supported: false,
+        registered: false,
+        reason: "This wallet does not implement the STRK20 methods yet.",
+      };
+    }
+
+    return { supported: false, registered: false, reason: msg.slice(0, 220) };
   }
 }
 

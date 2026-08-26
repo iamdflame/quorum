@@ -185,12 +185,32 @@ ${diag.windowProbe.length ? diag.windowProbe.map((s) => "  " + s).join("\n") : "
             {probe && !probe.supported && (
               <p className="note">
                 {probe.reason} Both routes close at once when this happens: the SDK route on the missing
-                prover URL, and this route on the wallet. A wallet implementing the STRK20 methods — the
-                Ready extension does — is the way through.
+                prover URL, and this route on the wallet.
               </p>
             )}
 
-            {probe?.supported && (
+            {probe?.supported && probe.registered === false && (
+              <div className="setup">
+                <p className="note" style={{ marginTop: 0 }}>
+                  {probe.reason}
+                </p>
+                <p className="note">
+                  Registration publishes an encrypted viewing key so the pool can address notes to you.
+                  Ready does this from its own privacy screen, and{" "}
+                  <a href="https://strk20.starknet.io/app" target="_blank" rel="noreferrer">
+                    strk20.starknet.io/app
+                  </a>{" "}
+                  will also walk you through it. Once it lands, come back and reload — the probe will
+                  read your shielded balance instead of an error.
+                </p>
+                <p className="note">
+                  Worth knowing: registering is itself a transaction against the pool, so it costs the
+                  same {POOL_FEE_STRK.toString()} STRK fee as any other private action.
+                </p>
+              </div>
+            )}
+
+            {probe?.supported && probe.registered !== false && (
               <>
                 <label className="field">
                   <span>amount</span>
