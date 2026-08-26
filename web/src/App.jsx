@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { connect, disconnect } from "@starknet-io/get-starknet";
+import { starknetWallets, connectWallet, describeEnvironment } from "./wallets.js";
 import { WalletAccountV6, RpcProvider } from "starknet";
 import { probeStrk20, shieldOnly, POOL_FEE_STRK, CONCLAVE, POOL } from "./strk20.js";
 import Field from "./Field.jsx";
@@ -22,10 +22,7 @@ export default function App() {
   /**
    * Forget everything about a previous connection.
    *
-   * get-starknet remembers the last wallet under the `gsw-last` localStorage
-   * key. A stale entry makes `connect()` resolve against a wallet that is no
-   * longer authorised, so no picker appears and nothing happens — which looks
-   * exactly like the page being broken. Clearing it forces a clean pick.
+   * Clears any cached connection state this page put in localStorage.
    *
    * This cannot revoke the site's permission inside the extension; only the
    * wallet can do that. So it says so rather than implying a full reset.
@@ -35,11 +32,6 @@ export default function App() {
     setProbe(null);
     setTxHash(null);
     setStatus({ kind: "work", text: "Clearing…" });
-    try {
-      await disconnect({ clearLastWallet: true });
-    } catch (err) {
-      console.warn("[shoal] disconnect threw, clearing storage anyway", err);
-    }
     try {
       for (const k of Object.keys(localStorage)) {
         if (/^gsw-|starknet/i.test(k)) localStorage.removeItem(k);
@@ -55,28 +47,36 @@ export default function App() {
   }
 
   async function onConnect() {
-    setStatus({ kind: "work", text: "Opening the wallet picker…" });
+    setStatus({ kind: "work", text: "Looking for a Starknet wallet…" });
     setProbe(null);
     try {
-      const swo = await connect({ modalMode: "alwaysAsk" });
-      if (!swo) {
-        setStatus({ kind: "error", text: "No wallet selected. Pick one from the list to continue." });
+      const candidates = starknetWallets();
+      if (candidates.length === 0) {
+        const env = describeEnvironment();
+        console.warn("[shoal] no starknet-capable wallet", env);
+        setStatus({
+          kind: "error",
+          text: env.total === 0
+            ? "No wallet extension announced itself. Install Ready, then reload the page — " +
+              "extensions register on load, so a wallet installed after this tab opened will not appear."
+            : `Found ${env.total} wallet(s) — ${env.names.join(", ")} — but none expose the ` +
+              `Starknet wallet API. Ready is the one known to implement it.`,
+        });
         return;
       }
 
-      // get-starknet hands back the window object; the address is a separate
-      // request, and WalletAccountV6 requires it up front. Constructing without
-      // it yields an account whose address is undefined, which then fails
-      // silently on the first call rather than at construction.
-      setStatus({ kind: "work", text: "Waiting for the wallet to authorise this site…" });
-      const accounts = await swo.request({ type: "wallet_requestAccounts" });
-      const address = Array.isArray(accounts) ? accounts[0] : accounts?.[0];
-      if (!address) throw new Error("The wallet returned no account. Unlock it and try again.");
+      // Prefer Ready when several are present; it is the wallet documented as
+      // implementing the STRK20 methods.
+      const chosen =
+        candidates.find((w) => /ready|argent/i.test(w.name ?? "")) ?? candidates[0];
+
+      setStatus({ kind: "work", text: `Waiting for ${chosen.name} to authorise this site…` });
+      const { wallet: w, address } = await connectWallet(chosen);
 
       const provider = new RpcProvider({ nodeUrl: RPC });
-      const account = new WalletAccountV6({ provider, walletProvider: swo, address });
+      const account = new WalletAccountV6({ provider, walletProvider: w, address });
 
-      setWallet({ account, name: swo.name ?? swo.id ?? "wallet", address });
+      setWallet({ account, name: w.name, address });
       setStatus({ kind: "work", text: "Checking whether this wallet speaks STRK20…" });
       const p = await probeStrk20(account);
       setProbe(p);
