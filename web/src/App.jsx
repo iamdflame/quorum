@@ -207,10 +207,14 @@ ${diag.windowProbe.length ? diag.windowProbe.map((s) => "  " + s).join("\n") : "
                   Worth knowing: registering is itself a transaction against the pool, so it costs the
                   same {POOL_FEE_STRK.toString()} STRK fee as any other private action.
                 </p>
+                <p className="note">
+                  You can also just press Shield below. Some wallets register on first use, and an
+                  error from a real attempt tells us more than a probe does.
+                </p>
               </div>
             )}
 
-            {probe?.supported && probe.registered !== false && (
+            {probe?.supported && (
               <>
                 <label className="field">
                   <span>amount</span>
