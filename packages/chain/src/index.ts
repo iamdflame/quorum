@@ -224,21 +224,60 @@ export const EXTERNAL_INVOKED_SELECTOR =
  * Addresses that are infrastructure rather than participants.
  *
  * This distinction decides whether the measured anonymity set means anything.
- * A private swap withdraws to an anonymizer contract, and relayers and fee
- * sinks receive constantly — none of those are "someone you could have been",
- * so counting them inflates the crowd with entities that were never candidates.
+ * A withdrawal only means a person left the pool if its destination is a
+ * person, and there are at least three destinations that are not:
  *
- * Two sources, both derived from chain state rather than a maintained list:
+ *   anonymizer   a private swap withdraws to a helper contract mid-transaction
+ *   fee leg      the pool's own fee, paid to `get_fee_collector()`
+ *   gas leg      a paymaster relaying a gasless transaction, paid its gas
+ *
+ * The last two are easy to conflate and we did conflate them: the address that
+ * dominates mainnet withdrawals, `0x127021a1…`, is not the fee collector. It
+ * exposes `execute_private`, `execute_sponsored`, `get_gas_fees_recipient` and
+ * `is_whitelisted` — it is a paymaster, and those withdrawals are the gas leg.
+ * The fee collector is a different address entirely. Filtering only one of them
+ * leaves the other in. Credit to PugarHuda for catching the distinction on
+ * starkience/strk20-hackathon#121.
+ *
+ * Three sources, all derived from chain state rather than a maintained list:
  *
  *   1. Anonymizers, taken directly from `ExternalContractInvoked`.
- *   2. Sinks: deployed contracts that receive withdrawals across several assets
+ *   2. The fee collector, read from the pool itself.
+ *   3. Sinks: deployed contracts that receive withdrawals across several assets
  *      and never once deposit. A participant puts value in before taking it
- *      out; something that only ever drains the pool is plumbing.
+ *      out; something that only ever drains the pool is plumbing. This is what
+ *      catches paymasters without needing to know their addresses in advance.
  */
 export interface Infrastructure {
   readonly anonymizers: ReadonlySet<string>;
+  /** The pool's fee collector, read from `get_fee_collector()`. */
+  readonly feeCollector: string | null;
+  /** Paymasters and other contracts that only ever receive. */
   readonly sinks: ReadonlySet<string>;
   readonly all: ReadonlySet<string>;
+}
+
+/** `get_fee_collector` selector, so the fee leg needs no hardcoded address. */
+const FEE_COLLECTOR_SELECTOR =
+  "0x1851214e009d1e1c4cceab374566e1346d7f852de08ab6141991952887ab182";
+
+/** Ask the pool who it pays its fees to. */
+export async function feeCollector(
+  opts: { pool?: string; rpcs?: readonly string[] } = {},
+): Promise<string | null> {
+  const pool = opts.pool ?? MAINNET_POOL;
+  const rpcs = opts.rpcs ?? DEFAULT_RPCS;
+  try {
+    const res: string[] = await withFailover(rpcs, (r) =>
+      call(r, "starknet_call", [
+        { contract_address: pool, entry_point_selector: FEE_COLLECTOR_SELECTOR, calldata: [] },
+        "latest",
+      ]));
+    const a = res?.[0];
+    return a === undefined ? null : BigInt(a).toString(16);
+  } catch {
+    return null;
+  }
 }
 
 /** A receiver spanning at least this many assets, with no deposits, is a sink. */
@@ -299,7 +338,13 @@ export async function identifyInfrastructure(
     }
   }
 
-  return { anonymizers, sinks, all: new Set([...anonymizers, ...sinks]) };
+  const collector = await feeCollector(opts);
+  return {
+    anonymizers,
+    feeCollector: collector,
+    sinks,
+    all: new Set([...anonymizers, ...sinks, ...(collector ? [collector] : [])]),
+  };
 }
 
 /** Drop edges whose counterparty is infrastructure. */
