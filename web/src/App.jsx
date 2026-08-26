@@ -195,21 +195,19 @@ ${diag.windowProbe.length ? diag.windowProbe.map((s) => "  " + s).join("\n") : "
                   {probe.reason}
                 </p>
                 <p className="note">
-                  Registration publishes an encrypted viewing key so the pool can address notes to you.
-                  Ready does this from its own privacy screen, and{" "}
-                  <a href="https://strk20.starknet.io/app" target="_blank" rel="noreferrer">
-                    strk20.starknet.io/app
-                  </a>{" "}
-                  will also walk you through it. Once it lands, come back and reload — the probe will
-                  read your shielded balance instead of an error.
+                  <b>Do your first shield inside Ready itself.</b> Open the extension, pick STRK, and use
+                  its Shield action. Registration is not a separate step you have to find — the wallet
+                  publishes your encrypted viewing key as part of that first shield, which is why the
+                  Wallet API exposes no register method for a dapp to call.
                 </p>
                 <p className="note">
-                  Worth knowing: registering is itself a transaction against the pool, so it costs the
-                  same {POOL_FEE_STRK.toString()} STRK fee as any other private action.
+                  Then come back here and reload. The probe will read your shielded balance instead of
+                  erroring, and everything below works — including routing a shield into the largest
+                  crowd, which is the part Ready cannot do for you.
                 </p>
                 <p className="note">
-                  You can also just press Shield below. Some wallets register on first use, and an
-                  error from a real attempt tells us more than a probe does.
+                  Registering costs the same {POOL_FEE_STRK.toString()} STRK pool fee as any other
+                  private action.
                 </p>
               </div>
             )}
