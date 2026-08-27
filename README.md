@@ -70,7 +70,7 @@ the_root_depends_on_order_not_just_membership              PASS
 poseidon_matches_the_typescript_client                     PASS
 ```
 
-**146 tests** — 43 Cairo, 103 TypeScript.
+**157 tests** — 43 Cairo, 114 TypeScript.
 
 That last one earns its place. Commitments are computed in TypeScript and checked in Cairo, and if those two Poseidon implementations ever disagree, nothing throws: pledges simply become unreclaimable and campaigns silently cannot fire. For a system whose entire promise is that you can always get your money back, that is the worst available failure. The two implementations are now pinned to each other by fixed vectors asserted on both sides.
 
@@ -96,6 +96,16 @@ A participant hands money to a contract on two claims: that the quorum was reall
 
 [`verifyCampaign`](packages/protocol/src/verify.ts) replays the accumulator from the observed event stream, checks the count is sequential, confirms firing happened at or above quorum, and confirms the document you were shown hashes to the terms committed on-chain. It distinguishes *cannot verify* from *verified false*, because conflating them makes the report useless in the common case.
 
+## Deadlines are measured, not assumed
+
+Starknet mainnet produces a block every **~1.7 seconds**. We had 30s hardcoded — the figure from an older Starknet — and the difference is not cosmetic.
+
+A campaign expiry expressed as "seven days" would have become **2.8 hours** on-chain. Expiry cannot be changed after creation, so every pledge would have refunded long before anyone could reach quorum, in a contract whose entire purpose is holding a set together long enough to act. It would have failed silently, in the one direction that looks exactly like nobody wanted to join.
+
+Caught by [PugarHuda on #121](https://github.com/starkience/strk20-hackathon/issues/121) and confirmed here across three spans — 1.699 s/block over 200,000 blocks. Block time is now measured from the chain, falls back only when it cannot be, and ignores samples too small to trust: a 1,000-block sample reads 2.03 s/block against a true 1.70, which would make every deadline 20% wrong in a direction nobody checks.
+
+`prepareCampaign` now refuses any window shorter than fifteen minutes, on the grounds that it is almost always a units mistake rather than an intention.
+
 ## What is public, stated plainly
 
 The pool hides who pledged and how much. It does not hide that a campaign exists, how many pledges it holds, or when they arrived — each pledge is a transaction.
@@ -105,7 +115,7 @@ That matters for a union drive: an employer can see *forty people pledged*, just
 ## Run it
 
 ```bash
-npm install && npm run build && npm test    # 103 tests
+npm install && npm run build && npm test    # 114 tests
 cd contracts && snforge test                # 43 tests
 ```
 

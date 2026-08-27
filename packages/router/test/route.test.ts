@@ -6,7 +6,7 @@ import type { PoolObservation, PublicEdge } from "@shoal/oracle";
 const TOKEN = 0x53746fn;
 const RARE = 0x999n;
 
-function obs(edges: PublicEdge[], head = 100_000): PoolObservation {
+function obs(edges: PublicEdge[], head = 700_000): PoolObservation {
   return { head, notes: [], edges, channels: [], blockTimeSeconds: 30 };
 }
 function e(amount: bigint, block: number, operator: bigint, token = TOKEN): PublicEdge {
@@ -15,10 +15,12 @@ function e(amount: bigint, block: number, operator: bigint, token = TOKEN): Publ
 
 /** A pool with genuine crowds at 100 and 1000, spread over many windows. */
 function busyPool(): PublicEdge[] {
+  // Spaced for the real ~1.7s block time: a six-hour window is 12,700 blocks,
+  // so activity has to span days to occupy more than one of them.
   const edges: PublicEdge[] = [];
   for (let i = 0; i < 120; i++) {
-    edges.push(e(1000n, i * 300, BigInt(1000 + i)));
-    edges.push(e(100n, i * 300 + 50, BigInt(2000 + i)));
+    edges.push(e(1000n, i * 5_000, BigInt(1000 + i)));
+    edges.push(e(100n, i * 5_000 + 900, BigInt(2000 + i)));
   }
   return edges;
 }
@@ -55,9 +57,27 @@ test("a plan is only as strong as its weakest leg", () => {
 });
 
 test("routing into a real crowd beats acting alone", () => {
-  const plan = route(obs(busyPool()), TOKEN, 2_000n);
-  assert.ok(plan.effectiveSet > 1, `expected a crowd, got ${plan.effectiveSet}`);
+  // The case the router exists for: the operator is standing in a quiet window
+  // while busy ones sit ahead. With a genuine six-hour window this is narrower
+  // than it looks — if the current window already holds a crowd there is
+  // nothing to gain, and the router correctly reports an improvement of 1.
+  const edges = busyPool();
+  const quietHead = 120 * 5_000 + 200_000;   // well past the last activity
+  const plan = route(obs(edges, quietHead), TOKEN, 2_000n);
+  assert.ok(plan.baseline <= 1.0001, `acting now should be lonely, got ${plan.baseline}`);
+  assert.ok(plan.effectiveSet > 1, `expected a crowd to route into, got ${plan.effectiveSet}`);
   assert.ok(plan.improvement > 1, `expected improvement, got ${plan.improvement}`);
+});
+
+test("routing claims no improvement when the current window is already busy", () => {
+  // Honesty in the other direction. A wider window means the crowd you need is
+  // often already around you, and a router that always claims a multiple is
+  // selling something.
+  const edges = busyPool();
+  const plan = route(obs(edges, 60_000), TOKEN, 2_000n);
+  assert.ok(plan.improvement >= 1);
+  assert.ok(plan.effectiveSet >= plan.baseline * 0.999,
+    "routing must never land you in a smaller crowd than acting now");
 });
 
 test("an asset nobody else uses is honestly reported as unroutable", () => {
@@ -74,7 +94,7 @@ test("legs are spread across distinct future windows", () => {
   assert.equal(new Set(windows).size, windows.length, "legs must not share a window");
   for (const l of plan.legs) {
     assert.ok(l.earliestBlock > 0);
-    assert.ok(l.window > Math.floor(100_000 / 720), "legs are placed in the future");
+    assert.ok(l.window > Math.floor(100_000 / 12_700), "legs are placed in the future");
   }
 });
 

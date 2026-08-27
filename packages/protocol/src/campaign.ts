@@ -1,5 +1,6 @@
 import { hash, num, shortString } from "starknet";
 import { fireCommitment } from "./commit.ts";
+import { FALLBACK_CLOCK, humanDuration, blocksFor, DAY, type BlockClock } from "./blocktime.ts";
 
 /**
  * A campaign: what people are pledging to, how many are needed, and by when.
@@ -82,8 +83,7 @@ export interface CampaignCalldata {
   readonly fireCommitment: string;
 }
 
-/** Blocks per day at ~30s, for expressing deadlines in human units. */
-export const BLOCKS_PER_DAY = 2880;
+export { blocksFor, blocksPerDay, humanDuration, DAY, HOUR, MINUTE } from "./blocktime.ts";
 
 export class CampaignError extends Error {}
 
@@ -96,7 +96,9 @@ export class CampaignError extends Error {}
  * quietly traps money for the full window. Each of these is a way to build
  * something that looks like a quorum and behaves like a trap.
  */
-export function prepareCampaign(spec: CampaignSpec, currentBlock: number): CampaignCalldata {
+export function prepareCampaign(
+  spec: CampaignSpec, currentBlock: number, opts: { clock?: BlockClock } = {},
+): CampaignCalldata {
   if (spec.threshold < 2) {
     throw new CampaignError(
       "A threshold below two is not coordination — it fires on the first pledge. " +
@@ -112,6 +114,20 @@ export function prepareCampaign(spec: CampaignSpec, currentBlock: number): Campa
   if (spec.terms.statement.trim() === "") {
     throw new CampaignError("A campaign with no statement asks people to commit to nothing.");
   }
+  // A window this short is almost always a units mistake rather than an
+  // intention, and expiry cannot be changed once the campaign exists. The
+  // failure it produces - everyone refunded before anyone could join - is
+  // indistinguishable from nobody wanting to join.
+  const window = spec.expiryBlock - currentBlock;
+  const clock = opts.clock ?? FALLBACK_CLOCK;
+  if (window < blocksFor(15 * 60, clock)) {
+    throw new CampaignError(
+      `The campaign would close in ${humanDuration(window, clock)}. At ` +
+      `${clock.secondsPerBlock.toFixed(2)}s per block that is ${window} blocks, which is ` +
+      "almost certainly a units mistake — Starknet produces a block roughly every 1.7 " +
+      "seconds, not every 30. Expiry cannot be changed once the campaign exists.",
+    );
+  }
   return {
     id: spec.id,
     terms: hashTerms(spec.terms),
@@ -122,17 +138,19 @@ export function prepareCampaign(spec: CampaignSpec, currentBlock: number): Campa
   };
 }
 
-/** How long a campaign has left, in blocks and in plain language. */
-export function timeRemaining(expiryBlock: number, currentBlock: number): {
-  blocks: number; expired: boolean; human: string;
-} {
+/**
+ * How long a campaign has left.
+ *
+ * Takes a clock rather than assuming one. The whole reason this function exists
+ * is so an organiser can sanity-check a deadline before committing to it, and a
+ * function that lies about the units is worse than no function.
+ */
+export function timeRemaining(
+  expiryBlock: number, currentBlock: number, clock: BlockClock = FALLBACK_CLOCK,
+): { blocks: number; expired: boolean; human: string } {
   const blocks = expiryBlock - currentBlock;
   if (blocks <= 0) return { blocks: 0, expired: true, human: "closed" };
-  const hours = (blocks * 30) / 3600;
-  const human = hours < 1 ? `${Math.round(hours * 60)} minutes`
-    : hours < 48 ? `${hours.toFixed(1)} hours`
-    : `${Math.round(hours / 24)} days`;
-  return { blocks, expired: false, human };
+  return { blocks, expired: false, human: humanDuration(blocks, clock) };
 }
 
 export { num };

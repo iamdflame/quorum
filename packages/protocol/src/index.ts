@@ -10,6 +10,7 @@ export * from "./commit.ts";
 export * from "./campaign.ts";
 export * from "./actions.ts";
 export * from "./verify.ts";
+export * from "./blocktime.ts";
 
 /** QuorumMachine, live. */
 export const DEPLOYMENTS = {

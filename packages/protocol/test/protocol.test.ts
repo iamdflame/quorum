@@ -5,8 +5,7 @@ import {
   secretFromSignature, pledgeKeyFromSignature,
 } from "../src/commit.ts";
 import {
-  hashTerms, verifyTerms, prepareCampaign, timeRemaining, CampaignError, BLOCKS_PER_DAY,
-  type Terms,
+  hashTerms, verifyTerms, prepareCampaign, timeRemaining, CampaignError, type Terms,
 } from "../src/campaign.ts";
 import { createActions, commitActions, fireActions, reclaimActions, OP } from "../src/actions.ts";
 import { verifyCampaign, replayRoots, type OnChainCampaign, type CommittedEvent } from "../src/verify.ts";
@@ -99,9 +98,10 @@ test("optional fields do not change the hash when absent versus empty", () => {
 
 // ------------------------------------------------------------- campaigns
 
+const WEEK_BLOCKS = 355_000;  // ~7 days at 1.7s
 const SPEC = {
-  id: "0xcamp", terms: TERMS, token: "0x111",
-  threshold: 5, expiryBlock: 1000, fireSecret: "0xsecret",
+  id: "walkout-2026", terms: TERMS, token: "0x111",
+  threshold: 5, expiryBlock: 10 + WEEK_BLOCKS, fireSecret: "0xsecret",
 };
 
 test("a valid campaign prepares cleanly", () => {
@@ -121,15 +121,19 @@ test("an expiry in the past is refused", () => {
   assert.throws(() => prepareCampaign({ ...SPEC, expiryBlock: 5 }, 10), CampaignError);
 });
 
+test("a campaign id can be a human name", () => {
+  // An organiser names a campaign; they should not have to think in felts.
+  const c = prepareCampaign(SPEC, 10);
+  assert.equal(c.id, "walkout-2026");
+});
+
 test("a campaign with no statement is refused", () => {
   assert.throws(() => prepareCampaign({ ...SPEC, terms: { statement: "  ", action: "a" } }, 10),
     /commit to nothing/);
 });
 
-test("time remaining reads in human units and knows when it is over", () => {
-  assert.equal(timeRemaining(1000, 1000).expired, true);
+test("an expired campaign reads as closed", () => {
   assert.equal(timeRemaining(1000, 1001).human, "closed");
-  assert.ok(timeRemaining(10 + BLOCKS_PER_DAY * 7, 10).human.includes("days"));
 });
 
 // --------------------------------------------------------------- actions
@@ -235,4 +239,74 @@ test("unverifiable is not the same as false", () => {
   assert.ok(!v.findings.some((f) => f.check === "pledge root"),
     "root replay is skipped, not failed, when there is nothing to replay with");
   assert.ok(v.sound);
+});
+
+// ------------------------------------------------------------ block time
+
+import {
+  blocksFor, blocksPerDay, humanDuration, measureBlockTime, FALLBACK_CLOCK,
+  OBSERVED_BLOCK_SECONDS, DAY,
+} from "../src/blocktime.ts";
+
+test("a day is about fifty thousand blocks, not two thousand", () => {
+  // The 30s assumption gave 2,880 and was wrong by roughly eighteen times.
+  const d = blocksPerDay();
+  assert.ok(d > 45_000 && d < 55_000, `expected ~50,800 blocks/day, got ${d}`);
+  assert.equal(OBSERVED_BLOCK_SECONDS, 1.7);
+});
+
+test("proof validity of 450 blocks is minutes, not hours", () => {
+  // The scheduler had this as 3.75 hours. It is closer to thirteen minutes,
+  // which changes when a proof may be generated relative to submission.
+  const s = 450 * OBSERVED_BLOCK_SECONDS;
+  assert.ok(s > 700 && s < 800, `expected ~765s, got ${s}`);
+  assert.ok(humanDuration(450).includes("minutes"));
+});
+
+test("durations round up, so a deadline never lands early", () => {
+  assert.equal(blocksFor(1.7), 1);
+  assert.equal(blocksFor(1.8), 2, "a partial block still needs a whole block");
+});
+
+test("measured block time beats the fallback when a sample is large enough", async () => {
+  // 1.0s/block over 200k blocks.
+  const clock = await measureBlockTime(200_000, async (b) => b * 1, 200_000);
+  assert.ok(clock.measured);
+  assert.ok(Math.abs(clock.secondsPerBlock - 1) < 1e-9);
+  assert.equal(clock.sampleBlocks, 200_000);
+});
+
+test("a sample too small to trust falls back rather than reporting jitter", () => {
+  // The 1,000-block sample read 2.03 s/block against a true 1.70 — using it
+  // would make every deadline 20% wrong in a direction nobody checks.
+  return measureBlockTime(1_000, async (b) => b * 99, 1_000).then((clock) => {
+    assert.ok(!clock.measured);
+    assert.equal(clock.secondsPerBlock, OBSERVED_BLOCK_SECONDS);
+  });
+});
+
+test("an unreachable node falls back instead of throwing", async () => {
+  const clock = await measureBlockTime(200_000, async () => { throw new Error("down"); });
+  assert.ok(!clock.measured);
+});
+
+test("a campaign closing in minutes is refused as a units mistake", () => {
+  // 2880 blocks was "a day" under the old assumption. It is under an hour.
+  assert.throws(
+    () => prepareCampaign({ ...SPEC, expiryBlock: 10 + 200 }, 10),
+    /units mistake/,
+  );
+});
+
+test("a genuine week-long campaign is accepted", () => {
+  const week = blocksFor(7 * DAY);
+  const c = prepareCampaign({ ...SPEC, expiryBlock: 10 + week }, 10);
+  assert.equal(c.expiryBlock, 10 + week);
+  assert.ok(week > 300_000, `a week should be ~355,000 blocks, got ${week}`);
+});
+
+test("time remaining reports in units an organiser can check", () => {
+  assert.equal(timeRemaining(1000, 1000).expired, true);
+  assert.ok(timeRemaining(10 + blocksFor(7 * DAY), 10).human.includes("days"));
+  assert.ok(timeRemaining(10 + blocksFor(600), 10).human.includes("minutes"));
 });

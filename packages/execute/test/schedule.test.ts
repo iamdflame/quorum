@@ -24,7 +24,7 @@ test("live mainnet constants are carried, not assumed", () => {
 });
 
 test("proving cannot start before now", () => {
-  const s = schedule(plan([{ amount: 100n, block: 1_000, set: 8 }]), 900);
+  const s = schedule(plan([{ amount: 100n, block: 60_000, set: 8 }]), 900);
   assert.ok(s.legs[0]!.proveAfter >= 900, "a leg cannot be proven in the past");
 });
 
@@ -32,18 +32,20 @@ test("a distant leg defers proving instead of pre-proving", () => {
   const s = schedule(plan([{ amount: 100n, block: 6_000, set: 8 }]), 1_000);
   const leg = s.legs[0]!;
   assert.ok(leg.proveAfter > 1_000, "proving must be deferred, not done at planning time");
-  assert.equal(leg.proveAfter, leg.submitAt - 450 + 10 + 30);
+  assert.equal(leg.proveAfter, leg.submitAt - 450 + 10 + 300);
 });
 
 test("every leg keeps real headroom between submission and proof expiry", () => {
   const s = schedule(plan([
-    { amount: 100n, block: 6_000, set: 8 },
-    { amount: 100n, block: 20_000, set: 8 },
-    { amount: 100n, block: 90_000, set: 8 },
+    { amount: 100n, block: 60_000, set: 8 },
+    { amount: 100n, block: 200_000, set: 8 },
+    { amount: 100n, block: 900_000, set: 8 },
   ]), 1_000);
   for (const leg of s.legs) {
-    assert.ok(leg.slack >= 30,
-      `leg at ${leg.submitAt} had ${leg.slack} blocks of headroom, needs >= 30`);
+    // 300 blocks is ~8.5 minutes at 1.7s. The old 30 read as fifteen minutes
+    // under a 30s assumption and was really 51 seconds.
+    assert.ok(leg.slack >= 300,
+      `leg at ${leg.submitAt} had ${leg.slack} blocks of headroom, needs >= 300`);
     assert.ok(leg.submitAt < leg.expiresAt, "must submit before the proof dies");
     assert.ok(leg.submitAt >= leg.earliestBlock, "must not submit before its window");
   }
@@ -52,28 +54,30 @@ test("every leg keeps real headroom between submission and proof expiry", () => 
 
 test("legs aim inside their window, not at its boundary", () => {
   const s = schedule(plan([
-    { amount: 100n, block: 6_000, set: 8 },
-    { amount: 100n, block: 20_000, set: 8 },
+    { amount: 100n, block: 60_000, set: 8 },
+    { amount: 100n, block: 200_000, set: 8 },
   ]), 1_000);
   for (const leg of s.legs) {
     assert.notEqual(leg.submitAt, leg.earliestBlock,
       "submitting on a window boundary is itself a pattern");
-    assert.ok(leg.submitAt - leg.earliestBlock < 720, "must stay inside the window");
+    assert.ok(leg.submitAt - leg.earliestBlock < 12_700, "must stay inside the window");
   }
   const offsets = s.legs.map(l => l.submitAt - l.earliestBlock);
   assert.notEqual(offsets[0], offsets[1], "offsets must vary between legs");
 });
 
-test("a near leg is provable immediately with headroom to spare", () => {
-  const s = schedule(plan([{ amount: 100n, block: 1_010, set: 8 }]), 1_000);
+test("a leg inside the proving window is provable immediately", () => {
+  // Proof validity is 450 blocks - about thirteen minutes at 1.7s, not the
+  // 3.75 hours a 30s assumption implied. Only a genuinely imminent leg qualifies.
+  const s = schedule(plan([{ amount: 100n, block: 1_010, set: 8 }]), 1_000,
+    undefined, { windowBlocks: 100 });
   assert.equal(s.legs[0]!.proveAfter, 1_000, "already inside its proving window");
-  assert.ok(s.legs[0]!.slack > 30);
 });
 
 test("fees are charged per transaction, so splitting multiplies them", () => {
-  const one = schedule(plan([{ amount: 100n, block: 1_010, set: 8 }]), 1_000);
+  const one = schedule(plan([{ amount: 100n, block: 60_000, set: 8 }]), 1_000);
   const six = schedule(plan(Array.from({ length: 6 }, (_, i) =>
-    ({ amount: 100n, block: 1_010 + i * 40, set: 8 }))), 1_000);
+    ({ amount: 100n, block: 60_000 + i * 20_000, set: 8 }))), 1_000);
   assert.equal(one.feeTotal, MAINNET_CONSTANTS.feeAmount);
   assert.equal(six.feeTotal, MAINNET_CONSTANTS.feeAmount * 6n);
   assert.equal(six.baseline.fee, MAINNET_CONSTANTS.feeAmount);
@@ -81,29 +85,29 @@ test("fees are charged per transaction, so splitting multiplies them", () => {
 
 test("the batching tension is stated, not hidden", () => {
   const s = schedule(plan(Array.from({ length: 4 }, (_, i) =>
-    ({ amount: 100n, block: 1_010 + i * 40, set: 8 }))), 1_000);
+    ({ amount: 100n, block: 60_000 + i * 20_000, set: 8 }))), 1_000);
   const w = s.warnings.find((x) => x.includes("more in pool fees"));
   assert.ok(w, `expected a fee-cost warning, got ${JSON.stringify(s.warnings)}`);
   assert.ok(w!.includes("18.000 STRK"), `expected 3 extra fees quantified, got: ${w}`);
 });
 
 test("crowd per fee falls when splitting buys no extra crowd", () => {
-  const one = schedule(plan([{ amount: 600n, block: 1_010, set: 8 }]), 1_000);
+  const one = schedule(plan([{ amount: 600n, block: 60_000, set: 8 }]), 1_000);
   const six = schedule(plan(Array.from({ length: 6 }, (_, i) =>
-    ({ amount: 100n, block: 1_010 + i * 40, set: 8 }))), 1_000);
+    ({ amount: 100n, block: 60_000 + i * 20_000, set: 8 }))), 1_000);
   assert.equal(one.effectiveSet, six.effectiveSet, "same crowd either way");
   assert.ok(six.crowdPerFee < one.crowdPerFee,
     "paying six fees for the same crowd must score worse");
 });
 
 test("route warnings survive into the schedule", () => {
-  const s = schedule(plan([{ amount: 100n, block: 1_010, set: 8 }],
+  const s = schedule(plan([{ amount: 100n, block: 60_000, set: 8 }],
     { warnings: ["50 could not be expressed in any denomination"] }), 1_000);
   assert.ok(s.warnings.some((w) => w.includes("could not be expressed")));
 });
 
 test("operations emit the SDK's consolidation mode only for consolidation", () => {
-  const s = schedule(plan([{ amount: 100n, block: 1_010, set: 8 }]), 1_000);
+  const s = schedule(plan([{ amount: 100n, block: 60_000, set: 8 }]), 1_000);
   const ops = toOperations(s, "0x53746f", "0xbob", { consolidateFirst: true });
   assert.equal(ops[0]!.kind, "consolidate");
   assert.equal(ops[0]!.autoSelectNotes, "all", "only 'all' actually collapses a note set");

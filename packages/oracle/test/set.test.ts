@@ -75,13 +75,15 @@ test("the set fragments along asset, denomination and time independently", () =>
 });
 
 test("a large pool still offers a tiny set once fragmented", () => {
-  // 600 edges — a busy pool — but spread across assets, sizes and windows.
+  // 600 edges — a busy pool — spread across assets, sizes and windows. Blocks
+  // are spaced for the real ~1.7s block time, so a six-hour window is 12,700
+  // blocks and the spread has to cover days rather than minutes.
   const edges: PublicEdge[] = [];
   for (let i = 0; i < 600; i++) {
     edges.push(edge({
       token: i % 5 === 0 ? OTHER_TOKEN : TOKEN,
       amount: BigInt(1000 * (1 + (i % 12))),
-      block: i * 37,
+      block: i * 640,
     }));
   }
   const sets = anonymitySets(obs(edges));

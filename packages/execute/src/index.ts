@@ -90,15 +90,21 @@ export interface Schedule {
 /**
  * Blocks of headroom demanded between intended submission and proof expiry.
  *
- * Proving is documented at roughly 29 seconds, and submission then has to be
- * built, signed, relayed and included. Fifteen minutes of margin turns a plan
- * that is correct on paper into one that survives a slow prover or a congested
- * block.
+ * This was 30 blocks, chosen when we believed a block took 30 seconds — so it
+ * read as fifteen minutes of margin. At the real ~1.7s it was **51 seconds**,
+ * against a proving step the docs put at roughly 29 seconds plus building,
+ * signing, relaying and inclusion. The margin was not a margin.
+ *
+ * 300 blocks is about eight and a half minutes, which is headroom a slow prover
+ * or a congested block can actually be absorbed by.
  */
-export const DEFAULT_MARGIN_BLOCKS = 30;
+export const DEFAULT_MARGIN_BLOCKS = 300;
 
-/** Width of a routing window, in blocks — legs are placed inside one. */
-export const WINDOW_BLOCKS = 720;
+/**
+ * Width of a routing window, in blocks. Six hours at ~1.7s, not the 720 that a
+ * 30s assumption made look like six hours and was really twenty minutes.
+ */
+export const WINDOW_BLOCKS = 12_700;
 
 export function schedule(
   plan: RoutePlan,

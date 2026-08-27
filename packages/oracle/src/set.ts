@@ -58,8 +58,19 @@ export interface AnonymitySet {
   readonly observations: number;
 }
 
-/** Width of a timing window, in blocks. Roughly six hours at 30s blocks. */
-export const DEFAULT_WINDOW_BLOCKS = 720;
+/**
+ * Width of a timing window, in blocks.
+ *
+ * Previously 720, labelled "roughly six hours at 30s blocks". Mainnet produces a
+ * block every ~1.7s, so 720 blocks is **twenty minutes** — the window was
+ * seventeen times narrower than described, which made cells finer and crowds
+ * smaller than the label implied.
+ *
+ * Now genuinely six hours. Cells can only merge under a wider window, never
+ * split, so any crowd measured here is a lower bound on what a narrower slice
+ * would report.
+ */
+export const DEFAULT_WINDOW_BLOCKS = 12_700;
 
 export function cellKey(c: SetCell): string {
   return `${c.token.toString(16)}:${c.denomination}:${c.window}`;
