@@ -13,3 +13,6 @@ accounts.json
 web/node_modules/
 web/dist/
 
+
+app/node_modules/
+app/dist/
