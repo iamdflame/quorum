@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="440" viewBox="0 0 1280 440" fill="none">
+  <rect width="1280" height="440" fill="#0B0A08"/>
+
+  <!-- The ring: seven cold pledges and the one that closes it.
+       Nothing is lit until the last commitment arrives. -->
+  <g transform="translate(200 220)">
+    <circle cx="0" cy="0" r="118" stroke="#2C251C" stroke-width="1"/>
+    <circle cx="0" cy="-104" r="9" fill="#4A443B"/>
+    <circle cx="73.5" cy="-73.5" r="9" fill="#4A443B"/>
+    <circle cx="104" cy="0" r="9" fill="#4A443B"/>
+    <circle cx="73.5" cy="73.5" r="9" fill="#4A443B"/>
+    <circle cx="0" cy="104" r="9" fill="#4A443B"/>
+    <circle cx="-73.5" cy="73.5" r="9" fill="#4A443B"/>
+    <circle cx="-104" cy="0" r="9" fill="#4A443B"/>
+    <!-- the fifth, which fires it -->
+    <circle cx="-73.5" cy="-73.5" r="30" fill="#E2661A" opacity="0.16"/>
+    <circle cx="-73.5" cy="-73.5" r="18" fill="#E2661A" opacity="0.3"/>
+    <circle cx="-73.5" cy="-73.5" r="11" fill="#F0842E"/>
+  </g>
+
+  <text x="430" y="196" font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="104" font-weight="800" letter-spacing="-4" fill="#E8E6E1">Quorum</text>
+  <text x="436" y="252" font-family="ui-monospace, SFMono-Regular, Menlo, monospace"
+        font-size="21" letter-spacing="1.5" fill="#6E6960">Nobody moves until enough of us do.</text>
+  <rect x="436" y="292" width="52" height="2" fill="#E2661A"/>
+  <text x="436" y="336" font-family="ui-monospace, SFMono-Regular, Menlo, monospace"
+        font-size="17" letter-spacing="0.8" fill="#A8A399">Threshold coordination on Starknet</text>
+</svg>

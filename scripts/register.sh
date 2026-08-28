@@ -36,10 +36,10 @@ python3 - "$TG" <<'PY'
 import json, sys
 tg = sys.argv[1]
 reg = json.load(open("registry.json"))
-if any("iamdflame/shoal" in (e.get("repo_url") or "").lower() for e in reg):
+if any("iamdflame/quorum" in (e.get("repo_url") or "").lower() for e in reg):
     print("already registered"); raise SystemExit(0)
 reg.append({
-    "repo_url": "https://github.com/iamdflame/shoal",
+    "repo_url": "https://github.com/iamdflame/quorum",
     "telegram": [tg],
     "slug": "shoal",
     "name": "Shoal",
@@ -75,6 +75,6 @@ Shoal routes value into the largest crowd available, and ships a general private
 
 This is not a flaw in STRK20 — the pool is young, and small sets follow from low volume. It is the reason an aggregation layer has to exist.
 
-Repo: https://github.com/iamdflame/shoal
+Repo: https://github.com/iamdflame/quorum
 BODY
 )"

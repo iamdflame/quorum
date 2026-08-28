@@ -103,7 +103,7 @@ export default function How() {
           <Reveal>
             <p className="mono guarantee-foot">
               157 tests · 43 Cairo · 114 TypeScript ·{" "}
-              <a href="https://github.com/iamdflame/shoal/blob/master/contracts/tests/quorum_test.cairo"
+              <a href="https://github.com/iamdflame/quorum/blob/master/contracts/tests/quorum_test.cairo"
                 target="_blank" rel="noreferrer">read them →</a>
             </p>
           </Reveal>

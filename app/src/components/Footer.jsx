@@ -42,9 +42,9 @@ export default function Footer() {
           <div>
             <h4>Source</h4>
             <ul>
-              <li><a href="https://github.com/iamdflame/shoal" target="_blank" rel="noreferrer">Repository</a></li>
-              <li><a href="https://github.com/iamdflame/shoal/blob/master/contracts/src/quorum.cairo" target="_blank" rel="noreferrer">The contract</a></li>
-              <li><a href="https://github.com/iamdflame/shoal/blob/master/contracts/tests/quorum_test.cairo" target="_blank" rel="noreferrer">The adversarial tests</a></li>
+              <li><a href="https://github.com/iamdflame/quorum" target="_blank" rel="noreferrer">Repository</a></li>
+              <li><a href="https://github.com/iamdflame/quorum/blob/master/contracts/src/quorum.cairo" target="_blank" rel="noreferrer">The contract</a></li>
+              <li><a href="https://github.com/iamdflame/quorum/blob/master/contracts/tests/quorum_test.cairo" target="_blank" rel="noreferrer">The adversarial tests</a></li>
               <li><a href="https://strk20-by-example.org/" target="_blank" rel="noreferrer">STRK20 docs</a></li>
             </ul>
           </div>

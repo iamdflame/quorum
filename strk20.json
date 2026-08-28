@@ -1,9 +1,10 @@
 {
   "contracts": [
-    "0x0269fa8cd8a7a04f5cd5b2fda7139efebb99511e2dde4778ba9395948a62ecfc",
-    "0x0193e222869091a5b350d0a282c82f34c3554256a45b9ea631b66cdbd4d70309"
+    "0x06d3f070a8732b1272ac7e73527187ce08da502839b18fc30a481a79512b8c08",
+    "0x01281b5f8e26c1ec0ab5fc439b1c23e1e37f183438a7b148b2894436f940da02",
+    "0x0269fa8cd8a7a04f5cd5b2fda7139efebb99511e2dde4778ba9395948a62ecfc"
   ],
-  "demo_url": "https://iamdflame.github.io/shoal/",
+  "demo_url": "https://quorum-alpha-drab.vercel.app",
   "transactions": [
     "0x04816dbb3ec04d21cc5da879358e485afdbfe52a3d8f6b8bf4a678003b6e0278"
   ]
