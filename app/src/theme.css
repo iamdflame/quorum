@@ -397,3 +397,32 @@ section.band { padding: clamp(80px, 11vw, 150px) 0; }
 .chainstate span { color:var(--muted) }
 .chainstate b { font-weight:500; color:var(--text) }
 .chainstate b.ok { color:var(--fire-400) }
+
+/* ---------------------------------------------------- campaign state
+ * A campaign page opens with the only two numbers that decide anything:
+ * how many pledged, and how many it takes. Everything else is detail.
+ * Deliberately not reusing .demo-core, which is absolutely positioned inside
+ * the home page's ring and collapses when lifted out of it.
+ */
+.camp-state {
+  border: 1px solid var(--line); background: color-mix(in oklab, var(--ink-850) 82%, transparent);
+  padding: clamp(26px, 4vw, 42px); margin-bottom: 34px;
+}
+.camp-state.is-fired { border-color: var(--fire-500); box-shadow: 0 0 110px -40px var(--fire-500); }
+.camp-state-top { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
+.camp-badge {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+  border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; color: var(--dim);
+}
+.camp-badge.on { border-color: var(--fire-500); color: var(--fire-500); }
+.camp-state-num {
+  font-family: var(--display); font-weight: 800; font-size: clamp(54px, 9vw, 96px);
+  line-height: 1; letter-spacing: -.045em; color: var(--text); margin: 0;
+}
+.camp-state.is-fired .camp-state-num { color: var(--fire-500); }
+.camp-state-num .of { color: var(--muted); font-size: .46em; font-weight: 600; }
+.camp-state-cap { margin: 18px 0 0; color: var(--dim); font-size: clamp(15px, 1.7vw, 18px); max-width: 54ch; }
+.camp-after { margin-top: 40px; border-top: 1px solid var(--line); padding-top: 26px; }
+.camp-after p { font-size: 14px; color: var(--muted); line-height: 1.7; margin: 0; max-width: 62ch; }
+.camp-after p strong { color: var(--text); }
+.camp-links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }

@@ -1,0 +1,24 @@
+<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="base.css">
+<style>
+.stage{justify-content:center;align-items:flex-start}
+.mark{font-family:var(--display);font-weight:800;font-size:238px;letter-spacing:-.05em;
+  line-height:.86;margin:0}
+.mark .dot{color:var(--fire)}
+.tag{font-family:var(--body);font-size:52px;font-weight:200;color:var(--dim);
+  margin-top:46px;letter-spacing:-.01em}
+.badges{display:flex;gap:20px;margin-top:76px}
+.badge{font-family:var(--mono);font-size:22px;letter-spacing:.14em;text-transform:uppercase;
+  padding:16px 30px;border:1px solid var(--line);border-radius:999px;color:var(--dim);
+  display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.012)}
+.live{width:11px;height:11px;border-radius:50%;background:var(--fire);
+  box-shadow:0 0 0 6px rgba(226,102,26,.16)}
+</style>
+<div class="stage">
+  <h1 class="mark">Quorum<span class="dot">.</span></h1>
+  <div class="tag">Nobody moves until enough of us do.</div>
+  <div class="badges">
+    <div class="badge"><span class="live"></span>Live on Starknet mainnet</div>
+    <div class="badge">Threshold escrow inside STRK20</div>
+    <div class="badge">51 Cairo · 88 TypeScript tests</div>
+  </div>
+</div>

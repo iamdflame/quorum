@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Newsreader:ital,opsz,wght@0,6..72,200..700;1,6..72,200..600&family=Spline+Sans+Mono:wght@300..700&display=swap');
+
+:root{
+  --ground:#0B0A08; --panel:#100E0B; --raise:#17140F; --line:#2C251C;
+  --text:#E8E6E1; --dim:#A8A399; --muted:#6E6960; --fire:#E2661A;
+  --display:"Bricolage Grotesque",sans-serif;
+  --body:"Newsreader",Georgia,serif;
+  --mono:"Spline Sans Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--ground);overflow:hidden}
+body{width:1920px;height:1080px;position:relative;color:var(--text);
+  -webkit-font-smoothing:antialiased;text-rendering:geometricPrecision}
+
+/* Warm ember bloom, off-centre so nothing is dead symmetrical. */
+body::before{content:"";position:absolute;top:0;left:0;width:1920px;height:1080px;pointer-events:none;
+  background:
+    radial-gradient(84% 78% at 76% 4%,
+      rgba(226,102,26,.11) 0%, rgba(226,102,26,.055) 26%,
+      rgba(226,102,26,.018) 52%, rgba(226,102,26,0) 78%),
+    radial-gradient(90% 85% at 4% 104%,
+      rgba(226,102,26,.055) 0%, rgba(226,102,26,.018) 38%, rgba(226,102,26,0) 72%)}
+/* Film grain: keeps large flat fields from looking like dead vector art. */
+body::after{content:"";position:absolute;top:0;left:0;width:1920px;height:1080px;pointer-events:none;opacity:.055;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+.stage{position:absolute;inset:0;padding:118px 140px;display:flex;flex-direction:column;z-index:2}
+
+/* Eyebrow: small mono kicker with a fire tick. */
+.eyebrow{font-family:var(--mono);font-size:21px;font-weight:500;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:18px}
+.eyebrow::before{content:"";width:34px;height:2px;background:var(--fire);flex:none}
+
+h1{font-family:var(--display);font-weight:800;font-size:158px;line-height:.92;
+  letter-spacing:-.045em;margin:0;color:var(--text)}
+h1.sm{font-size:118px}
+h1 em{font-style:normal;color:var(--fire)}
+
+.lede{font-family:var(--body);font-size:40px;line-height:1.42;color:var(--dim);
+  max-width:1180px;margin:0;font-weight:300}
+.lede strong{color:var(--text);font-weight:500}
+
+.mono{font-family:var(--mono);font-size:26px;color:var(--muted);letter-spacing:.02em}
+.rule{height:1px;background:var(--line);width:100%}
+.grow{flex:1}
