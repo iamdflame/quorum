@@ -5,6 +5,7 @@ import {
   describeError, MACHINE_DISPLAY, POOL_FEE_STRK,
 } from "../campaign.js";
 import { RPC } from "../wallet.js";
+import { runProbes } from "../diagnose.js";
 
 /**
  * Run a campaign end to end, on mainnet.
@@ -32,6 +33,7 @@ export default function Run({ ctx }) {
   const [state, setState] = useState({});
   const [busy, setBusy] = useState(null);
   const [log, setLog] = useState([]);
+  const [probes, setProbes] = useState([]);
 
   const wallet = ctx.wallet;
   const say = (t) => setLog((l) => [...l, t]);
@@ -145,6 +147,25 @@ export default function Run({ ctx }) {
           <Reveal delay={100}>
             <aside className="aside">
               <h3 className="sub">Log</h3>
+              <button className="btn-ghost" style={{ marginBottom: 12 }}
+                disabled={!wallet || busy !== null}
+                onClick={async () => {
+                  setProbes([]);
+                  say("Probing which action shapes this wallet accepts. Nothing is signed or spent.");
+                  await runProbes(wallet.account, id, (r) => setProbes((p) => [...p, r]));
+                  say("Probe finished.");
+                }}>
+                Probe the wallet (free)
+              </button>
+              {probes.length > 0 && (
+                <div className="runlog mono" style={{ marginBottom: 16 }}>
+                  {probes.map((p, i) => (
+                    <div key={i} className={p.ok ? "" : "runlog-fail"}>
+                      {p.ok ? "OK  " : "NO  "}{p.name} — {p.detail}
+                    </div>
+                  ))}
+                </div>
+              )}
               <div className="runlog mono">
                 {log.length === 0
                   ? <span style={{ color: "var(--muted)" }}>Nothing yet.</span>
