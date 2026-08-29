@@ -1,13 +1,14 @@
 {
-  "contracts": [
-    "0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7",
-    "0x07d639ca00289a59a6949a12f6470feadf74d905d01bcce331f6c9d1d775fc73"
-  ],
-  "demo_url": "https://quorum-strk20.vercel.app",
   "transactions": [
     "0x071d322075e75df9be35a46e36024b02c3f9c37fcaedd52a38a7391b0cf8e806",
     "0x03c6bd55104d3b05254364f369689e648ec7af6e1f849f440fdcbd9792e0dbd1",
     "0x018bb72dc2b97bc028c3b22f633d2ac43e5432ae2be720652c809ef0d3ff8d22",
     "0x01da6af3260615abebaa5d708c885d8017fb0de2f2001d8269203b5924bb5a8e"
-  ]
+  ],
+  "contracts": [
+    "0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7",
+    "0x07d639ca00289a59a6949a12f6470feadf74d905d01bcce331f6c9d1d775fc73"
+  ],
+  "demo_video": "https://youtu.be/5_VwUWlBYXs",
+  "demo_url": "https://quorum-strk20.vercel.app"
 }

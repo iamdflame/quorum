@@ -325,6 +325,33 @@ try {
     : fail("pool fee has changed", `now ${strk} STRK — the cost figures shown to organisers are wrong`);
 } catch (e) { fail("could not read the pool fee", String(e.message ?? e)); }
 
+/* ---- the submission manifest has what the panel needs to score at all ---- *
+ *
+ * The hackathon README marks `transactions` and `demo_video` as required "to be
+ * scored". demo_video was missing here until the day the video was published,
+ * and nothing in this repository would have noticed: every other check verified
+ * the contents of the manifest and not whether the manifest was complete.
+ *
+ * A submission that is not scored loses to every submission that is, regardless
+ * of what is in it.
+ */
+{
+  const missing = [];
+  const txs = manifest.transactions ?? [];
+  if (txs.length < 3) missing.push(`transactions: ${txs.length} listed, the panel needs at least 3`);
+  if (!manifest.demo_video) missing.push("demo_video: required to be scored");
+  if (!manifest.demo_url) missing.push("demo_url: the public demo anyone can open");
+  if (!(manifest.contracts ?? []).length) missing.push("contracts: deployed addresses");
+
+  // A live demo and a licence are conditions of entry, not just nice to have.
+  if (!existsSync(join(ROOT, "LICENSE"))) missing.push("LICENSE: the repo must carry one");
+
+  missing.length === 0
+    ? pass("strk20.json carries everything the panel scores on",
+           `${txs.length} transactions, demo video, demo url, licence`)
+    : fail("the submission manifest is incomplete", missing.join("\n         "));
+}
+
 /* ---- every transaction listed in strk20.json actually did what we claim ---- */
 try {
   const txs = manifest.transactions ?? [];
