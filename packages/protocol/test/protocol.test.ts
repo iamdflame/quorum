@@ -178,11 +178,31 @@ test("an expired campaign reads as closed", () => {
 
 // --------------------------------------------------------------- actions
 
-test("create encodes the campaign, escrows nothing, and mints no note", () => {
-  const a = createActions("0xmachine", prepareCampaign(SPEC, 10));
-  assert.equal(a.length, 1, "opening a campaign moves no value");
+test("create deposits the organiser's own pledge", () => {
+  // The pool refuses an invoke that moves no value, so a create carrying
+  // nothing cannot be submitted. The deposit is the organiser's first pledge.
+  const a = createActions("0x79bab0", prepareCampaign(SPEC, 10), refundCommitment("0xorg"));
+  assert.deepEqual(a.map((x) => x.type), ["deposit", "invoke"]);
+  assert.equal(BigInt((a[1]!.calldata as string[])[0]!), BigInt(OP.Create));
+});
+
+test("a refund-all fire is paired with a self-transfer", () => {
+  // It moves no value by design, and the pool rejects an invoke that moves none.
+  const a = fireActions("0x79bab0", "walkout-2026", { token: "0x4718f5a0", self: "0xaaa" });
+  assert.deepEqual(a.map((x) => x.type), ["transfer", "invoke"]);
+  assert.equal(a[0]!["recipient"], "0xaaa", "to the firer, changing nobody's balance");
+});
+
+test("a refund-all fire refuses to build without somewhere to send the pairing", () => {
+  assert.throws(() => fireActions("0x79bab0", "walkout-2026"), /moves no value/);
+});
+
+test("a treasury fire needs no pairing, because it moves the payouts", () => {
+  const a = fireActions("0x79bab0", "walkout-2026", {
+    payouts: [{ noteId: "0x1", token: "0x4718f5a0", amount: 500n }],
+  });
+  assert.equal(a.length, 1);
   assert.equal(a[0]!.type, "invoke");
-  assert.equal(BigInt((a[0]!.calldata as string[])[0]!), BigInt(OP.Create));
 });
 
 test("commit deposits a unit and passes no amount at all", () => {
@@ -196,8 +216,8 @@ test("commit deposits a unit and passes no amount at all", () => {
 });
 
 test("firing a refund-all campaign carries no payouts", () => {
-  const a = fireActions("0xmachine", "walkout-2026");
-  const cd = a[0]!.calldata as string[];
+  const a = fireActions("0x79bab0", "walkout-2026", { token: "0x4718f5a0", self: "0xaaa" });
+  const cd = a[1]!.calldata as string[];
   assert.equal(BigInt(cd[0]!), BigInt(OP.Fire));
   assert.equal(BigInt(cd[cd.length - 1]!), 0n, "no destinations, so nothing can be redirected");
 });
@@ -219,10 +239,10 @@ test("reclaim mints an open note for the refund to land in", () => {
 });
 
 test("fire serialises a payout span correctly", () => {
-  const a = fireActions("0xmachine", "walkout-2026", [
+  const a = fireActions("0x79bab0", "walkout-2026", { payouts: [
     { noteId: "0x1", token: "0x111", amount: 300n },
     { noteId: "0x2", token: "0x111", amount: 200n },
-  ]);
+  ] });
   const cd = a[0]!.calldata as string[];
   // 13 fixed params, then length 2, then two flattened deposits of 3 felts each.
   assert.equal(cd.length, 13 + 1 + 6);
@@ -379,7 +399,7 @@ test("time remaining reports in units an organiser can check", () => {
 const FELT_PATTERN = /^0x(0|[a-fA-F1-9]{1}[a-fA-F0-9]{0,62})$/;
 
 test("the wallet's FELT pattern rejects padded addresses", () => {
-  const padded = "0x0079bab03056fd05dde50e921cf5ea8c3405aaaa2f05492a8a0e1fb6c811ff76";
+  const padded = "0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7";
   assert.ok(!FELT_PATTERN.test(padded), "a padded address must be recognised as invalid");
   assert.ok(FELT_PATTERN.test("0x" + BigInt(padded).toString(16)));
 });
@@ -391,10 +411,10 @@ test("every felt we emit in calldata is acceptable to the wallet", () => {
       payouts: [{ noteId: "0x1", token: "0x111", amount: 500n }] },
   };
   const actions = [
-    ...createActions("0x79bab0", prepareCampaign(spec, 10)),
+    ...createActions("0x79bab0", prepareCampaign(spec, 10), refundCommitment("0xorg")),
     ...commitActions("0x79bab0", "walkout-2026", "0x4718f5a0", 100n, refundCommitment("0xa")),
     ...fireActions("0x79bab0", "walkout-2026",
-      [{ noteId: "0x1", token: "0x4718f5a0", amount: 500n }]),
+      { payouts: [{ noteId: "0x1", token: "0x4718f5a0", amount: 500n }] }),
     ...reclaimActions("0x79bab0", "walkout-2026", "0x4718f5a0", "0xsecret"),
     ...unsealActions("0x79bab0", "walkout-2026", "0xsecret", "0xpayload"),
   ];

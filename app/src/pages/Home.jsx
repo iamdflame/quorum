@@ -32,7 +32,7 @@ export default function Home({ ctx }) {
               <Link to="/how" className="btn-line">How it works</Link>
             </div>
             <p className="hero-foot mono">
-              Live at <a href="https://voyager.online/contract/0x0079bab03056fd05dde50e921cf5ea8c3405aaaa2f05492a8a0e1fb6c811ff76"
+              Live at <a href="https://voyager.online/contract/0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7"
                 target="_blank" rel="noreferrer">0x06d3f070…8c08</a>
             </p>
           </div>

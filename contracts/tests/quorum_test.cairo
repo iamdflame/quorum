@@ -60,13 +60,17 @@ fn setup() -> (IQuorumMachineDispatcher, IMockERC20Dispatcher, ContractAddress) 
     )
 }
 
+/// Opening a campaign is also joining it: the pool refuses an invoke that moves
+/// no value, so the organiser's deposit is their own first pledge.
 fn create(
-    m: IQuorumMachineDispatcher, token: ContractAddress, policy: PayoutPolicy, root: felt252,
+    m: IQuorumMachineDispatcher, t: IMockERC20Dispatcher, token: ContractAddress,
+    policy: PayoutPolicy, root: felt252,
 ) {
+    t.mint(m.contract_address, UNIT.into());
     m
         .privacy_invoke(
-            QuorumOp::Create, ID, TERMS, token, policy, root, UNIT, THRESHOLD, EXPIRY, 0, 0, 0, 0,
-            none(),
+            QuorumOp::Create, ID, TERMS, token, policy, root, UNIT, THRESHOLD, EXPIRY,
+            refund_commitment('organiser'), 0, 0, 0, none(),
         );
 }
 
@@ -112,9 +116,10 @@ fn met_refund() -> (IQuorumMachineDispatcher, IMockERC20Dispatcher, ContractAddr
     let (m, t, addr) = setup();
     start_cheat_caller_address(m.contract_address, POOL());
     start_cheat_block_number_global(START);
-    create(m, addr, PayoutPolicy::RefundAll, 0);
-    commit(m, t, 'a', UNIT); commit(m, t, 'b', UNIT); commit(m, t, 'c', UNIT);
-    commit(m, t, 'd', UNIT); commit(m, t, 'e', UNIT);
+    create(m, t, addr, PayoutPolicy::RefundAll, 0);
+    // The organiser is pledge one; four more reach a threshold of five.
+    commit(m, t, 'a', UNIT); commit(m, t, 'b', UNIT);
+    commit(m, t, 'c', UNIT); commit(m, t, 'd', UNIT);
     (m, t, addr)
 }
 
@@ -126,9 +131,9 @@ fn met_treasury() -> (IQuorumMachineDispatcher, IMockERC20Dispatcher, ContractAd
     ].span();
     start_cheat_caller_address(m.contract_address, POOL());
     start_cheat_block_number_global(START);
-    create(m, addr, PayoutPolicy::BoundTreasury, payout_root(agreed));
-    commit(m, t, 'a', UNIT); commit(m, t, 'b', UNIT); commit(m, t, 'c', UNIT);
-    commit(m, t, 'd', UNIT); commit(m, t, 'e', UNIT);
+    create(m, t, addr, PayoutPolicy::BoundTreasury, payout_root(agreed));
+    commit(m, t, 'a', UNIT); commit(m, t, 'b', UNIT);
+    commit(m, t, 'c', UNIT); commit(m, t, 'd', UNIT);
     (m, t, addr, agreed)
 }
 
@@ -172,7 +177,7 @@ fn payout_order_is_part_of_the_commitment() {
     ].span();
     start_cheat_caller_address(m.contract_address, POOL());
     start_cheat_block_number_global(START);
-    create(m, addr, PayoutPolicy::BoundTreasury, payout_root(agreed));
+    create(m, t, addr, PayoutPolicy::BoundTreasury, payout_root(agreed));
     commit(m, t, 'a', UNIT); commit(m, t, 'b', UNIT); commit(m, t, 'c', UNIT);
     commit(m, t, 'd', UNIT); commit(m, t, 'e', UNIT);
     // Same amounts, same destinations, swapped. A different fold.
@@ -219,7 +224,7 @@ fn nobody_can_fire_below_quorum() {
     let (m, t, addr) = setup();
     start_cheat_caller_address(m.contract_address, POOL());
     start_cheat_block_number_global(START);
-    create(m, addr, PayoutPolicy::RefundAll, 0);
+    create(m, t, addr, PayoutPolicy::RefundAll, 0);
     commit(m, t, 'a', UNIT); commit(m, t, 'b', UNIT);
     fire(m, none());
 }
@@ -241,10 +246,11 @@ fn commit_uses_the_balance_delta_not_the_calldata() {
     let (m, t, addr) = setup();
     start_cheat_caller_address(m.contract_address, POOL());
     start_cheat_block_number_global(START);
-    create(m, addr, PayoutPolicy::RefundAll, 0);
+    create(m, t, addr, PayoutPolicy::RefundAll, 0);
     commit(m, t, 'a', UNIT);
-    assert(m.get_campaign(ID).escrowed == UNIT, 'escrow is the delta');
-    assert(m.held(addr) == UNIT, 'held tracks the balance');
+    // The organiser's pledge plus one: two units, measured rather than claimed.
+    assert(m.get_campaign(ID).escrowed == 2 * UNIT, 'escrow is the delta');
+    assert(m.held(addr) == 2 * UNIT, 'held tracks the balance');
 }
 
 #[test]
@@ -254,7 +260,7 @@ fn a_pledge_below_the_unit_reverts() {
     let (m, t, addr) = setup();
     start_cheat_caller_address(m.contract_address, POOL());
     start_cheat_block_number_global(START);
-    create(m, addr, PayoutPolicy::RefundAll, 0);
+    create(m, t, addr, PayoutPolicy::RefundAll, 0);
     commit(m, t, 'a', 1);
 }
 
@@ -265,7 +271,7 @@ fn a_pledge_above_the_unit_reverts() {
     let (m, t, addr) = setup();
     start_cheat_caller_address(m.contract_address, POOL());
     start_cheat_block_number_global(START);
-    create(m, addr, PayoutPolicy::RefundAll, 0);
+    create(m, t, addr, PayoutPolicy::RefundAll, 0);
     commit(m, t, 'a', UNIT + 1);
 }
 
@@ -274,8 +280,9 @@ fn held_falls_back_to_zero_once_everything_is_returned() {
     // Stranded value would show up here as a non-zero remainder.
     let (m, _, addr) = met_refund();
     fire(m, none());
-    reclaim(m, 'a', 1); reclaim(m, 'b', 2); reclaim(m, 'c', 3);
-    reclaim(m, 'd', 4); reclaim(m, 'e', 5);
+    // The organiser reclaims too - they pledged like everyone else.
+    reclaim(m, 'organiser', 1);
+    reclaim(m, 'a', 2); reclaim(m, 'b', 3); reclaim(m, 'c', 4); reclaim(m, 'd', 5);
     assert(m.held(addr) == 0, 'nothing stranded');
     assert(m.get_campaign(ID).escrowed == 0, 'escrow empty');
 }
@@ -285,12 +292,12 @@ fn held_falls_back_to_zero_once_everything_is_returned() {
 #[test]
 #[should_panic(expected: 'QUORUM: expiry not in future')]
 fn a_campaign_cannot_be_born_expired() {
-    let (m, _, addr) = setup();
+    let (m, t, addr) = setup();
     start_cheat_caller_address(m.contract_address, POOL());
     // Past the expiry the campaign would be created with: pledges could never
     // be made, and never refunded.
     start_cheat_block_number_global(EXPIRY + 1);
-    create(m, addr, PayoutPolicy::RefundAll, 0);
+    create(m, t, addr, PayoutPolicy::RefundAll, 0);
 }
 
 #[test]
@@ -298,19 +305,19 @@ fn a_campaign_cannot_be_born_expired() {
 fn a_window_too_short_to_gather_anyone_reverts() {
     // Expiry cannot be changed later, and a window computed on a 30s block
     // assumption closes seventeen times too early.
-    let (m, _, addr) = setup();
+    let (m, t, addr) = setup();
     start_cheat_caller_address(m.contract_address, POOL());
     start_cheat_block_number_global(EXPIRY - 100);
-    create(m, addr, PayoutPolicy::RefundAll, 0);
+    create(m, t, addr, PayoutPolicy::RefundAll, 0);
 }
 
 #[test]
 #[should_panic(expected: 'QUORUM: no payout root')]
 fn a_treasury_campaign_must_commit_its_destinations_up_front() {
-    let (m, _, addr) = setup();
+    let (m, t, addr) = setup();
     start_cheat_caller_address(m.contract_address, POOL());
     start_cheat_block_number_global(START);
-    create(m, addr, PayoutPolicy::BoundTreasury, 0);
+    create(m, t, addr, PayoutPolicy::BoundTreasury, 0);
 }
 
 #[test]
@@ -340,10 +347,10 @@ fn a_zero_unit_reverts() {
 #[test]
 #[should_panic(expected: 'QUORUM: caller not pool')]
 fn only_the_pool_may_drive_the_machine() {
-    let (m, _, addr) = setup();
+    let (m, t, addr) = setup();
     start_cheat_caller_address(m.contract_address, STRANGER());
     start_cheat_block_number_global(START);
-    create(m, addr, PayoutPolicy::RefundAll, 0);
+    create(m, t, addr, PayoutPolicy::RefundAll, 0);
 }
 
 // ==================================================== the escrow itself
@@ -356,7 +363,7 @@ fn unseal_reverts_before_quorum() {
     let (m, t, addr) = setup();
     start_cheat_caller_address(m.contract_address, POOL());
     start_cheat_block_number_global(START);
-    create(m, addr, PayoutPolicy::RefundAll, 0);
+    create(m, t, addr, PayoutPolicy::RefundAll, 0);
     commit(m, t, 'a', UNIT); commit(m, t, 'b', UNIT);
     unseal(m, 'a', 'my name and what happened');
 }
@@ -367,7 +374,7 @@ fn unseal_reverts_on_a_campaign_that_failed() {
     let (m, t, addr) = setup();
     start_cheat_caller_address(m.contract_address, POOL());
     start_cheat_block_number_global(START);
-    create(m, addr, PayoutPolicy::RefundAll, 0);
+    create(m, t, addr, PayoutPolicy::RefundAll, 0);
     commit(m, t, 'a', UNIT); commit(m, t, 'b', UNIT);
     start_cheat_block_number_global(EXPIRY + 1);
     unseal(m, 'a', 'my name');
@@ -408,21 +415,21 @@ fn a_failed_campaign_returns_every_pledge_in_full() {
     let (m, t, addr) = setup();
     start_cheat_caller_address(m.contract_address, POOL());
     start_cheat_block_number_global(START);
-    create(m, addr, PayoutPolicy::RefundAll, 0);
+    create(m, t, addr, PayoutPolicy::RefundAll, 0);
     commit(m, t, 'a', UNIT); commit(m, t, 'b', UNIT); commit(m, t, 'c', UNIT);
     start_cheat_block_number_global(EXPIRY + 1);
 
     let mut total: u128 = 0;
-    let secrets = array!['a', 'b', 'c'];
+    let secrets = array!['organiser', 'a', 'b', 'c'];
     let mut i: u32 = 0;
-    while i < 3 {
+    while i < 4 {
         let out = reclaim(m, *secrets.at(i), (i + 1).into());
         assert(out.len() == 1, 'one deposit per reclaim');
         assert(*out.at(0).amount == UNIT, 'exact unit returned');
         total += *out.at(0).amount;
         i += 1;
     };
-    assert(total == 3 * UNIT, 'all three refunded');
+    assert(total == 4 * UNIT, 'all four refunded in full');
     assert(m.get_campaign(ID).phase == Phase::Refunding, 'refunding');
     assert(m.held(addr) == 0, 'nothing stranded');
 }
@@ -442,7 +449,7 @@ fn a_pledge_cannot_be_withdrawn_before_the_deadline() {
     let (m, t, addr) = setup();
     start_cheat_caller_address(m.contract_address, POOL());
     start_cheat_block_number_global(START);
-    create(m, addr, PayoutPolicy::RefundAll, 0);
+    create(m, t, addr, PayoutPolicy::RefundAll, 0);
     commit(m, t, 'a', UNIT);
     reclaim(m, 'a', 1);
 }
@@ -470,7 +477,7 @@ fn the_same_commitment_cannot_be_counted_twice() {
     let (m, t, addr) = setup();
     start_cheat_caller_address(m.contract_address, POOL());
     start_cheat_block_number_global(START);
-    create(m, addr, PayoutPolicy::RefundAll, 0);
+    create(m, t, addr, PayoutPolicy::RefundAll, 0);
     commit(m, t, 'a', UNIT);
     commit(m, t, 'a', UNIT);
 }
@@ -482,29 +489,31 @@ fn the_pledge_root_depends_on_order_not_just_membership() {
     let (m1, t1, a1) = setup();
     start_cheat_caller_address(m1.contract_address, POOL());
     start_cheat_block_number_global(START);
-    create(m1, a1, PayoutPolicy::RefundAll, 0);
+    create(m1, t1, a1, PayoutPolicy::RefundAll, 0);
     commit(m1, t1, 'a', UNIT); commit(m1, t1, 'b', UNIT);
     let ab = m1.get_campaign(ID).pledge_root;
 
     let (m2, t2, a2) = setup();
     start_cheat_caller_address(m2.contract_address, POOL());
-    create(m2, a2, PayoutPolicy::RefundAll, 0);
+    create(m2, t2, a2, PayoutPolicy::RefundAll, 0);
     commit(m2, t2, 'b', UNIT); commit(m2, t2, 'a', UNIT);
     assert(ab != m2.get_campaign(ID).pledge_root, 'order changes the root');
 }
 
 #[test]
 fn a_campaign_publishes_its_terms_threshold_and_unit_but_no_participants() {
-    let (m, _, addr) = setup();
+    let (m, t, addr) = setup();
     start_cheat_caller_address(m.contract_address, POOL());
     start_cheat_block_number_global(START);
-    create(m, addr, PayoutPolicy::RefundAll, 0);
+    create(m, t, addr, PayoutPolicy::RefundAll, 0);
     let c: Campaign = m.get_campaign(ID);
     assert(c.terms == TERMS, 'terms committed');
     assert(c.threshold == THRESHOLD, 'threshold public');
     assert(c.unit == UNIT, 'unit public');
-    assert(c.pledge_count == 0, 'nobody yet');
-    assert(!m.quorum_reached(ID), 'not reached');
+    // One pledge: the organiser's own. A campaign never exists with nobody in it.
+    assert(c.pledge_count == 1, 'organiser is pledge one');
+    assert(c.escrowed == UNIT, 'their unit is escrowed');
+    assert(!m.quorum_reached(ID), 'one is not five');
 }
 
 #[test]

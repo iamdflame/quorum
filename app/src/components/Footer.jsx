@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Mark } from "./Nav.jsx";
 
-const MACHINE = "0x0079bab03056fd05dde50e921cf5ea8c3405aaaa2f05492a8a0e1fb6c811ff76";
+const MACHINE = "0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7";
 
 export default function Footer() {
   return (
@@ -35,7 +35,7 @@ export default function Footer() {
             <ul>
               <li><a href={`https://voyager.online/contract/${MACHINE}`} target="_blank" rel="noreferrer">QuorumMachine</a></li>
               <li><a href="https://voyager.online/contract/0x040337b1af3c663e86e333bab5a4b28da8d4652a15a69beee2b677776ffe812a" target="_blank" rel="noreferrer">STRK20 pool</a></li>
-              <li><a href="https://sepolia.voyager.online/contract/0x06e13e8e129b91085bcb6bde0f3bac7b8cf3ceb504ed4eb0149becc4c9b41736" target="_blank" rel="noreferrer">Sepolia deployment</a></li>
+              <li><a href="https://sepolia.voyager.online/contract/0x07d639ca00289a59a6949a12f6470feadf74d905d01bcce331f6c9d1d775fc73" target="_blank" rel="noreferrer">Sepolia deployment</a></li>
             </ul>
           </div>
 

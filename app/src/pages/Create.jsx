@@ -68,7 +68,7 @@ export default function Create({ ctx }) {
         // including whoever fills in this form - to redirect.
         policy: { kind: "RefundAll" },
       };
-      const { hash } = await createCampaign(ctx.wallet.account, spec, head, say);
+      const { hash } = await createCampaign(ctx.wallet.account, spec, head, "SN_MAIN", say);
       setHash(hash);
       say(`Created. ${hash}`);
     } catch (err) {

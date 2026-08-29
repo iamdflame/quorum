@@ -2,7 +2,7 @@ import { useState } from "react";
 import Reveal from "../components/Reveal.jsx";
 import { RPC } from "../wallet.js";
 
-const MACHINE = "0x0079bab03056fd05dde50e921cf5ea8c3405aaaa2f05492a8a0e1fb6c811ff76";
+const MACHINE = "0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7";
 // starknet_keccak("get_campaign")
 const GET_CAMPAIGN = "0x333358710919613a34f18567332063b09711678bab1f50754e4f8f7fd637a8e";
 

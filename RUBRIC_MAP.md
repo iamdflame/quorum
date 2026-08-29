@@ -24,8 +24,8 @@ Where each judging criterion is satisfied, by file, test and transaction. Run `n
 
 | | |
 |---|---|
-| QuorumMachine, mainnet | [`0x0079bab0…ff76`](https://voyager.online/contract/0x0079bab03056fd05dde50e921cf5ea8c3405aaaa2f05492a8a0e1fb6c811ff76) |
-| QuorumMachine, Sepolia | [`0x06e13e8e…1736`](https://sepolia.voyager.online/contract/0x06e13e8e129b91085bcb6bde0f3bac7b8cf3ceb504ed4eb0149becc4c9b41736) |
+| QuorumMachine, mainnet | [`0x0079bab0…ff76`](https://voyager.online/contract/0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7) |
+| QuorumMachine, Sepolia | [`0x06e13e8e…1736`](https://sepolia.voyager.online/contract/0x07d639ca00289a59a6949a12f6470feadf74d905d01bcce331f6c9d1d775fc73) |
 | Class hash | `0x262f3f54…6086` — **identical on both**, so production runs what the tests rehearsed |
 | App | https://quorum-alpha-drab.vercel.app |
 | Self-check | `npm run verify` |

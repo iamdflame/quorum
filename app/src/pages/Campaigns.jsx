@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import Reveal from "../components/Reveal.jsx";
 import { RPC } from "../wallet.js";
 
-const MACHINE = "0x0079bab03056fd05dde50e921cf5ea8c3405aaaa2f05492a8a0e1fb6c811ff76";
+const MACHINE = "0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7";
 // starknet_keccak("Created")
 const CREATED = "0x3d899d98fd273fdfb3ab9d667c9743f84081d8e2009d188f3ad6b0967260e8b";
 

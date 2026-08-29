@@ -6,7 +6,7 @@
 
 **[Live app](https://quorum-alpha-drab.vercel.app)** &nbsp;·&nbsp;
 **[Rubric map](RUBRIC_MAP.md)** &nbsp;·&nbsp;
-**[Contract on mainnet](https://voyager.online/contract/0x0079bab03056fd05dde50e921cf5ea8c3405aaaa2f05492a8a0e1fb6c811ff76)** &nbsp;·&nbsp;
+**[Contract on mainnet](https://voyager.online/contract/0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7)** &nbsp;·&nbsp;
 **[The adversarial tests](contracts/tests/quorum_test.cairo)** &nbsp;·&nbsp;
 **[How it works](https://quorum-alpha-drab.vercel.app/how)**
 
@@ -137,9 +137,9 @@ That last one earns its place. Commitments are computed in TypeScript and checke
 
 | Network | Address |
 |---|---|
-| **Mainnet** | [`0x0079bab03056fd05dde50e921cf5ea8c3405aaaa2f05492a8a0e1fb6c811ff76`](https://voyager.online/contract/0x0079bab03056fd05dde50e921cf5ea8c3405aaaa2f05492a8a0e1fb6c811ff76) |
-| **Sepolia** | [`0x06e13e8e129b91085bcb6bde0f3bac7b8cf3ceb504ed4eb0149becc4c9b41736`](https://sepolia.voyager.online/contract/0x06e13e8e129b91085bcb6bde0f3bac7b8cf3ceb504ed4eb0149becc4c9b41736) |
-| **Class hash** | `0x262f3f548d23f74ac7326f04d11d315623ca57a6be9af4aabfd7c1a24b66086` — identical on both |
+| **Mainnet** | [`0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7`](https://voyager.online/contract/0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7) |
+| **Sepolia** | [`0x07d639ca00289a59a6949a12f6470feadf74d905d01bcce331f6c9d1d775fc73`](https://sepolia.voyager.online/contract/0x07d639ca00289a59a6949a12f6470feadf74d905d01bcce331f6c9d1d775fc73) |
+| **Class hash** | `0x04a3ad9409c4f4acc72b9fda88410161044e44eb2aa6ab403d08d3ac7de4d4f7` — identical on both |
 
 Same bytecode on testnet and mainnet, so production runs what the tests rehearsed. Verify it yourself:
 
@@ -148,7 +148,7 @@ Same bytecode on testnet and mainnet, so production runs what the tests rehearse
 curl -s -X POST https://api.cartridge.gg/x/starknet/mainnet \
   -H 'Content-Type: application/json' -d '{
     "jsonrpc":"2.0","id":1,"method":"starknet_call","params":[{
-      "contract_address":"0x0079bab03056fd05dde50e921cf5ea8c3405aaaa2f05492a8a0e1fb6c811ff76",
+      "contract_address":"0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7",
       "entry_point_selector":"0x333358710919613a34f18567332063b09711678bab1f50754e4f8f7fd637a8e",
       "calldata":["0x77616c6b6f75742d32303236"]},"latest"]}'
 ```

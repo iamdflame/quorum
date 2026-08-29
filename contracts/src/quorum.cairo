@@ -376,6 +376,17 @@ pub mod QuorumMachine {
 
             match operation {
                 QuorumOp::Create => {
+                    // Opening a campaign is also joining it.
+                    //
+                    // Not a product decision: the pool refuses an invoke that
+                    // moves no value, so a create carrying nothing cannot be
+                    // submitted at all. Rather than pair it with a token
+                    // movement that means nothing, the deposit is the
+                    // organiser's own first pledge.
+                    //
+                    // It reads better than the alternative anyway. Whoever asks
+                    // others to commit is committed themselves, and a campaign
+                    // can never exist with nobody in it.
                     assert(self.campaigns.read(campaign_id).phase == Phase::Void, errors::EXISTS);
                     // A threshold of one fires on the first pledge, which is a
                     // donation with extra steps, not coordination.
@@ -392,6 +403,20 @@ pub mod QuorumMachine {
                         assert(payout_root.is_non_zero(), errors::NO_PAYOUT_ROOT);
                     }
 
+                    // The organiser's pledge, measured like every other.
+                    let delta = self.take_delta(token);
+                    assert(delta == unit, errors::WRONG_UNIT);
+                    assert(self.pledges.read(commitment).amount.is_zero(), errors::DUPLICATE_PLEDGE);
+                    self
+                        .pledges
+                        .write(
+                            commitment,
+                            Pledge { campaign_id, amount: delta, claimed: false, payload: 0 },
+                        );
+                    let root = poseidon_hash_span(
+                        array![PLEDGE_ACC_TAG, 0, commitment].span(),
+                    );
+
                     self
                         .campaigns
                         .write(
@@ -404,9 +429,9 @@ pub mod QuorumMachine {
                                 payout_root,
                                 unit,
                                 threshold,
-                                pledge_count: 0,
-                                pledge_root: 0,
-                                escrowed: 0,
+                                pledge_count: 1,
+                                pledge_root: root,
+                                escrowed: delta,
                                 expiry_block,
                             },
                         );

@@ -80,9 +80,20 @@ export interface Strk20Action {
   readonly [k: string]: unknown;
 }
 
-/** Open a campaign. Escrows nothing; only the pool fee is spent. */
-export function createActions(machine: string, c: CampaignCalldata): Strk20Action[] {
+/**
+ * Open a campaign, and join it.
+ *
+ * The deposit is not optional and not decoration: the pool refuses an invoke
+ * that moves no value, so a create carrying nothing cannot be submitted at all.
+ * Rather than pad it with a movement that means nothing, the deposit is the
+ * organiser's own first pledge — which is the better arrangement anyway, since
+ * whoever asks others to commit is then committed themselves.
+ */
+export function createActions(
+  machine: string, c: CampaignCalldata, commitment: string,
+): Strk20Action[] {
   return [
+    { type: "deposit", token: c.token, amount: felt(c.unit) },
     {
       type: "invoke",
       contract: machine,
@@ -96,6 +107,7 @@ export function createActions(machine: string, c: CampaignCalldata): Strk20Actio
         unit: c.unit,
         threshold: c.threshold,
         expiryBlock: c.expiryBlock,
+        commitment,
       }),
     },
   ];
@@ -128,11 +140,39 @@ export function commitActions(
 export function fireActions(
   machine: string,
   campaignId: string,
-  payouts: readonly { noteId: string; token: string; amount: bigint }[] = [],
+  opts: {
+    payouts?: readonly { noteId: string; token: string; amount: bigint }[];
+    /** Required for a RefundAll fire — see below. */
+    token?: string;
+    self?: string;
+    dust?: bigint;
+  } = {},
 ): Strk20Action[] {
-  return [
-    { type: "invoke", contract: machine, calldata: invoke({ op: OP.Fire, campaignId, payouts }) },
-  ];
+  const payouts = opts.payouts ?? [];
+  const invokeAction = {
+    type: "invoke" as const,
+    contract: machine,
+    calldata: invoke({ op: OP.Fire, campaignId, payouts }),
+  };
+
+  // A RefundAll fire moves no value by design — that is the whole point of the
+  // mode — but the pool will not accept an invoke that moves none. So it is
+  // paired with the smallest legal movement there is: a private transfer of one
+  // unit from the firer to themselves, which changes nobody's balance and exists
+  // only to make the transaction well-formed.
+  if (payouts.length === 0) {
+    if (!opts.token || !opts.self) {
+      throw new Error(
+        "A refund-all fire needs `token` and `self`: the pool rejects an invoke that " +
+        "moves no value, so the call must be paired with a self-transfer.",
+      );
+    }
+    return [
+      { type: "transfer", token: opts.token, amount: felt(opts.dust ?? 1n), recipient: opts.self },
+      invokeAction,
+    ];
+  }
+  return [invokeAction];
 }
 
 /**

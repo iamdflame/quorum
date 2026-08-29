@@ -32,10 +32,10 @@ import {
  */
 const unpad = (a) => "0x" + BigInt(a).toString(16);
 
-export const MACHINE = unpad("0x0079bab03056fd05dde50e921cf5ea8c3405aaaa2f05492a8a0e1fb6c811ff76");
+export const MACHINE = unpad("0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7");
 export const STRK = unpad("0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d");
 /** The padded form, for explorer links and anything shown to a person. */
-export const MACHINE_DISPLAY = "0x0079bab03056fd05dde50e921cf5ea8c3405aaaa2f05492a8a0e1fb6c811ff76";
+export const MACHINE_DISPLAY = "0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7";
 export const POOL_FEE_STRK = 6n;
 
 /** Errors from wallets arrive in shapes that `String()` flattens to nothing. */
@@ -82,18 +82,32 @@ export async function derivePledgeKey(account, campaignId, chainId, nonce = 0) {
   return pledgeKeyFromSignature(campaignId, sig, nonce);
 }
 
-export async function createCampaign(account, spec, currentBlock, say) {
+export async function createCampaign(account, spec, currentBlock, chainId, say) {
   const calldata = prepareCampaign(spec, currentBlock);
-  return { hash: await submit(account, createActions(MACHINE, calldata), say), calldata };
+  // Opening a campaign is joining it: the pool refuses an invoke that moves no
+  // value, so the organiser's deposit is their own first pledge.
+  say("Deriving your pledge key — sign the message. Nothing is stored.");
+  const key = await derivePledgeKey(account, spec.id, chainId, 0);
+  const hash = await submit(account, createActions(MACHINE, calldata, key.commitment), say);
+  return { hash, calldata, key };
 }
 
 export async function pledge(account, campaignId, unit, commitment, say) {
   return submit(account, commitActions(MACHINE, campaignId, STRK, unit, commitment), say);
 }
 
-/** Permissionless. There is no secret, so anyone watching can do this. */
+/**
+ * Permissionless — there is no secret, so anyone watching can do this.
+ *
+ * A refund-all fire moves no value, and the pool will not accept an invoke that
+ * moves none, so it is paired with a one-wei transfer from the firer to
+ * themselves. It changes nobody's balance and exists only to make the
+ * transaction well-formed.
+ */
 export async function fire(account, campaignId, payouts, say) {
-  return submit(account, fireActions(MACHINE, campaignId, payouts), say);
+  const self = "0x" + BigInt(account.address).toString(16);
+  const opts = payouts?.length ? { payouts } : { token: STRK, self };
+  return submit(account, fireActions(MACHINE, campaignId, opts), say);
 }
 
 export async function reclaim(account, campaignId, secret, say) {

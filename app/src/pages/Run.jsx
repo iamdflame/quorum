@@ -22,9 +22,9 @@ import { runProbes } from "../diagnose.js";
  */
 
 const STEPS = [
-  { key: "create", label: "Create the campaign", detail: "Opens it with a threshold of two, a one STRK unit, and a week to gather. Escrows nothing." },
-  { key: "pledgeA", label: "Pledge (first)", detail: "One STRK into the pool, sealed behind a commitment. Nothing becomes visible." },
-  { key: "pledgeB", label: "Pledge (second)", detail: "Reaches quorum. Still nothing is announced — no event carries a count." },
+  { key: "create", label: "Create the campaign", detail: "Opens it — and joins it. The pool refuses an invoke that moves no value, so the organiser's deposit is their own first pledge." },
+  { key: "pledgeA", label: "Pledge (second)", detail: "One STRK into the pool, sealed behind a commitment. This reaches the quorum of two." },
+  { key: "pledgeB", label: "Pledge (third, optional)", detail: "Past quorum. Still nothing is announced — no event carries a count." },
   { key: "fire", label: "Fire it", detail: "Permissionless: there is no secret. RefundAll moves no value; the set simply opens." },
 ];
 
@@ -54,11 +54,13 @@ export default function Run({ ctx }) {
       const chainId = "SN_MAIN";
       if (step === "create") {
         say(`Creating "${id}"…`);
-        const { hash } = await createCampaign(wallet.account, defaultSpec(id, await head()), await head(), say);
+        const h = await head();
+        const { hash } = await createCampaign(wallet.account, defaultSpec(id, h), h, chainId, say);
         setState((s) => ({ ...s, create: hash }));
         say(`Created. ${hash}`);
       } else if (step === "pledgeA" || step === "pledgeB") {
-        const nonce = step === "pledgeA" ? 0 : 1;
+        // Nonce 0 is the organiser's pledge, made during create.
+        const nonce = step === "pledgeA" ? 1 : 2;
         say(`Deriving pledge key ${nonce} — sign the message, nothing is stored.`);
         const key = await derivePledgeKey(wallet.account, id, chainId, nonce);
         say("Pledging one STRK…");

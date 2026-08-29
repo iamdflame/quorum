@@ -103,7 +103,7 @@ export const PROBES = [
     why: "Confirms whether address padding is what the wallet objects to.",
     actions: (id) => [{
       type: "invoke",
-      contract: "0x0079bab03056fd05dde50e921cf5ea8c3405aaaa2f05492a8a0e1fb6c811ff76",
+      contract: "0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7",
       calldata: createCalldata(id),
     }],
   },
