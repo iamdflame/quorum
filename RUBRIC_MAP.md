@@ -27,7 +27,7 @@ Where each judging criterion is satisfied, by file, test and transaction. Run `n
 | QuorumMachine, mainnet | [`0x0079bab0…ff76`](https://voyager.online/contract/0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7) |
 | QuorumMachine, Sepolia | [`0x06e13e8e…1736`](https://sepolia.voyager.online/contract/0x07d639ca00289a59a6949a12f6470feadf74d905d01bcce331f6c9d1d775fc73) |
 | Class hash | `0x262f3f54…6086` — **identical on both**, so production runs what the tests rehearsed |
-| App | https://quorum-alpha-drab.vercel.app |
+| App | https://quorum-strk20.vercel.app |
 | Self-check | `npm run verify` |
 
 **Where this is incomplete, stated plainly.** One pool transaction is listed in [`strk20.json`](strk20.json), and it touched the pool but did not run through QuorumMachine. `npm run verify` prints that as a note rather than a pass, because the criterion is a campaign running end to end on mainnet and that has not happened yet. It is the largest open item in this repository and nothing else here compensates for it.

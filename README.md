@@ -4,11 +4,11 @@
 
 <br>
 
-**[Live app](https://quorum-alpha-drab.vercel.app)** &nbsp;·&nbsp;
+**[Live app](https://quorum-strk20.vercel.app)** &nbsp;·&nbsp;
 **[Rubric map](RUBRIC_MAP.md)** &nbsp;·&nbsp;
 **[Contract on mainnet](https://voyager.online/contract/0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7)** &nbsp;·&nbsp;
 **[The adversarial tests](contracts/tests/quorum_test.cairo)** &nbsp;·&nbsp;
-**[How it works](https://quorum-alpha-drab.vercel.app/how)**
+**[How it works](https://quorum-strk20.vercel.app/how)**
 
 <br>
 
