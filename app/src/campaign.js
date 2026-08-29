@@ -1,6 +1,6 @@
 import {
   prepareCampaign, createActions, commitActions, fireActions, reclaimActions,
-  pledgeSecretMessage, pledgeKeyFromSignature, blocksFor, DAY,
+  shieldActions, pledgeSecretMessage, pledgeKeyFromSignature, blocksFor, DAY,
 } from "@quorum/protocol";
 
 /**
@@ -108,20 +108,30 @@ export async function derivePledgeKey(account, campaignId, chainId, nonce = 0) {
  */
 export const FEE_WEI = 6n * 10n ** 18n;
 
+/**
+ * Shield STRK, as its own transaction.
+ *
+ * Every later step spends notes this creates, and a note is only spendable ten
+ * blocks after it is created — so this cannot be folded into them. Shield
+ * generously: each pool transaction also costs a six STRK fee, taken from the
+ * shielded balance rather than from public STRK.
+ */
+export async function shield(account, amount, say) {
+  return submit(account, shieldActions(STRK, amount), say);
+}
+
 export async function createCampaign(account, spec, currentBlock, chainId, say) {
   const calldata = prepareCampaign(spec, currentBlock);
   // Opening a campaign is joining it: the pool refuses an invoke that moves no
   // value, so the organiser's deposit is their own first pledge.
   say("Deriving your pledge key — sign the message. Nothing is stored.");
   const key = await derivePledgeKey(account, spec.id, chainId, 0);
-  const hash = await submit(
-    account, createActions(MACHINE, calldata, key.commitment, { fee: FEE_WEI }), say);
+  const hash = await submit(account, createActions(MACHINE, calldata, key.commitment), say);
   return { hash, calldata, key };
 }
 
 export async function pledge(account, campaignId, unit, commitment, say) {
-  return submit(
-    account, commitActions(MACHINE, campaignId, STRK, unit, commitment, { fee: FEE_WEI }), say);
+  return submit(account, commitActions(MACHINE, campaignId, STRK, unit, commitment), say);
 }
 
 /**

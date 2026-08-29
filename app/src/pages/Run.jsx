@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Reveal from "../components/Reveal.jsx";
 import {
-  createCampaign, pledge, fire, derivePledgeKey, defaultSpec,
+  createCampaign, pledge, fire, shield, derivePledgeKey, defaultSpec,
   describeError, MACHINE_DISPLAY, POOL_FEE_STRK,
 } from "../campaign.js";
 import { RPC } from "../wallet.js";
@@ -22,6 +22,7 @@ import { runProbes } from "../diagnose.js";
  */
 
 const STEPS = [
+  { key: "shield", label: "Shield 30 STRK", detail: "Its own transaction, and it has to be. Everything after spends notes this creates, and a note is only spendable ten blocks after it exists — so shielding cannot share a transaction with anything that uses it." },
   { key: "create", label: "Create the campaign", detail: "Opens it — and joins it. The pool refuses an invoke that moves no value, so the organiser's deposit is their own first pledge." },
   { key: "pledgeA", label: "Pledge (second)", detail: "One STRK into the pool, sealed behind a commitment. This reaches the quorum of two." },
   { key: "pledgeB", label: "Pledge (third, optional)", detail: "Past quorum. Still nothing is announced — no event carries a count." },
@@ -52,7 +53,12 @@ export default function Run({ ctx }) {
     setBusy(step);
     try {
       const chainId = "SN_MAIN";
-      if (step === "create") {
+      if (step === "shield") {
+        say("Shielding 30 STRK. Wait for the next block or two before the next step.");
+        const hash = await shield(wallet.account, 30n * 10n ** 18n, say);
+        setState((s) => ({ ...s, shield: hash }));
+        say(`Shielded. ${hash}`);
+      } else if (step === "create") {
         say(`Creating "${id}"…`);
         const h = await head();
         const { hash } = await createCampaign(wallet.account, defaultSpec(id, h), h, chainId, say);

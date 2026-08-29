@@ -182,18 +182,11 @@ test("create deposits the organiser's own pledge", () => {
   // The pool refuses an invoke that moves no value, so a create carrying
   // nothing cannot be submitted. The deposit is the organiser's first pledge.
   const a = createActions("0x79bab0", prepareCampaign(SPEC, 10), refundCommitment("0xorg"));
-  // A deposit alone leaves the value in the pledger's own note. The withdraw is
-  // what moves it to the helper, which is what the contract measures.
-  assert.deepEqual(a.map((x) => x.type), ["deposit", "withdraw", "invoke"]);
-  assert.equal(a[1]!["recipient"], "0x79bab0", "the withdraw funds the machine");
-  assert.equal(BigInt((a[2]!.calldata as string[])[0]!), BigInt(OP.Create));
-
-  // With a fee, the deposit covers the pledge and the fee; the withdraw still
-  // moves only the pledge. The pool takes its fee from the shielded balance.
-  const withFee = createActions("0x79bab0", prepareCampaign(SPEC, 10),
-    refundCommitment("0xorg"), { fee: 6n * 10n ** 18n });
-  assert.equal(BigInt(withFee[0]!["amount"] as string), SPEC.unit + 6n * 10n ** 18n);
-  assert.equal(BigInt(withFee[1]!["amount"] as string), SPEC.unit);
+  // No deposit. A deposited note is only spendable ten blocks after creation,
+  // so shielding and spending cannot share a transaction.
+  assert.deepEqual(a.map((x) => x.type), ["withdraw", "invoke"]);
+  assert.equal(a[0]!["recipient"], "0x79bab0", "the withdraw funds the machine");
+  assert.equal(BigInt((a[1]!.calldata as string[])[0]!), BigInt(OP.Create));
 });
 
 test("a refund-all fire is paired with a self-transfer", () => {
@@ -217,12 +210,12 @@ test("a treasury fire needs no pairing, because it moves the payouts", () => {
 
 test("commit passes no amount at all — the contract measures its own balance", () => {
   const a = commitActions("0x79bab0", "walkout-2026", "0x111", 100n, "0xcommit");
-  assert.deepEqual(a.map((x) => x.type), ["deposit", "withdraw", "invoke"]);
-  const cd = a[2]!.calldata as string[];
+  assert.deepEqual(a.map((x) => x.type), ["withdraw", "invoke"]);
+  const cd = a[1]!.calldata as string[];
   assert.equal(BigInt(cd[0]!), BigInt(OP.Commit));
   assert.equal(BigInt(cd[cd.length - 1]!), 0n, "empty payout span: nothing is credited");
   // Passing an amount would invite it to be believed; the withdraw is the fact.
-  assert.equal(a[1]!["amount"], "0x64");
+  assert.equal(a[0]!["amount"], "0x64");
 });
 
 test("firing a refund-all campaign carries no payouts", () => {

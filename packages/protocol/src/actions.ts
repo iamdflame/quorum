@@ -89,23 +89,29 @@ export interface Strk20Action {
  * organiser's own first pledge — which is the better arrangement anyway, since
  * whoever asks others to commit is then committed themselves.
  */
+/**
+ * Shield tokens, on its own.
+ *
+ * This has to be a separate transaction from anything that spends the result. A
+ * deposited note is only spendable ten blocks after it is created, so depositing
+ * and withdrawing in one transaction tries to spend a note that does not yet
+ * exist — which reverts with nothing more informative than a failed transaction.
+ *
+ * AVNU's working private swap gives the same answer from the other direction:
+ * it emits `withdraw`, `transfer` and `invoke`, and never a `deposit` beside
+ * them.
+ */
+export function shieldActions(token: string, amount: bigint): Strk20Action[] {
+  return [{ type: "deposit", token, amount: felt(amount) }];
+}
+
 export function createActions(
   machine: string, c: CampaignCalldata, commitment: string,
-  opts: { fee?: bigint } = {},
 ): Strk20Action[] {
-  // The pool's fee is paid from the shielded balance, so the deposit has to
-  // cover the pledge *and* the fee. Depositing only the pledge leaves the
-  // transaction short by the fee, and the wallet reports that as nothing more
-  // informative than a failed transaction.
-  const fee = opts.fee ?? 0n;
   return [
-    // Public tokens into the pool, as the pledger's own note.
-    { type: "deposit", token: c.token, amount: felt(c.unit + fee) },
-    // And out of the pool to the machine. This is the step that actually funds
-    // the helper: a deposit alone leaves the value sitting in the pledger's own
-    // note, where the contract's balance-delta accounting correctly sees
-    // nothing. The docs put it plainly — "the pool withdraws input tokens to
-    // the helper" — and without it every operation reverts on the unit check.
+    // Out of the pool to the machine. This is what funds the helper, and it
+    // spends notes the pledger already holds — which is why shielding must
+    // happen in an earlier transaction.
     { type: "withdraw", token: c.token, amount: felt(c.unit), recipient: machine },
     {
       type: "invoke",
@@ -136,12 +142,9 @@ export function createActions(
  */
 export function commitActions(
   machine: string, campaignId: string, token: string, unit: bigint, commitment: string,
-  opts: { fee?: bigint } = {},
 ): Strk20Action[] {
-  const fee = opts.fee ?? 0n;
   return [
-    { type: "deposit", token, amount: felt(unit + fee) },
-    // The withdraw is what funds the helper; see `createActions`.
+    // Spends already-shielded notes; see `shieldActions`.
     { type: "withdraw", token, amount: felt(unit), recipient: machine },
     { type: "invoke", contract: machine, calldata: invoke({ op: OP.Commit, campaignId, commitment }) },
   ];
