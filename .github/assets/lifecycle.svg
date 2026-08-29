@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="660" viewBox="0 0 1280 660" fill="none" role="img" aria-label="A campaign end to end: shield, pledge, then either fire at quorum or refund at expiry. The chain records counts, never identities.">
+  <rect width="1280" height="660" fill="#0B0A08"/>
+
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#6E6960"/>
+    </marker>
+    <marker id="af" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#E2661A"/>
+    </marker>
+    <style>
+      .h  { font: 600 27px ui-sans-serif, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #E8E6E1 }
+      .sub{ font: 400 16px ui-sans-serif, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #A8A399 }
+      .n  { font: 600 11px ui-monospace, "SF Mono", Menlo, Consolas, monospace; fill: #E2661A; letter-spacing: 1.6px }
+      .t  { font: 600 18px ui-sans-serif, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #E8E6E1 }
+      .d  { font: 400 13.5px ui-sans-serif, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #A8A399 }
+      .m  { font: 400 12px ui-monospace, "SF Mono", Menlo, Consolas, monospace; fill: #6E6960 }
+      .mf { font: 400 12px ui-monospace, "SF Mono", Menlo, Consolas, monospace; fill: #E2661A }
+      .lbl{ font: 600 11px ui-monospace, "SF Mono", Menlo, Consolas, monospace; fill: #6E6960; letter-spacing: 1.4px }
+    </style>
+  </defs>
+
+  <text class="h" x="64" y="70">A campaign, end to end</text>
+  <text class="sub" x="64" y="99">What the chain records at each step — and what it never does.</text>
+  <line x1="64" y1="126" x2="1216" y2="126" stroke="#2C251C"/>
+
+  <!-- ═══ 1 · Shield ═══════════════════════════════════════════════ -->
+  <g>
+    <rect x="64" y="186" width="236" height="104" rx="8" fill="#17140F" stroke="#2C251C"/>
+    <text class="n" x="88" y="216">01</text>
+    <text class="t" x="88" y="243">Shield</text>
+    <text class="d" x="88" y="268">STRK into the pool</text>
+  </g>
+  <text class="lbl" x="64" y="322">CHAIN SEES</text>
+  <text class="m" x="64" y="344">your address, and</text>
+  <text class="m" x="64" y="362">that you funded a note</text>
+  <text class="m" x="64" y="386">— a separate step,</text>
+  <text class="m" x="64" y="404">deliberately, so this</text>
+  <text class="m" x="64" y="422">never shares a</text>
+  <text class="m" x="64" y="440">transaction with 02</text>
+
+  <line x1="300" y1="238" x2="352" y2="238" stroke="#6E6960" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <!-- ═══ 2 · Pledge ═══════════════════════════════════════════════ -->
+  <g>
+    <rect x="360" y="186" width="256" height="104" rx="8" fill="#17140F" stroke="#2C251C"/>
+    <text class="n" x="384" y="216">02</text>
+    <text class="t" x="384" y="243">Pledge</text>
+    <text class="d" x="384" y="268">one unit, same as everyone</text>
+  </g>
+  <text class="lbl" x="360" y="322">CHAIN SEES</text>
+  <text class="mf" x="360" y="344">Committed(campaign_id)</text>
+  <text class="m" x="360" y="366">and nothing else. No</text>
+  <text class="m" x="360" y="384">address. No amount. No</text>
+  <text class="m" x="360" y="402">index. The transaction is</text>
+  <text class="m" x="360" y="420">sent by a shared relayer</text>
+  <text class="m" x="360" y="438">with ~300k others.</text>
+
+  <line x1="616" y1="238" x2="668" y2="238" stroke="#6E6960" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <!-- ═══ 3 · The escrow ═══════════════════════════════════════════ -->
+  <g>
+    <rect x="676" y="170" width="216" height="136" rx="8" fill="#17140F" stroke="#2C251C"/>
+    <text class="n" x="700" y="200">03</text>
+    <text class="t" x="700" y="227">Sealed escrow</text>
+    <text class="d" x="700" y="252">count++ · escrow += unit</text>
+    <text class="d" x="700" y="272">payout_root fixed at 01</text>
+    <text class="d" x="700" y="292">no pledger list exists</text>
+  </g>
+
+  <!-- branch -->
+  <path d="M892 214 H 936 V 132 H 976" stroke="#E2661A" stroke-width="1.5" fill="none" marker-end="url(#af)"/>
+  <path d="M892 262 H 936 V 420 H 976" stroke="#6E6960" stroke-width="1.5" fill="none"
+        stroke-dasharray="5 4" marker-end="url(#a)"/>
+  <text class="mf" x="968" y="122" text-anchor="end">count ≥ threshold</text>
+  <text class="m"  x="968" y="444" text-anchor="end">expiry, still below</text>
+
+  <!-- ═══ 4a · Fire ════════════════════════════════════════════════ -->
+  <g>
+    <rect x="984" y="88" width="232" height="112" rx="8" fill="#17140F" stroke="#E2661A"/>
+    <text class="n" x="1008" y="118">04a</text>
+    <text class="t" x="1008" y="145">Fire</text>
+    <text class="d" x="1008" y="170">permissionless — anyone,</text>
+    <text class="d" x="1008" y="188">no secret, no organiser</text>
+  </g>
+  <text class="m" x="984" y="228">Payouts must reproduce the</text>
+  <text class="m" x="984" y="246">root committed when the</text>
+  <text class="m" x="984" y="264">campaign opened, so whoever</text>
+  <text class="m" x="984" y="282">fires it cannot redirect it.</text>
+
+  <!-- ═══ 4b · Reclaim ═════════════════════════════════════════════ -->
+  <g>
+    <rect x="984" y="376" width="232" height="112" rx="8" fill="#17140F" stroke="#2C251C"/>
+    <text class="n" x="1008" y="406">04b</text>
+    <text class="t" x="1008" y="433">Reclaim</text>
+    <text class="d" x="1008" y="458">every pledge returned,</text>
+    <text class="d" x="1008" y="476">nobody revealed</text>
+  </g>
+  <text class="m" x="984" y="516">The half that does not fire</text>
+  <text class="m" x="984" y="534">is the half worth having:</text>
+  <text class="m" x="984" y="552">going first has to be</text>
+  <text class="m" x="984" y="570">survivable when it fails.</text>
+
+  <!-- the point of the whole diagram -->
+  <rect x="64" y="470" width="836" height="98" rx="8" fill="#17140F" stroke="#2C251C"/>
+  <rect x="64" y="470" width="3" height="98" fill="#E2661A"/>
+  <text class="t" x="94" y="506">Never recorded, anywhere: who pledged.</text>
+  <text class="d" x="94" y="532">Not in the contract, not in the app, not in a database. There is no pledger list to</text>
+  <text class="d" x="94" y="552">subpoena, because none was ever written — by the organiser or by anyone else.</text>
+
+  <!-- footer -->
+  <line x1="64" y1="596" x2="1216" y2="596" stroke="#2C251C"/>
+  <text class="m" x="64" y="626">Every pledge is the same size, so the count is the whole public record. With variable amounts an amount is a fingerprint.</text>
+  <text class="m" x="64" y="646">The anonymity set is the pool's users during your window — not the campaign's pledgers. A threshold of 2 is not a crowd.</text>
+</svg>

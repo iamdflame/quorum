@@ -92,6 +92,12 @@ page still lied to anyone reading it. Reading is not a control.
 
 <br>
 
+<div align="center">
+<img src=".github/assets/lifecycle.svg" alt="A campaign end to end: shield, then pledge, into a sealed escrow that either fires at quorum or refunds at expiry. The chain records counts, never identities." width="100%">
+</div>
+
+<br>
+
 ## If the quorum is never reached
 
 Half the mechanism is the half that does not fire, and it is the half worth
