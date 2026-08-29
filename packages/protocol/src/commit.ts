@@ -40,16 +40,20 @@ export const TAGS = {
  */
 export function toFelt(v: string | number | bigint): string {
   if (typeof v === "string") {
-    if (v.startsWith("${")) return v;
-    if (!/^0[xX][0-9a-fA-F]*$/.test(v)) {
-      if (v.length > 31) {
-        throw new Error(
-          `"${v}" is ${v.length} characters; a Cairo short string holds 31. ` +
-          "Shorten it, or pass a felt directly.",
-        );
-      }
-      return shortString.encodeShortString(v);
+    if (v.startsWith("${")) return v;                       // wallet placeholder
+    if (/^0[xX][0-9a-fA-F]*$/.test(v)) return num.toHex(v); // hex
+    // A run of digits is a number, not a name. Wallets return signature
+    // components as decimal strings, and treating one as a name tries to encode
+    // a 76-digit integer as a short string — which fails with a message about
+    // character limits that says nothing about where the value came from.
+    if (/^[0-9]+$/.test(v)) return num.toHex(BigInt(v));
+    if (v.length > 31) {
+      throw new Error(
+        `"${v}" is ${v.length} characters; a Cairo short string holds 31. ` +
+        "Shorten it, or pass a felt directly.",
+      );
     }
+    return shortString.encodeShortString(v);
   }
   return num.toHex(v);
 }

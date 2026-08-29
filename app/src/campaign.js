@@ -78,7 +78,16 @@ async function submit(account, actions, say) {
 export async function derivePledgeKey(account, campaignId, chainId, nonce = 0) {
   const msg = pledgeSecretMessage(campaignId, chainId);
   const signature = await account.signMessage(msg);
-  const sig = Array.isArray(signature) ? signature : (signature?.signature ?? []);
+  // Wallets return this in several shapes: a bare array, an object with a
+  // `signature` field, or `{ r, s }`. All of them arrive as decimal strings.
+  const sig = Array.isArray(signature)
+    ? signature
+    : Array.isArray(signature?.signature)
+      ? signature.signature
+      : [signature?.r, signature?.s].filter((x) => x !== undefined);
+  if (sig.length === 0) {
+    throw new Error("The wallet returned a signature in a shape we do not recognise.");
+  }
   return pledgeKeyFromSignature(campaignId, sig, nonce);
 }
 

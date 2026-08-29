@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  payoutRoot, refundCommitment, foldPledge, pledgeRoot, TAGS,
+  payoutRoot, refundCommitment, foldPledge, pledgeRoot, TAGS, toFelt,
   secretFromSignature, pledgeKeyFromSignature,
 } from "../src/commit.ts";
 import {
@@ -430,4 +430,25 @@ test("every felt we emit in calldata is acceptable to the wallet", () => {
       assert.ok(FELT_PATTERN.test(v), `${key} "${v}" would be rejected`);
     }
   }
+});
+
+test("a decimal string is a number, not a name", () => {
+  // Wallets return signature components as decimal. Treating one as a name
+  // tries to encode a 76-digit integer as a Cairo short string.
+  const decimal = "1359875869018127880684032253361965086718885364505183201468179827409842874670";
+  assert.equal(BigInt(toFelt(decimal)), BigInt(decimal));
+});
+
+test("a signature of decimal components derives a secret", () => {
+  const sig = [
+    "1359875869018127880684032253361965086718885364505183201468179827409842874670",
+    "2891234567890123456789012345678901234567890123456789012345678901234567890123",
+  ];
+  const secret = secretFromSignature(sig, "walkout-2026");
+  assert.ok(FELT_PATTERN.test(secret), "the derived secret must itself be a valid felt");
+  assert.equal(secret, secretFromSignature([...sig], "walkout-2026"), "and be reproducible");
+});
+
+test("names are still names", () => {
+  assert.equal(BigInt(toFelt("walkout-2026")), BigInt("0x77616c6b6f75742d32303236"));
 });
