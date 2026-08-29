@@ -23,7 +23,8 @@
     "test:bridge": "node --test --experimental-strip-types packages/sdk-bridge/test/*.test.ts",
     "test:contracts": "cd contracts && snforge test",
     "build:archive": "tsc -b archive/oracle archive/router archive/execute archive/sdk-bridge",
-    "verify": "node scripts/verify.mjs"
+    "verify": "node scripts/verify.mjs",
+    "publish:tools": "npm run build && npm test && npm publish -w @quorum/chain && npm publish -w @quorum/linkage"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

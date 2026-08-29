@@ -232,20 +232,22 @@ Two of those are real limits rather than rounding errors.
 
 ## Repository
 
-```
-contracts/          QuorumMachine, Cairo 2.20                     51 tests
-packages/protocol/  commitments, key derivation, actions, verify  47 tests
-packages/linkage/   what the live pool already gives away         27 tests
-packages/chain/     mainnet reader, infrastructure classification
-app/                the front end
-archive/            Shoal — the earlier project in this repo
-```
+| | | |
+|---|---|---|
+| [`contracts/`](contracts/) | QuorumMachine, Cairo 2.20 — **[documented as a standalone primitive](contracts/README.md)** | 51 tests |
+| [`packages/protocol/`](packages/protocol) | commitments, key derivation, actions, verification | 57 tests |
+| [`packages/linkage/`](packages/linkage) | what the live pool already gives away — **[its own tool](packages/linkage/README.md)** | 27 tests |
+| [`packages/chain/`](packages/chain) | mainnet reader, infrastructure classification | 4 tests |
+| [`app/`](app/) | the front end | |
+| [`archive/`](archive/) | Shoal — the earlier project in this repo | |
 
 ```bash
-npm install && npm run build && npm test    # 74 TypeScript tests
+npm install && npm run build && npm test    # 88 TypeScript tests
 cd contracts && snforge test                # 51 Cairo tests
 npm run verify                              # every on-chain claim in this README
 ```
+
+`npm run verify` also checks that every address written in these documents is one this repository actually deployed or transacted. Twice a plausible-looking address reached a document from memory rather than from the chain, and reading is not a control.
 
 Node 24+ — the STRK20 SDK's `ohttp-ts` requires modern WebCrypto.
 
@@ -253,7 +255,7 @@ Node 24+ — the STRK20 SDK's `ohttp-ts` requires modern WebCrypto.
 
 ## Contributed upstream
 
-- [**#121**](https://github.com/starkience/strk20-hackathon/issues/121) — a way past the SDK's unexported `ContractDiscoveryProvider`, packaged as [`@quorum/sdk-bridge`](packages/sdk-bridge); confirmation that **Ready X implements the STRK20 wallet methods** where Braavos answers *not implemented*; and the finding that a shield with no exit still emits a `Withdrawal`, because the fee is settled by paying the collector.
+- [**#121**](https://github.com/starkience/strk20-hackathon/issues/121) — a way past the SDK's unexported `ContractDiscoveryProvider`, packaged as [`sdk-bridge`](archive/sdk-bridge); confirmation that **Ready X implements the STRK20 wallet methods** where Braavos answers *not implemented*; and the finding that a shield with no exit still emits a `Withdrawal`, because the fee is settled by paying the collector.
 
 <br>
 

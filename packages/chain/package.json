@@ -10,5 +10,26 @@
       "default": "./dist/index.js"
     }
   },
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "description": "Read the STRK20 privacy pool from Starknet mainnet: transactions, public edges, and which addresses are infrastructure rather than people.",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "starknet",
+    "strk20",
+    "privacy",
+    "rpc",
+    "indexer"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Highneighbour/quorum.git",
+    "directory": "packages/chain"
+  },
+  "homepage": "https://github.com/Highneighbour/quorum/tree/master/packages/chain",
+  "publishConfig": {
+    "access": "public"
+  }
 }
