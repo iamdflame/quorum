@@ -281,11 +281,57 @@ export async function feeCollector(
   }
 }
 
-/** A receiver spanning at least this many assets, with no deposits, is a sink. */
+/*
+ * Two independent signatures of plumbing. Either one is enough.
+ *
+ * Breadth: a receiver spanning several assets, never depositing, is being paid
+ * rather than transacting. People hold a couple of tokens; a fee collector
+ * takes whatever it is handed.
+ *
+ * Volume: a receiver appearing in this many transactions, never depositing, is
+ * being paid on a schedule someone else sets.
+ *
+ * These were once an AND, which was wrong and expensively so. The pool's
+ * paymaster receives in almost every transaction but only ever in two tokens,
+ * so it passed the volume test, failed the breadth test, and was counted as a
+ * person — reappearing as dozens of users who had supposedly shielded and
+ * unshielded atomically. The counterexample is that a single-asset payee is
+ * still a payee.
+ */
 const SINK_MIN_TOKENS = 3;
-
-/** ...and must have received at least this many times, to exclude coincidence. */
 const SINK_MIN_RECEIPTS = 10;
+
+/**
+ * Addresses that look like plumbing from the edge list alone.
+ *
+ * Pure and network-free so the rule can be tested against the shapes that have
+ * actually fooled it. Callers still confirm each candidate is a deployed
+ * contract before excluding it, because an EOA receiving a lot is a heavy user
+ * and deleting them understates the crowd.
+ */
+export function sinkCandidates(edges: readonly PublicEdge[]): Set<string> {
+  const deposited = new Set<string>();
+  const tokens = new Map<string, Set<string>>();
+  const receipts = new Map<string, number>();
+  for (const e of edges) {
+    if (e.operator === undefined) continue;
+    const a = e.operator.toString(16);
+    if (e.kind === "deposit") { deposited.add(a); continue; }
+    const toks = tokens.get(a) ?? new Set<string>();
+    toks.add(e.token.toString(16));
+    tokens.set(a, toks);
+    receipts.set(a, (receipts.get(a) ?? 0) + 1);
+  }
+
+  const out = new Set<string>();
+  for (const [addr, toks] of tokens) {
+    if (deposited.has(addr)) continue;
+    const breadth = toks.size >= SINK_MIN_TOKENS;
+    const volume = (receipts.get(addr) ?? 0) >= SINK_MIN_RECEIPTS;
+    if (breadth || volume) out.add(addr);
+  }
+  return out;
+}
 
 export async function identifyInfrastructure(
   edges: readonly PublicEdge[],
@@ -305,28 +351,9 @@ export async function identifyInfrastructure(
     // heuristic below still catches the high-volume helpers.
   }
 
-  const deposited = new Set<string>();
-  const received = new Map<string, Set<string>>();
-  const receipts = new Map<string, number>();
-  for (const e of edges) {
-    if (e.operator === undefined) continue;
-    const a = e.operator.toString(16);
-    if (e.kind === "deposit") {
-      deposited.add(a);
-    } else {
-      const toks = received.get(a) ?? new Set<string>();
-      toks.add(e.token.toString(16));
-      received.set(a, toks);
-      receipts.set(a, (receipts.get(a) ?? 0) + 1);
-    }
-  }
-
   const rpcs = opts.rpcs ?? DEFAULT_RPCS;
   const sinks = new Set<string>();
-  for (const [addr, tokens] of received) {
-    if (deposited.has(addr)) continue;
-    if (tokens.size < SINK_MIN_TOKENS) continue;
-    if ((receipts.get(addr) ?? 0) < SINK_MIN_RECEIPTS) continue;
+  for (const addr of sinkCandidates(edges)) {
     // Only a deployed contract can be plumbing; an EOA receiving a lot is just
     // a heavy user, and excluding them would understate the real crowd.
     try {

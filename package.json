@@ -13,7 +13,7 @@
   },
   "scripts": {
     "build": "tsc -b packages/protocol packages/chain packages/linkage",
-    "test": "node --test --experimental-strip-types packages/protocol/test/*.test.ts packages/linkage/test/*.test.ts",
+    "test": "node --test --experimental-strip-types packages/protocol/test/*.test.ts packages/chain/test/*.test.ts packages/linkage/test/*.test.ts",
     "typecheck": "tsc -b packages/protocol packages/chain packages/linkage",
     "demo": "npm run build && node examples/the-crowd-you-are-in.mjs",
     "live": "npm run build && node examples/live-mainnet.mjs",

@@ -25,6 +25,9 @@ const CLASS_HASH = "0x04a3ad9409c4f4acc72b9fda88410161044e44eb2aa6ab403d08d3ac7d
 const POOL = "0x040337b1af3c663e86e333bab5a4b28da8d4652a15a69beee2b677776ffe812a";
 const STRK = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
 
+const { readFileSync } = await import("node:fs");
+const manifest = JSON.parse(readFileSync(new URL("../strk20.json", import.meta.url), "utf8"));
+
 /* Selectors, from starknet_keccak of the entry point name. */
 const SEL = {
   get_campaign: "0x333358710919613a34f18567332063b09711678bab1f50754e4f8f7fd637a8e",
@@ -92,6 +95,52 @@ try {
   }
 } catch (e) { fail("get_campaign failed", String(e.message ?? e)); }
 
+/* ---- every address written in the docs is one that actually exists ---- *
+ *
+ * Twice now a plausible-looking address has been written into a document from
+ * memory rather than from the chain. Both times it was caught by reading, which
+ * is not a control. A full-width hex literal in a document is a claim about
+ * mainnet, so it is checked against the small set this repository has actually
+ * deployed or transacted, and anything else has to be declared here on purpose.
+ */
+{
+  // The contract's own entry points, computed rather than listed: documenting a
+  // call means writing its selector, and those are legitimate by construction.
+  const { hash } = await import("starknet");
+  const selectors = ["privacy_invoke", "get_campaign", "get_pledge", "quorum_reached", "held"]
+    .map((n) => hash.getSelectorFromName(n));
+
+  const known = new Set([
+    MACHINE, MACHINE_SEPOLIA, CLASS_HASH, POOL, STRK,
+    ...manifest.transactions, ...selectors,
+    // Values this repository legitimately names, each checked once by hand
+    // against the chain before being written down here.
+    "0x127021a1b5a52d3174c2ab077c2b043c80369250d29428cee956d76ee51584f", // the pool's paymaster
+    "0x00d79041634625e5288296fbc648088788710ba44903a3a49468a66567749e77", // the fee collector
+    "0x0487c8b492361acdf48bf691ee61f56884734dc0e84980ffccc18b128ee3dd49", // mainnet deploy tx
+    "0x0254a6b2997ef52e9f830ce1f543f6b29768295e8d17e2267d672c552cfe0d91", // the Sepolia pool
+    "0x076032ab7a20ff0b7a324157e403062eba3a756421fa70a44514cdb0ee7d0c65", // Sepolia deploy tx
+    "0x06d3f070a8732b1272ac7e73527187ce08da502839b18fc30a481a79512b8c08", // superseded QuorumMachine
+    "0x0269fa8cd8a7a04f5cd5b2fda7139efebb99511e2dde4778ba9395948a62ecfc", // superseded ConclaveMachine
+  ].map((h) => h.toLowerCase()));
+  const eqHex = (a, b) => { try { return BigInt(a) === BigInt(b); } catch { return false; } };
+
+  const docs = ["README.md", "RUBRIC_MAP.md", "DEPLOYMENTS.md",
+                "contracts/README.md", "packages/linkage/README.md"];
+  const bad = [];
+  for (const doc of docs) {
+    let text;
+    try { text = readFileSync(new URL(`../${doc}`, import.meta.url), "utf8"); } catch { continue; }
+    for (const m of text.matchAll(/0x[0-9a-fA-F]{48,64}/g)) {
+      if (![...known].some((k) => eqHex(k, m[0]))) bad.push(`${doc}: ${m[0]}`);
+    }
+  }
+  bad.length === 0
+    ? pass("every address in the docs is one that exists", `${docs.length} documents scanned`)
+    : fail("a document names an address this repo never deployed or used",
+           bad.slice(0, 4).join("\n         "));
+}
+
 /* ---- the contract's own accounting reconciles with its real balance ---- *
  *
  * `held` is not expected to be zero: a live RefundAll campaign holds its
@@ -144,8 +193,6 @@ try {
 
 /* ---- every transaction listed in strk20.json actually did what we claim ---- */
 try {
-  const { readFileSync } = await import("node:fs");
-  const manifest = JSON.parse(readFileSync(new URL("../strk20.json", import.meta.url), "utf8"));
   const txs = manifest.transactions ?? [];
   if (txs.length === 0) {
     console.log("  \x1b[33mnote\x1b[0m  strk20.json lists no transactions yet");

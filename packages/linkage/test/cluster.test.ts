@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { clusterEntities } from "../src/cluster.ts";
-import type { PoolTransaction, PoolEvent } from "@shoal/chain";
+import type { PoolTransaction, PoolEvent } from "@quorum/chain";
 
 const T = "0x111";
 const ev = (kind: PoolEvent["kind"], keys: string[], data: string[] = []): PoolEvent =>

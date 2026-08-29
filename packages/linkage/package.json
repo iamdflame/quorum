@@ -1,10 +1,47 @@
 {
-  "name": "@shoal/linkage",
+  "name": "@quorum/linkage",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
-  "dependencies": { "@shoal/chain": "0.1.0" },
-  "license": "Apache-2.0"
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./cluster": {
+      "types": "./dist/cluster.d.ts",
+      "default": "./dist/cluster.js"
+    }
+  },
+  "dependencies": {
+    "@quorum/chain": "0.1.0"
+  },
+  "license": "Apache-2.0",
+  "description": "What the STRK20 privacy pool already reveals, with no cryptography broken. Point it at your own address.",
+  "bin": {
+    "quorum-linkage": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "starknet",
+    "strk20",
+    "privacy",
+    "anonymity",
+    "linkage",
+    "deanonymisation",
+    "audit"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Highneighbour/quorum.git",
+    "directory": "packages/linkage"
+  },
+  "homepage": "https://github.com/Highneighbour/quorum/tree/master/packages/linkage",
+  "publishConfig": {
+    "access": "public"
+  }
 }
