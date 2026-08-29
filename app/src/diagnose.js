@@ -91,6 +91,23 @@ export const PROBES = [
     ],
   },
   {
+    name: "deposit + withdraw to machine + invoke",
+    why: "The documented sandwich: value out of the pool to the helper, then the call. This is what a real create sends.",
+    actions: (id) => [
+      { type: "deposit", token: STRK, amount: ONE_STRK },
+      { type: "withdraw", token: STRK, amount: ONE_STRK, recipient: MACHINE },
+      { type: "invoke", contract: MACHINE, calldata: createCalldata(id) },
+    ],
+  },
+  {
+    name: "withdraw to machine + invoke",
+    why: "Same, for someone whose STRK is already shielded and needs no deposit.",
+    actions: (id) => [
+      { type: "withdraw", token: STRK, amount: ONE_STRK, recipient: MACHINE },
+      { type: "invoke", contract: MACHINE, calldata: createCalldata(id) },
+    ],
+  },
+  {
     name: "transfer to self + invoke",
     why: "A plain private transfer as the accompanying movement, instead of a deposit.",
     actions: (id, self) => [

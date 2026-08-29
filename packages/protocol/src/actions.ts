@@ -93,7 +93,14 @@ export function createActions(
   machine: string, c: CampaignCalldata, commitment: string,
 ): Strk20Action[] {
   return [
+    // Public tokens into the pool, as the pledger's own note.
     { type: "deposit", token: c.token, amount: felt(c.unit) },
+    // And out of the pool to the machine. This is the step that actually funds
+    // the helper: a deposit alone leaves the value sitting in the pledger's own
+    // note, where the contract's balance-delta accounting correctly sees
+    // nothing. The docs put it plainly — "the pool withdraws input tokens to
+    // the helper" — and without it every operation reverts on the unit check.
+    { type: "withdraw", token: c.token, amount: felt(c.unit), recipient: machine },
     {
       type: "invoke",
       contract: machine,
@@ -126,6 +133,8 @@ export function commitActions(
 ): Strk20Action[] {
   return [
     { type: "deposit", token, amount: felt(unit) },
+    // The withdraw is what funds the helper; see `createActions`.
+    { type: "withdraw", token, amount: felt(unit), recipient: machine },
     { type: "invoke", contract: machine, calldata: invoke({ op: OP.Commit, campaignId, commitment }) },
   ];
 }
