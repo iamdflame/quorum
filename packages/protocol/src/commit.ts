@@ -110,8 +110,11 @@ export function pledgeSecretMessage(campaignId: string, chainId: string) {
   return {
     domain: { name: "Quorum", version: "1", chainId, revision: "1" },
     message: {
-      purpose: "Derive the secret that lets you reclaim this pledge",
-      campaign: campaignId,
+      // Every value must fit a felt. `shortstring` holds 31 characters, and a
+      // longer one does not error — the wallet simply never returns, which
+      // surfaces as a timeout with nothing to point at.
+      action: "Derive pledge key",
+      campaign: toFelt(campaignId),
     },
     primaryType: "PledgeKey",
     types: {
@@ -122,7 +125,7 @@ export function pledgeSecretMessage(campaignId: string, chainId: string) {
         { name: "revision", type: "shortstring" },
       ],
       PledgeKey: [
-        { name: "purpose", type: "string" },
+        { name: "action", type: "shortstring" },
         { name: "campaign", type: "felt" },
       ],
     },

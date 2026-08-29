@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   payoutRoot, refundCommitment, foldPledge, pledgeRoot, TAGS, toFelt,
-  secretFromSignature, pledgeKeyFromSignature,
+  secretFromSignature, pledgeKeyFromSignature, pledgeSecretMessage,
 } from "../src/commit.ts";
 import {
   hashTerms, verifyTerms, prepareCampaign, timeRemaining, CampaignError, type Terms,
@@ -454,4 +454,24 @@ test("a signature of decimal components derives a secret", () => {
 
 test("names are still names", () => {
   assert.equal(BigInt(toFelt("walkout-2026")), BigInt("0x77616c6b6f75742d32303236"));
+});
+
+test("every value in the signing message fits a felt", () => {
+  // A value longer than 31 characters does not error — the wallet simply never
+  // returns, and the only symptom is a timeout with nothing to point at.
+  const m = pledgeSecretMessage("a-campaign-with-a-long-name", "SN_MAIN");
+  for (const [key, value] of Object.entries(m.message)) {
+    const s = String(value);
+    const len = s.startsWith("0x") ? (s.length - 2) / 2 : s.length;
+    assert.ok(len <= 31, `message.${key} is ${len} bytes; a felt holds 31`);
+  }
+  for (const [key, value] of Object.entries(m.domain)) {
+    assert.ok(String(value).length <= 31, `domain.${key} is too long for a felt`);
+  }
+});
+
+test("the signing message names the campaign, so one signature is not another", () => {
+  const a = pledgeSecretMessage("walkout-2026", "SN_MAIN");
+  const b = pledgeSecretMessage("other-campaign", "SN_MAIN");
+  assert.notEqual(a.message.campaign, b.message.campaign);
 });

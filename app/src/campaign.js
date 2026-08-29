@@ -78,9 +78,20 @@ async function submit(account, actions, say) {
 }
 
 /** Derive this wallet's pledge key for a campaign. Nothing is stored. */
+/** Fail loudly rather than hanging forever on a wallet that never answers. */
+function withTimeout(promise, ms, what) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(
+        `${what} did not answer within ${Math.round(ms / 1000)}s. If the wallet showed no ` +
+        "prompt, it rejected the request before displaying it.")), ms)),
+  ]);
+}
+
 export async function derivePledgeKey(account, campaignId, chainId, nonce = 0) {
   const msg = pledgeSecretMessage(campaignId, chainId);
-  const signature = await account.signMessage(msg);
+  const signature = await withTimeout(account.signMessage(msg), 90_000, "The signature request");
   // Wallets return this in several shapes: a bare array, an object with a
   // `signature` field, or `{ r, s }`. All of them arrive as decimal strings.
   const sig = Array.isArray(signature)
