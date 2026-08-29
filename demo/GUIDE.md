@@ -106,7 +106,9 @@ cards in and out of black, cuts the live footage hard, and writes:
 demo/out/quorum-demo.mp4
 ```
 
-It prints the final length and **warns you if you went over 3:00**. If it does,
+It prints the final length, **warns you if you went over 3:00**, and writes
+`demo/out/chapters.txt` — the real chapter timings measured from your own audio.
+Paste those into the YouTube description rather than guessing. If it does,
 `SCRIPT.md` has an "If you run long" section listing exactly which three
 sentences to cut, in order, and why not to cut block 05.
 
@@ -167,13 +169,7 @@ WHAT IS IN IT
 51 Cairo tests, 88 TypeScript tests, Apache-2.0, unaudited.
 
 CHAPTERS
-0:00  Somebody has to go first
-0:26  What Quorum is
-0:52  A campaign that ran on mainnet
-1:20  The transactions
-1:42  Don't believe it — check it
-2:20  What the pool already gives away
-2:48  Links
+<-- paste demo/out/chapters.txt here -->
 
 Built for the STRK20 Private Sprint.
 ```

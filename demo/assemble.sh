@@ -17,17 +17,17 @@ WORK="$SCRATCH/assemble"; rm -rf "$WORK"; mkdir -p "$WORK"
 
 # block -> the clip that plays under it. Order is the order of the film.
 CLIPS=(
-  "01:clips/card-01-open.mp4:card"
-  "02:clips/card-02-trap.mp4:card"
-  "03:clips/card-03-title.mp4:card"
-  "04:clips/app-A.mp4:live"
-  "05:clips/app-B.mp4:live"
-  "06:clips/app-C.mp4:live"
-  "07:clips/card-04-verify.mp4:card"
-  "08:clips/term-verify.mp4:live"
-  "09:clips/card-05-leak.mp4:card"
-  "10:clips/term-linkage.mp4:live"
-  "11:clips/card-06-end.mp4:card"
+  "01:clips/card-01-open.mp4:card:Somebody has to go first"
+  "02:clips/card-02-trap.mp4:card:"
+  "03:clips/card-03-title.mp4:card:What Quorum is"
+  "04:clips/app-A.mp4:live:"
+  "05:clips/app-B.mp4:live:A campaign that ran on mainnet"
+  "06:clips/app-C.mp4:live:The transactions"
+  "07:clips/card-04-verify.mp4:card:Don't believe it - check it"
+  "08:clips/term-verify.mp4:live:"
+  "09:clips/card-05-leak.mp4:card:What the pool already gives away"
+  "10:clips/term-linkage.mp4:live:"
+  "11:clips/card-06-end.mp4:card:Links"
 )
 
 audio_for() {
@@ -41,8 +41,7 @@ dur() { ffprobe -v error -show_entries format=duration -of csv=p=0 "$1"; }
 
 missing=()
 for entry in "${CLIPS[@]}"; do
-  n="${entry%%:*}"
-  audio_for "$n" >/dev/null || missing+=("$n")
+  audio_for "${entry%%:*}" >/dev/null || missing+=("${entry%%:*}")
 done
 if (( ${#missing[@]} )); then
   echo "No audio yet for block(s): ${missing[*]}"
@@ -52,10 +51,12 @@ fi
 
 echo "Building segments…"
 list="$WORK/list.txt"; : > "$list"
+: > "$WORK/chapters.txt"
+elapsed=0
 alist="$WORK/alist.txt"; : > "$alist"
 
 for entry in "${CLIPS[@]}"; do
-  n="${entry%%:*}"; rest="${entry#*:}"; clip="${rest%%:*}"; kind="${rest##*:}"
+  IFS=: read -r n clip kind chapter <<< "$entry"
   a=$(audio_for "$n")
   [[ -f "$clip" ]] || { echo "missing clip $clip — run ./build.sh all first"; exit 1; }
 
@@ -78,6 +79,13 @@ for entry in "${CLIPS[@]}"; do
     -af "apad,atrim=0:$d,asetpts=PTS-STARTPTS,aresample=48000" \
     -c:a aac -b:a 192k "$WORK/a$n.m4a"
 
+  # Chapter marks from the real durations, because the ones written by hand in
+  # GUIDE.md assume narration timings you have not recorded yet.
+  if [[ -n "$chapter" ]]; then
+    printf "%d:%02d  %s\n" $((${elapsed%.*} / 60)) $((${elapsed%.*} % 60)) "$chapter" >> "$WORK/chapters.txt"
+  fi
+  elapsed=$(awk -v e="$elapsed" -v d="$d" 'BEGIN{printf "%.3f", e + d}')
+
   echo "file '$WORK/v$n.mp4'" >> "$list"
   echo "file '$WORK/a$n.m4a'" >> "$alist"
   printf "  block %s  %5.1fs  %s\n" "$n" "$d" "$(basename "$clip")"
@@ -98,3 +106,8 @@ printf "Done: demo/out/quorum-demo.mp4  —  %s\n" \
   "$(awk -v t="$(dur out/quorum-demo.mp4)" 'BEGIN{printf "%d:%02d", int(t/60), int(t)%60}')"
 [[ $(awk -v t="$(dur out/quorum-demo.mp4)" 'BEGIN{print (t>180)?1:0}') == 1 ]] && \
   echo "WARNING: over 3:00. See the 'If you run long' cuts in SCRIPT.md." || true
+
+cp "$WORK/chapters.txt" out/chapters.txt
+echo
+echo "Chapters for the YouTube description — paste these, not the ones in GUIDE.md:"
+sed 's/^/  /' out/chapters.txt
