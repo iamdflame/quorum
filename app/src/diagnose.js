@@ -13,11 +13,28 @@ import { MACHINE, STRK } from "./campaign.js";
 const felt = (n) => "0x" + BigInt(n).toString(16);
 const ONE_STRK = felt(10n ** 18n);
 
+/**
+ * Encode an ASCII name as a Cairo short string.
+ *
+ * `Buffer` does not exist in a browser — it is Node's, and reaching for it here
+ * made four of five probes fail on our own code before the wallet ever saw them.
+ */
+function shortString(text) {
+  let hex = "";
+  for (const ch of text) {
+    const c = ch.codePointAt(0);
+    if (c > 0xff) throw new Error(`"${text}" is not ASCII; a short string cannot hold it.`);
+    hex += c.toString(16).padStart(2, "0");
+  }
+  if (hex.length > 62) throw new Error(`"${text}" is longer than 31 characters.`);
+  return "0x" + (hex.replace(/^0+/, "") || "0");
+}
+
 /** Thirteen fixed params then an empty payout span — a Create, structurally. */
 function createCalldata(id) {
   return [
     "0x0",                       // QuorumOp::Create
-    felt("0x" + Buffer.from(id, "utf8").toString("hex")),
+    shortString(id),
     "0x1",                       // terms
     STRK,                        // token
     "0x0",                       // policy: RefundAll
@@ -30,6 +47,13 @@ function createCalldata(id) {
   ];
 }
 
+/**
+ * `recipient` on a transfer is typed `ADDRESS`, not a calldata item.
+ * `${poolAddress}` and `${openNoteIds[N]}` are `STRK20_CALLDATA_ITEM`s — the
+ * wallet substitutes them while assembling *calldata*, and nowhere else. Passing
+ * one as a recipient is a type error the schema catches and the error message
+ * does not explain.
+ */
 export const PROBES = [
   {
     name: "deposit alone",
@@ -50,11 +74,27 @@ export const PROBES = [
     ],
   },
   {
-    name: "deposit + open note + invoke",
-    why: "The full sandwich: value in, a note for the result, then the call.",
-    actions: (id) => [
+    name: "open note to self + invoke",
+    why: "An open note for a result to land in, addressed to a real account rather than a placeholder.",
+    actions: (id, self) => [
       { type: "deposit", token: STRK, amount: ONE_STRK },
-      { type: "transfer", token: STRK, amount: "OPEN", recipient: "${poolAddress}" },
+      { type: "transfer", token: STRK, amount: "OPEN", recipient: self },
+      { type: "invoke", contract: MACHINE, calldata: createCalldata(id) },
+    ],
+  },
+  {
+    name: "open note to self, no deposit",
+    why: "Whether an open note counts as the value movement an invoke needs.",
+    actions: (id, self) => [
+      { type: "transfer", token: STRK, amount: "OPEN", recipient: self },
+      { type: "invoke", contract: MACHINE, calldata: createCalldata(id) },
+    ],
+  },
+  {
+    name: "transfer to self + invoke",
+    why: "A plain private transfer as the accompanying movement, instead of a deposit.",
+    actions: (id, self) => [
+      { type: "transfer", token: STRK, amount: ONE_STRK, recipient: self },
       { type: "invoke", contract: MACHINE, calldata: createCalldata(id) },
     ],
   },
@@ -79,9 +119,10 @@ function describe(err) {
 
 /** Run every probe in simulate mode. Nothing is signed and nothing is spent. */
 export async function runProbes(account, id, onResult) {
+  const self = "0x" + BigInt(account.address).toString(16);
   for (const p of PROBES) {
     try {
-      const res = await account.strk20PrepareInvoke(p.actions(id), true);
+      const res = await account.strk20PrepareInvoke(p.actions(id, self), true);
       onResult({ name: p.name, why: p.why, ok: true,
         detail: res?.call ? "accepted — the wallet built a call" : "accepted, no call returned" });
     } catch (err) {
