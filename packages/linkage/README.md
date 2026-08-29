@@ -1,9 +1,9 @@
-# @quorum/linkage
+# quorum-linkage
 
 **What the STRK20 privacy pool already reveals about you, with no cryptography broken.**
 
 ```
-npx @quorum/linkage --address 0xYOUR_ADDRESS
+npx quorum-linkage --address 0xYOUR_ADDRESS
 ```
 
 ---
@@ -54,9 +54,9 @@ The opposite mistake matters just as much: an EOA that receives a lot is a heavy
 ## Using it
 
 ```ts
-import { analyseLinkage, clusterEntities } from "@quorum/linkage";
+import { analyseLinkage, clusterEntities } from "quorum-linkage";
 import { fetchTransactions, blockNumber, observePool, identifyInfrastructure }
-  from "@quorum/chain";
+  from "quorum-chain";
 
 const head = await blockNumber();
 const from = head - 600_000;
@@ -78,7 +78,7 @@ parties.entityCount;        // the honest population of the pool
 
 ## The CLI has no leaderboard
 
-`npx @quorum/linkage` with no arguments prints aggregate statistics and **names no address**. `--address 0x…` prints everything known about one address, and it is meant to be pointed at your own.
+`npx quorum-linkage` with no arguments prints aggregate statistics and **names no address**. `--address 0x…` prints everything known about one address, and it is meant to be pointed at your own.
 
 There is no mode that ranks other people's exposure. That report would be useful to exactly one kind of reader, and the tool would be a deanonymiser with a safety notice attached. What it will do is tell you about yourself, and tell everyone how bad the general picture is — which is what a person needs in order to decide whether to trust the pool with anything.
 

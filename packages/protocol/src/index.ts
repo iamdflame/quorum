@@ -1,5 +1,5 @@
 /**
- * @quorum/protocol — threshold coordination on the STRK20 pool.
+ * quorum-protocol — threshold coordination on the STRK20 pool.
  *
  * Pure and offline. Nothing here opens a socket, holds a key, or signs
  * anything: it turns campaign intentions into calldata and turns chain state

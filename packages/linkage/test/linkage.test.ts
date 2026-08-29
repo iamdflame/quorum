@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { analyseLinkage } from "../src/index.ts";
-import type { PoolTransaction, PoolEvent } from "@quorum/chain";
+import type { PoolTransaction, PoolEvent } from "quorum-chain";
 
 const ADDR = "0xaaa", TOKEN = "0x111", NOTE = "0xn1", NULL1 = "0xnull";
 

@@ -1,4 +1,4 @@
-# @quorum/chain
+# quorum-chain
 
 **Reads the STRK20 privacy pool from Starknet mainnet, and — the part that matters — tells you which addresses are plumbing rather than people.**
 
@@ -6,7 +6,7 @@ No indexer, no API key. RPC with failover across public endpoints.
 
 ```ts
 import { blockNumber, fetchTransactions, observePool, identifyInfrastructure }
-  from "@quorum/chain";
+  from "quorum-chain";
 
 const head = await blockNumber();
 const from = head - 600_000;

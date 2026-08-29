@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Reveal from "../components/Reveal.jsx";
 import { createCampaign, describeError, MACHINE_DISPLAY, STRK, POOL_FEE_STRK } from "../campaign.js";
 import { RPC } from "../wallet.js";
-import { blocksFor, DAY, humanDuration } from "@quorum/protocol";
+import { blocksFor, DAY, humanDuration } from "quorum-protocol";
 
 /**
  * The organiser's form.

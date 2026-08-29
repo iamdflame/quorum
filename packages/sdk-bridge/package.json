@@ -1,5 +1,5 @@
 {
-  "name": "@quorum/sdk-bridge",
+  "name": "quorum-sdk-bridge",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",

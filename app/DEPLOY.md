@@ -7,7 +7,7 @@ vercel build --prod    # build HERE, in the monorepo
 vercel deploy --prebuilt --prod --yes
 ```
 
-**Do not run a plain `vercel deploy`.** It uploads only `app/` and builds there, and `app/` depends on `@quorum/protocol` through `file:../packages/protocol` — a path that does not exist inside the upload. Rollup fails with `failed to resolve import "@quorum/protocol"`, the deployment errors in about three seconds, and **the production alias silently stays on the previous build**.
+**Do not run a plain `vercel deploy`.** It uploads only `app/` and builds there, and `app/` depends on `quorum-protocol` through `file:../packages/protocol` — a path that does not exist inside the upload. Rollup fails with `failed to resolve import "quorum-protocol"`, the deployment errors in about three seconds, and **the production alias silently stays on the previous build**.
 
 That last part is what makes it dangerous rather than merely annoying: the site keeps serving, nothing looks broken, and the change simply never appears. Two deployments failed this way before anyone noticed the page had not changed.
 

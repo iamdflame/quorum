@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * `npx @quorum/linkage` — check what the STRK20 pool already reveals.
+ * `npx quorum-linkage` — check what the STRK20 pool already reveals.
  *
  * Two modes, and the distinction is deliberate:
  *
@@ -17,7 +17,7 @@
  * decide whether to trust the pool with anything.
  */
 import { fetchTransactions, blockNumber, observePool, identifyInfrastructure }
-  from "@quorum/chain";
+  from "quorum-chain";
 import { analyseLinkage } from "./index.ts";
 import { clusterEntities } from "./cluster.ts";
 
@@ -29,12 +29,12 @@ const arg = (name: string): string | undefined => {
 
 if (argv.includes("--help") || argv.includes("-h")) {
   console.log(`
-  @quorum/linkage — what the STRK20 pool already reveals, with nothing broken.
+  quorum-linkage — what the STRK20 pool already reveals, with nothing broken.
 
-    npx @quorum/linkage                    aggregate report, no address named
-    npx @quorum/linkage --address 0x…      what is known about one address
-    npx @quorum/linkage --span 200000      blocks to read back (default 600000)
-    npx @quorum/linkage --json             machine-readable
+    npx quorum-linkage                    aggregate report, no address named
+    npx quorum-linkage --address 0x…      what is known about one address
+    npx quorum-linkage --span 200000      blocks to read back (default 600000)
+    npx quorum-linkage --json             machine-readable
 
   Every finding is a join the chain itself makes. No key material is used, no
   proof is broken, and no heuristic is probabilistic: if it is reported, it is
@@ -125,4 +125,4 @@ say(`  parties holding more than one address .... ${c.multiAddress}`);
 say(`\n  The anonymity set is the second number, not the first. Addresses are`);
 say(`  free; being a different person is not.\n`);
 say(`  No address is named in this report. To see what is known about your own:`);
-say(`    npx @quorum/linkage --address 0xYOURS\n`);
+say(`    npx quorum-linkage --address 0xYOURS\n`);

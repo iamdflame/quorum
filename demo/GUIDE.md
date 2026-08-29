@@ -163,7 +163,7 @@ WHAT IS IN IT
 • `npm run verify` — one command that re-derives every claim in the README from
   mainnet, including that the contract's accounting reconciles with its real
   balance to the wei.
-• @quorum/linkage — a standalone tool measuring what the STRK20 pool already
+• quorum-linkage — a standalone tool measuring what the STRK20 pool already
   reveals with no cryptography broken. It names no address but your own.
 
 58 Cairo tests, 115 TypeScript tests, Apache-2.0, unaudited.

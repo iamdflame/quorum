@@ -1,5 +1,5 @@
 {
-  "name": "@quorum/oracle",
+  "name": "quorum-oracle",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",

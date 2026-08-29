@@ -145,7 +145,7 @@ protocol flaws; all are things people do because nothing tells them not to.
   about this by name.
 - **Pledging from an address with public history.** Your exposure is the union of
   every address provably yours, not the one you used at the time. Check your own:
-  `npx @quorum/linkage --address 0xYOURS`.
+  `npx quorum-linkage --address 0xYOURS`.
 - **Timing.** A pledge shortly after a distinctive deposit narrows the set.
   Nothing in the contract can fix this.
 
@@ -185,7 +185,7 @@ marketing.
 ```bash
 npm run verify          # every factual claim in the docs, re-derived from mainnet
 cd contracts && snforge test   # the adversarial tests, each named for its attack
-npx @quorum/linkage --address 0xYOURS   # what the pool already says about you
+npx quorum-linkage --address 0xYOURS   # what the pool already says about you
 ```
 
 If one of these documents disagrees with the chain, `npm run verify` fails and

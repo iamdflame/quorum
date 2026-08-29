@@ -1,7 +1,7 @@
 import {
   prepareCampaign, createActions, commitActions, fireActions, reclaimActions,
   shieldActions, pledgeSecretMessage, pledgeKeyFromSignature, blocksFor, DAY,
-} from "@quorum/protocol";
+} from "quorum-protocol";
 
 /**
  * Driving a campaign from the browser.

@@ -59,7 +59,7 @@ Once the threshold is met, anyone can fire, and firing requires no secret. If on
 
 ## Verifying rather than trusting
 
-`quorum_reached` is public, the payout fold is reproducible off-chain, and [`@quorum/protocol`](../packages/protocol) recomputes it in TypeScript. `verifyCampaign` replays the accumulator and distinguishes **"cannot verify"** from **"verified false"** — collapsing those two into one boolean is how verification tools end up reassuring people about things they never checked.
+`quorum_reached` is public, the payout fold is reproducible off-chain, and [`quorum-protocol`](../packages/protocol) recomputes it in TypeScript. `verifyCampaign` replays the accumulator and distinguishes **"cannot verify"** from **"verified false"** — collapsing those two into one boolean is how verification tools end up reassuring people about things they never checked.
 
 One test pins the two implementations together: `poseidon_matches_the_typescript_client`. If the Cairo and the TypeScript ever disagree about a commitment, that test fails rather than the user finding out at fire time.
 

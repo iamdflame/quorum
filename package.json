@@ -22,7 +22,7 @@
     "test:bridge": "node --test --experimental-strip-types packages/sdk-bridge/test/*.test.ts",
     "test:contracts": "cd contracts && snforge test",
     "verify": "node scripts/verify.mjs",
-    "publish:tools": "npm run build && npm test && npm publish -w @quorum/chain && npm publish -w @quorum/linkage"
+    "publish:tools": "npm run build && npm test && npm publish -w quorum-chain && npm publish -w quorum-oracle && npm publish -w quorum-linkage"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

@@ -1,5 +1,5 @@
 {
-  "name": "@quorum/app",
+  "name": "quorum-app",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -13,7 +13,7 @@
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.28.0",
     "starknet": "^10.4.0",
-    "@quorum/protocol": "file:../packages/protocol"
+    "quorum-protocol": "file:../packages/protocol"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",

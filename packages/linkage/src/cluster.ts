@@ -1,4 +1,4 @@
-import type { PoolTransaction, PoolEvent } from "@quorum/chain";
+import type { PoolTransaction, PoolEvent } from "quorum-chain";
 
 /**
  * ENTITY CLUSTERING.

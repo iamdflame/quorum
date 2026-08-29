@@ -17,8 +17,8 @@ conditions whether you measure them or not.
 Reproduce any of it:
 
 ```bash
-npx @quorum/linkage --span 600000        # the linkage figures
-npx @quorum/linkage --span 600000 --json # the raw record, as docs/pool-scan.json
+npx quorum-linkage --span 600000        # the linkage figures
+npx quorum-linkage --span 600000 --json # the raw record, as docs/pool-scan.json
 ```
 
 ---
