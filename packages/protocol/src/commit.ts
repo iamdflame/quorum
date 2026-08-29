@@ -141,10 +141,12 @@ export function pledgeSecretMessage(campaignId: string, chainId: string) {
  * is the difference between losing one pledge and losing a history.
  */
 export function secretFromSignature(
-  signature: readonly (string | number | bigint)[], campaignId: string | number | bigint,
+  signature: readonly (string | number | bigint)[],
+  campaignId: string | number | bigint,
+  nonce: number = 0,
 ): string {
   if (signature.length === 0) throw new Error("Empty signature: nothing to derive from.");
-  return poseidon(TAGS.refund, campaignId, poseidon(...signature));
+  return poseidon(TAGS.refund, campaignId, nonce, poseidon(...signature));
 }
 
 /**
@@ -157,9 +159,17 @@ export interface PledgeKey {
   readonly commitment: string;
 }
 
+/**
+ * `nonce` lets one wallet hold more than one pledge in a campaign.
+ *
+ * That is the sybil the fixed unit prices rather than forbids — the contract
+ * cannot tell two wallets from one, so it charges a full unit either way. It is
+ * also simply necessary: a campaign has to be testable by one person before it
+ * is trusted by forty.
+ */
 export function pledgeKeyFromSignature(
-  campaignId: string, signature: readonly (string | number | bigint)[],
+  campaignId: string, signature: readonly (string | number | bigint)[], nonce = 0,
 ): PledgeKey {
-  const secret = secretFromSignature(signature, campaignId);
+  const secret = secretFromSignature(signature, campaignId, nonce);
   return { campaignId, secret, commitment: refundCommitment(secret) };
 }

@@ -9,6 +9,7 @@ import Campaigns from "./pages/Campaigns.jsx";
 import Campaign from "./pages/Campaign.jsx";
 import Create from "./pages/Create.jsx";
 import Verify from "./pages/Verify.jsx";
+import Run from "./pages/Run.jsx";
 import { connectWallet } from "./wallet.js";
 
 export default function App() {
@@ -45,6 +46,7 @@ export default function App() {
             <Route path="/campaigns/:id" element={<Campaign ctx={ctx} />} />
             <Route path="/create" element={<Create ctx={ctx} />} />
             <Route path="/verify" element={<Verify ctx={ctx} />} />
+            <Route path="/run" element={<Run ctx={ctx} />} />
             <Route path="*" element={<Home ctx={ctx} />} />
           </Routes>
         </main>

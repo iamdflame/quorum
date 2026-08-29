@@ -5,6 +5,7 @@ const LINKS = [
   { to: "/how", label: "How it works" },
   { to: "/campaigns", label: "Campaigns" },
   { to: "/create", label: "Start one" },
+  { to: "/run", label: "Run it" },
   { to: "/verify", label: "Verify" },
 ];
 
