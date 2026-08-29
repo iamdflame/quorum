@@ -5,14 +5,13 @@
   "description": "Threshold coordination on Starknet. Nobody is exposed until enough people commit.",
   "type": "module",
   "workspaces": [
-    "packages/*",
-    "archive/*"
+    "packages/*"
   ],
   "engines": {
     "node": ">=24"
   },
   "scripts": {
-    "build": "tsc -b packages/protocol packages/chain packages/linkage packages/oracle",
+    "build": "tsc -b packages/protocol packages/chain packages/linkage packages/oracle packages/sdk-bridge",
     "test": "node --test --experimental-strip-types packages/protocol/test/*.test.ts packages/chain/test/*.test.ts packages/linkage/test/*.test.ts packages/oracle/test/*.test.ts",
     "typecheck": "tsc -b packages/protocol packages/chain packages/linkage",
     "demo": "npm run build && node examples/the-crowd-you-are-in.mjs",
@@ -22,7 +21,6 @@
     "entities": "npm run build && node examples/entities.mjs",
     "test:bridge": "node --test --experimental-strip-types packages/sdk-bridge/test/*.test.ts",
     "test:contracts": "cd contracts && snforge test",
-    "build:archive": "tsc -b archive/oracle archive/router archive/execute archive/sdk-bridge",
     "verify": "node scripts/verify.mjs",
     "publish:tools": "npm run build && npm test && npm publish -w @quorum/chain && npm publish -w @quorum/linkage"
   },

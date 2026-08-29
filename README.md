@@ -326,7 +326,7 @@ running those commands.
 | [`packages/oracle/`](packages/oracle) | how big the anonymity set actually is, as an effective number | 27 tests |
 | [`packages/chain/`](packages/chain) | mainnet reader, infrastructure classification | 4 tests |
 | [`app/`](app/) | the front end | |
-| [`archive/`](archive/) | Shoal — the earlier project. `sdk-bridge` is still cited; the rest is kept for history | |
+| [`packages/sdk-bridge/`](packages/sdk-bridge) | reaching the SDK's unexported `ContractDiscoveryProvider` without an indexer | |
 
 ```bash
 npm install && npm run build && npm test    # 115 TypeScript tests
@@ -342,7 +342,7 @@ Node 24+ — the STRK20 SDK's `ohttp-ts` requires modern WebCrypto.
 
 ## Contributed upstream
 
-- [**#121**](https://github.com/starkience/strk20-hackathon/issues/121) — a way past the SDK's unexported `ContractDiscoveryProvider`, packaged as [`sdk-bridge`](archive/sdk-bridge); confirmation that **Ready X implements the STRK20 wallet methods** where Braavos answers *not implemented*; and the finding that a shield with no exit still emits a `Withdrawal`, because the fee is settled by paying the collector.
+- [**#121**](https://github.com/starkience/strk20-hackathon/issues/121) — a way past the SDK's unexported `ContractDiscoveryProvider`, packaged as [`@quorum/sdk-bridge`](packages/sdk-bridge); confirmation that **Ready X implements the STRK20 wallet methods** where Braavos answers *not implemented*; and the finding that a shield with no exit still emits a `Withdrawal`, because the fee is settled by paying the collector.
 
 <br>
 
@@ -355,3 +355,12 @@ Node 24+ — the STRK20 SDK's `ohttp-ts` requires modern WebCrypto.
 *Somebody has to go first. Make it cost nothing.*
 
 </div>
+
+<br>
+
+> **On the history.** This repository began as a different project, Shoal. That
+> code is not deleted — it is reachable at the
+> [`shoal-archive`](https://github.com/Highneighbour/quorum/tree/shoal-archive)
+> tag, along with the parts of it that were not carried forward. What survived
+> the pivot was promoted into `packages/` and is tested and supported; the rest
+> should not sit at the root of a tree it no longer describes.

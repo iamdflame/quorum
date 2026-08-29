@@ -1,0 +1,32 @@
+{
+  "name": "@quorum/sdk-bridge",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "license": "Apache-2.0",
+  "description": "Reach the STRK20 SDK's unexported ContractDiscoveryProvider without an indexer.",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "starknet",
+    "strk20",
+    "sdk"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Highneighbour/quorum.git",
+    "directory": "packages/sdk-bridge"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

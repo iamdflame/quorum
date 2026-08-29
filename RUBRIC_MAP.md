@@ -61,7 +61,7 @@ The campaign `demo-70414` reads back as `Fired`, 3 pledges against a threshold o
 | The tests are adversarial | every invariant runs against an organiser trying to steal, not a cooperative one |
 | The leak table | [README](README.md#what-is-public-stated-exactly) states exactly what is public, including the two real limits — timing, and a count readable through the view |
 | A withdrawn claim | [DEPLOYMENTS.md](DEPLOYMENTS.md#superseded) documents the superseded contract and the hole it had, rather than quietly redeploying |
-| Examples | every example in the repository runs; `archive/` builds and runs too |
+| Examples | every example in the repository runs |
 | Licence | Apache-2.0, unaudited and labelled as such |
 
 ---
