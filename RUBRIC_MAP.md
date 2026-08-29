@@ -57,7 +57,7 @@ The campaign `demo-70414` reads back as `Fired`, 3 pledges against a threshold o
 
 | | |
 |---|---|
-| Tests | **146** — 58 Cairo, 88 TypeScript. `cd contracts && snforge test`, `npm test` |
+| Tests | **173** — 58 Cairo, 115 TypeScript. `cd contracts && snforge test`, `npm test` |
 | The tests are adversarial | every invariant runs against an organiser trying to steal, not a cooperative one |
 | The leak table | [README](README.md#what-is-public-stated-exactly) states exactly what is public, including the two real limits — timing, and a count readable through the view |
 | A withdrawn claim | [DEPLOYMENTS.md](DEPLOYMENTS.md#superseded) documents the superseded contract and the hole it had, rather than quietly redeploying |

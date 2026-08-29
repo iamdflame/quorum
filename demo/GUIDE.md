@@ -166,7 +166,7 @@ WHAT IS IN IT
 • @quorum/linkage — a standalone tool measuring what the STRK20 pool already
   reveals with no cryptography broken. It names no address but your own.
 
-58 Cairo tests, 88 TypeScript tests, Apache-2.0, unaudited.
+58 Cairo tests, 115 TypeScript tests, Apache-2.0, unaudited.
 
 CHAPTERS
 <-- paste demo/out/chapters.txt here -->

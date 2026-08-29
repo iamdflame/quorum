@@ -8,13 +8,14 @@
 **[Rubric map](RUBRIC_MAP.md)** &nbsp;·&nbsp;
 **[Contract on mainnet](https://voyager.online/contract/0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7)** &nbsp;·&nbsp;
 **[The adversarial tests](contracts/tests/quorum_test.cairo)** &nbsp;·&nbsp;
-**[How it works](https://quorum-strk20.vercel.app/how)**
+**[How it works](https://quorum-strk20.vercel.app/how)** &nbsp;·&nbsp;
+**[Threat model](THREAT_MODEL.md)**
 
 <br>
 
 [![CI](https://github.com/Highneighbour/quorum/actions/workflows/ci.yml/badge.svg)](https://github.com/Highneighbour/quorum/actions/workflows/ci.yml)
 ![Cairo](https://img.shields.io/badge/Cairo-2.20-E2661A?style=flat-square&labelColor=0B0A08)
-![Tests](https://img.shields.io/badge/tests-146%20passing-E2661A?style=flat-square&labelColor=0B0A08)
+![Tests](https://img.shields.io/badge/tests-173%20passing-E2661A?style=flat-square&labelColor=0B0A08)
 ![Mainnet](https://img.shields.io/badge/Starknet-mainnet-E2661A?style=flat-square&labelColor=0B0A08)
 ![STRK20](https://img.shields.io/badge/STRK20-anonymizer-E2661A?style=flat-square&labelColor=0B0A08)
 ![Licence](https://img.shields.io/badge/licence-Apache--2.0-6E6960?style=flat-square&labelColor=0B0A08)
@@ -216,7 +217,7 @@ a_stranger_cannot_reclaim_someone_elses_pledge              PASS
 the_pledge_root_depends_on_order_not_just_membership        PASS
 ```
 
-**146 tests — 58 Cairo, 88 TypeScript.**
+**173 tests — 58 Cairo, 115 TypeScript.**
 
 That last one earns its place. Commitments are computed in TypeScript and checked in Cairo. If those two Poseidon implementations ever disagree, *nothing throws* — pledges silently become unreclaimable and campaigns silently cannot fire. For a system whose entire promise is that you can always get your money back, that is the worst available failure. Both sides now assert fixed vectors.
 
@@ -305,6 +306,16 @@ The terminal shots are not retyped. [`demo/out/verify.txt`](demo/out/verify.txt)
 and [`demo/out/linkage.txt`](demo/out/linkage.txt) are the real output of really
 running those commands.
 
+## Documents
+
+| | |
+|---|---|
+| [**THREAT_MODEL.md**](THREAT_MODEL.md) | every adversary named, and exactly what each one learns — including the ones this does not defend against |
+| [**docs/what-the-pool-leaks.md**](docs/what-the-pool-leaks.md) | 701 notes in the live pool are already tied to a public address, and the effective crowd is 3.46 people. Measured, with the raw record |
+| [**docs/PRIOR_ART.md**](docs/PRIOR_ART.md) | Ayres–Nalebuff, Callisto, assurance contracts — what came before and what is actually different |
+| [**RUBRIC_MAP.md**](RUBRIC_MAP.md) | where each judging criterion is satisfied |
+| [**DEPLOYMENTS.md**](DEPLOYMENTS.md) | addresses, deploy transactions, and what is still open |
+
 ## Repository
 
 | | | |
@@ -312,12 +323,13 @@ running those commands.
 | [`contracts/`](contracts/) | QuorumMachine, Cairo 2.20 — **[documented as a standalone primitive](contracts/README.md)** | 58 tests |
 | [`packages/protocol/`](packages/protocol) | commitments, key derivation, actions, verification | 57 tests |
 | [`packages/linkage/`](packages/linkage) | what the live pool already gives away — **[its own tool](packages/linkage/README.md)** | 27 tests |
+| [`packages/oracle/`](packages/oracle) | how big the anonymity set actually is, as an effective number | 27 tests |
 | [`packages/chain/`](packages/chain) | mainnet reader, infrastructure classification | 4 tests |
 | [`app/`](app/) | the front end | |
-| [`archive/`](archive/) | Shoal — the earlier project in this repo | |
+| [`archive/`](archive/) | Shoal — the earlier project. `sdk-bridge` is still cited; the rest is kept for history | |
 
 ```bash
-npm install && npm run build && npm test    # 88 TypeScript tests
+npm install && npm run build && npm test    # 115 TypeScript tests
 cd contracts && snforge test                # 58 Cairo tests
 npm run verify                              # every on-chain claim in this README
 ```

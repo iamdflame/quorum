@@ -28,7 +28,7 @@ jobs:
         working-directory: contracts
 
   typescript:
-    name: 88 TypeScript tests
+    name: 115 TypeScript tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

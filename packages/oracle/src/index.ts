@@ -1,5 +1,5 @@
 /**
- * @shoal/oracle — the note-layer exposure model for the STRK20 shielded pool.
+ * @quorum/oracle — the note-layer exposure model for the STRK20 shielded pool.
  *
  * Pure and offline by design. Nothing here touches the network, holds a viewing
  * key, or needs spend authority: it takes an observation of a pool and returns

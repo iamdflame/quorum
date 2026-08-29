@@ -1,0 +1,29 @@
+{
+  "block": 14035045,
+  "span": 600000,
+  "transactions": 1213,
+  "exposedAddresses": 256,
+  "exposedNotes": 701,
+  "byKind": {
+    "binding": {
+      "user": 376,
+      "viaAnonymizer": 1
+    },
+    "round-trip": {
+      "user": 0,
+      "viaAnonymizer": 0
+    },
+    "onboarding": {
+      "user": 154,
+      "viaAnonymizer": 0
+    },
+    "exit": {
+      "user": 203,
+      "viaAnonymizer": 4
+    }
+  },
+  "addresses": 256,
+  "entities": 256,
+  "multiAddress": 0,
+  "largestEntity": 1
+}

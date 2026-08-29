@@ -1,0 +1,36 @@
+{
+  "name": "@quorum/oracle",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "license": "Apache-2.0",
+  "description": "How large a privacy pool's anonymity set actually is, measured as the effective number of parties rather than the count of addresses.",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "starknet",
+    "strk20",
+    "privacy",
+    "anonymity-set",
+    "entropy",
+    "measurement"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Highneighbour/quorum.git",
+    "directory": "packages/oracle"
+  },
+  "homepage": "https://github.com/Highneighbour/quorum/tree/master/packages/oracle",
+  "publishConfig": {
+    "access": "public"
+  }
+}
