@@ -12,8 +12,9 @@
 
 <br>
 
+[![CI](https://github.com/Highneighbour/quorum/actions/workflows/ci.yml/badge.svg)](https://github.com/Highneighbour/quorum/actions/workflows/ci.yml)
 ![Cairo](https://img.shields.io/badge/Cairo-2.20-E2661A?style=flat-square&labelColor=0B0A08)
-![Tests](https://img.shields.io/badge/tests-125%20passing-E2661A?style=flat-square&labelColor=0B0A08)
+![Tests](https://img.shields.io/badge/tests-139%20passing-E2661A?style=flat-square&labelColor=0B0A08)
 ![Mainnet](https://img.shields.io/badge/Starknet-mainnet-E2661A?style=flat-square&labelColor=0B0A08)
 ![STRK20](https://img.shields.io/badge/STRK20-anonymizer-E2661A?style=flat-square&labelColor=0B0A08)
 ![Licence](https://img.shields.io/badge/licence-Apache--2.0-6E6960?style=flat-square&labelColor=0B0A08)
@@ -24,6 +25,88 @@
 
 > **Pledge into a campaign and your pledge binds only once enough others have pledged too.**
 > If the quorum is never reached, you get your money back and you were never revealed.
+
+<br>
+
+## Proof, before the argument
+
+Everything below this block is reasoning. This block is evidence, and you can
+check all of it without leaving the page.
+
+**The contract** — [`0x00dca84f…fcdaf7`](https://voyager.online/contract/0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7)
+on Starknet mainnet. The same class hash runs on Sepolia, so production runs what the tests rehearsed.
+
+**A campaign that ran end to end.** `demo-70414`, four transactions, every one of
+them *through* QuorumMachine rather than merely touching the pool:
+
+| | | |
+|---|---|---|
+| **Created** | [`0x071d3220…`](https://voyager.online/tx/0x071d322075e75df9be35a46e36024b02c3f9c37fcaedd52a38a7391b0cf8e806) | block 14,024,487 — opening it is joining it, so this carries the organiser's own pledge |
+| **Committed** | [`0x03c6bd55…`](https://voyager.online/tx/0x03c6bd55104d3b05254364f369689e648ec7af6e1f849f440fdcbd9792e0dbd1) | block 14,024,550 — quorum reached, and no event says so |
+| **Committed** | [`0x018bb72d…`](https://voyager.online/tx/0x018bb72dc2b97bc028c3b22f633d2ac43e5432ae2be720652c809ef0d3ff8d22) | block 14,024,626 — past quorum |
+| **Fired** | [`0x01da6af3…`](https://voyager.online/tx/0x01da6af3260615abebaa5d708c885d8017fb0de2f2001d8269203b5924bb5a8e) | block 14,024,923 — permissionless, no secret |
+
+Read it back from the chain yourself — no wallet, no key, any node:
+
+```bash
+curl -s -X POST https://api.cartridge.gg/x/starknet/mainnet \
+  -H 'Content-Type: application/json' -d '{
+    "jsonrpc":"2.0","id":1,"method":"starknet_call","params":[{
+      "contract_address":"0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7",
+      "entry_point_selector":"0x333358710919613a34f18567332063b09711678bab1f50754e4f8f7fd637a8e",
+      "calldata":["0x64656d6f2d3730343134"]},"latest"]}'
+```
+
+Field 0 is the phase — `0x2` is `Fired`. Field 6 is the threshold, `0x2`. Field 7
+is the pledge count, `0x3`. Three people cleared a bar of two, and the chain does
+not say who they were.
+
+**Or check every claim in this file at once**, against mainnet, in one command:
+
+```
+$ npm run verify
+
+  ok    mainnet class hash matches  0x04a3ad9409c4f4ac…
+  ok    sepolia runs the same bytecode as mainnet
+  ok    an unopened campaign reads as Phase::Void  11 fields, all zero
+  ok    every address in the docs is one that exists  12 documents scanned
+  ok    abbreviated addresses agree with what they point at  12 documents scanned
+  ok    every relative link in the docs resolves  12 documents scanned
+  ok    the machine's accounting reconciles with its balance  held = balance = 3 STRK
+  ok    block time is ~1.7s as the code assumes  1.700 s/block over 200,000 blocks
+  ok    pool fee is 6 STRK per transaction  as quoted in the app and README
+  ok    transaction 0x071d322075e7… ran through QuorumMachine
+  ok    transaction 0x03c6bd55104d… ran through QuorumMachine
+  ok    transaction 0x018bb72dc2b9… ran through QuorumMachine
+  ok    transaction 0x01da6af32606… ran through QuorumMachine
+
+Everything this repository claims is true on chain.
+```
+
+It runs on every push, so the badge above is that command going green — not a
+claim about it. **Including the documentation**: a shortened address like
+`0x00dca84f…fcdaf7` is resolved against the address it links to, because this
+file once showed three addresses from a superseded deployment while linking
+correctly to the current one. Every link resolved, every target existed, and the
+page still lied to anyone reading it. Reading is not a control.
+
+<br>
+
+## If the quorum is never reached
+
+Half the mechanism is the half that does not fire, and it is the half worth
+having. A campaign that expires below its threshold refunds every pledge under
+`RefundAll`, and the people who pledged are never revealed — not to the
+organiser, not to the counterparty, not to anyone reading the chain afterwards.
+
+That is the property that makes going first survivable. An escrow that only
+protects you when it succeeds protects you exactly when you did not need
+protecting.
+
+The contract path is tested (`a_refund_all_campaign_cannot_move_value_at_all`,
+`unseal_reverts_before_quorum`). Its mainnet leg is the largest open item in this
+repository, and it is named as such in [DEPLOYMENTS.md](DEPLOYMENTS.md) rather
+than left for you to notice.
 
 <br>
 
@@ -133,31 +216,6 @@ That last one earns its place. Commitments are computed in TypeScript and checke
 
 <br>
 
-
-## A campaign that actually ran
-
-`demo-70414`, on Starknet mainnet, start to finish:
-
-| | | |
-|---|---|---|
-| **Created** | [`0x071d3220…`](https://voyager.online/tx/0x071d322075e75df9be35a46e36024b02c3f9c37fcaedd52a38a7391b0cf8e806) | block 14,024,487 — opening it is joining it, so this carries the organiser's own pledge |
-| **Committed** | [`0x03c6bd55…`](https://voyager.online/tx/0x03c6bd55104d3b05254364f369689e648ec7af6e1f849f440fdcbd9792e0dbd1) | block 14,024,550 — quorum reached, and no event says so |
-| **Committed** | [`0x018bb72d…`](https://voyager.online/tx/0x018bb72dc2b97bc028c3b22f633d2ac43e5432ae2be720652c809ef0d3ff8d22) | block 14,024,626 — past quorum |
-| **Fired** | [`0x01da6af3…`](https://voyager.online/tx/0x01da6af3260615abebaa5d708c885d8017fb0de2f2001d8269203b5924bb5a8e) | block 14,024,923 — permissionless, no secret |
-
-Read it back from the chain yourself:
-
-```
-phase     Fired
-policy    RefundAll
-pledges   3 of 2
-escrowed  3.0 STRK
-held      3.0 STRK      ← the contract's accounting reconciles to the wei
-```
-
-`held` is not zero and should not be: a `RefundAll` campaign holds its pledges until they are reclaimed. What matters is that what the contract *thinks* it holds is exactly what it *does* hold, and `npm run verify` checks that rather than checking for zero.
-
-Every pledge in that campaign is a note in the pool. The chain records that three pledges exist and that the quorum was honoured. It does not record who made them.
 
 ## Deployed
 

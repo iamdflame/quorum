@@ -1,0 +1,64 @@
+name: CI
+
+# Three claims this repository makes, each turned into something a stranger can
+# watch run: the Cairo tests pass, the TypeScript tests pass, and every factual
+# claim in the documentation still matches mainnet.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  cairo:
+    name: 51 Cairo tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: "2.20.1"
+      - uses: foundry-rs/setup-snfoundry@v3
+        with:
+          starknet-foundry-version: "0.63.0"
+      - run: scarb build
+        working-directory: contracts
+      - run: snforge test
+        working-directory: contracts
+
+  typescript:
+    name: 88 TypeScript tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+
+  chain:
+    name: Claims still true on chain
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      # Public RPC endpoints go down for reasons that have nothing to do with
+      # this repository being wrong. Retry before reporting a red build, so the
+      # badge means "a claim is false" rather than "someone's node blinked".
+      - name: npm run verify
+        run: |
+          for attempt in 1 2 3; do
+            if npm run verify; then exit 0; fi
+            echo "::warning::verify attempt $attempt failed, retrying in 20s"
+            sleep 20
+          done
+          echo "::error::verify failed three times — a claim in the docs no longer matches the chain"
+          exit 1

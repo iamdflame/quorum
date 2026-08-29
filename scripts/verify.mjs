@@ -25,8 +25,30 @@ const CLASS_HASH = "0x04a3ad9409c4f4acc72b9fda88410161044e44eb2aa6ab403d08d3ac7d
 const POOL = "0x040337b1af3c663e86e333bab5a4b28da8d4652a15a69beee2b677776ffe812a";
 const STRK = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
 
-const { readFileSync } = await import("node:fs");
-const manifest = JSON.parse(readFileSync(new URL("../strk20.json", import.meta.url), "utf8"));
+const { readFileSync, readdirSync, existsSync } = await import("node:fs");
+const { join, dirname, normalize } = await import("node:path");
+const { fileURLToPath } = await import("node:url");
+
+const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
+const manifest = JSON.parse(readFileSync(join(ROOT, "strk20.json"), "utf8"));
+
+/*
+ * Every markdown file in the repository, discovered rather than listed.
+ * A hardcoded list is a list that goes stale the first time someone adds a
+ * document, and the document nobody remembered to add is exactly the one that
+ * ends up carrying a wrong address.
+ */
+const SKIP = new Set(["node_modules", ".git", "dist", "target", ".vercel", "clips"]);
+function mdFiles(dir = ROOT, rel = "") {
+  const out = [];
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    if (SKIP.has(e.name)) continue;
+    const r = rel ? `${rel}/${e.name}` : e.name;
+    if (e.isDirectory()) out.push(...mdFiles(join(dir, e.name), r));
+    else if (e.name.endsWith(".md")) out.push(r);
+  }
+  return out;
+}
 
 /* Selectors, from starknet_keccak of the entry point name. */
 const SEL = {
@@ -125,12 +147,10 @@ try {
   ].map((h) => h.toLowerCase()));
   const eqHex = (a, b) => { try { return BigInt(a) === BigInt(b); } catch { return false; } };
 
-  const docs = ["README.md", "RUBRIC_MAP.md", "DEPLOYMENTS.md",
-                "contracts/README.md", "packages/linkage/README.md"];
+  const docs = mdFiles();
   const bad = [];
   for (const doc of docs) {
-    let text;
-    try { text = readFileSync(new URL(`../${doc}`, import.meta.url), "utf8"); } catch { continue; }
+    const text = readFileSync(join(ROOT, doc), "utf8");
     for (const m of text.matchAll(/0x[0-9a-fA-F]{48,64}/g)) {
       if (![...known].some((k) => eqHex(k, m[0]))) bad.push(`${doc}: ${m[0]}`);
     }
@@ -141,22 +161,87 @@ try {
            bad.slice(0, 4).join("\n         "));
 }
 
+/* ---- abbreviated addresses agree with what they point at ---- *
+ *
+ * The previous guard matched only full-width hex, so it checked link *targets*
+ * and never the shortened text a reader actually sees. RUBRIC_MAP.md - the one
+ * file written for the panel - displayed three addresses from a superseded
+ * deployment while linking correctly to the current one. Every link resolved,
+ * every target existed, and the page still lied to anyone who read it.
+ *
+ * So: any `0xabcd…ef01` is resolved against the address it links to, and a
+ * shortened form standing on its own must match something this repo deployed.
+ * On a project whose whole argument is verify-don't-trust, a judge spot-checking
+ * one of these is the cheapest way to lose everything.
+ */
+{
+  const known = [MACHINE, MACHINE_SEPOLIA, CLASS_HASH, POOL, STRK, ...manifest.transactions];
+  const pad = (h) => {
+    try { return "0x" + BigInt(h).toString(16).padStart(64, "0"); } catch { return null; }
+  };
+  /** Does `0xPREFIX…SUFFIX` describe this full value? Padded and bare both count. */
+  const describes = (prefix, suffix, full) => {
+    const p = pad(full);
+    if (!p) return false;
+    // Compare hex digits only. The captured prefix has no "0x", so leaving it on
+    // the candidate makes every comparison fail and reports the whole file as
+    // broken - which is how a checker gets switched off instead of fixed.
+    const bare = BigInt(full).toString(16);
+    const a = prefix.toLowerCase(), b = suffix.toLowerCase();
+    return [p.slice(2), bare].some((f) => f.startsWith(a) && f.endsWith(b));
+  };
+
+  const SHORT = /0x([0-9a-fA-F]{4,})(?:…|\.\.\.)([0-9a-fA-F]{3,})/g;
+  const docs = mdFiles();
+  const bad = [];
+
+  for (const doc of docs) {
+    const text = readFileSync(join(ROOT, doc), "utf8");
+
+    /* Linked: [`0xabcd…ef01`](https://…/0xFULL) must describe that exact target. */
+    for (const m of text.matchAll(/\[([^\]]*?)\]\((https?:\/\/[^)\s]+)\)/g)) {
+      const label = m[1], href = m[2];
+      const short = [...label.matchAll(SHORT)];
+      if (short.length === 0) continue;
+      const target = (href.match(/0x[0-9a-fA-F]{20,}/) ?? [])[0];
+      if (!target) continue;
+      for (const [, prefix, suffix] of short) {
+        if (!describes(prefix, suffix, target)) {
+          bad.push(`${doc}: shows 0x${prefix}…${suffix} but links to ${target.slice(0, 14)}…`);
+        }
+      }
+    }
+
+    /* Standalone: a shortened address with no link must still be one of ours. */
+    const linked = new Set();
+    for (const m of text.matchAll(/\[([^\]]*?)\]\(https?:[^)\s]+\)/g))
+      for (const s of m[1].matchAll(SHORT)) linked.add(s[0]);
+
+    for (const m of text.matchAll(SHORT)) {
+      if (linked.has(m[0])) continue;
+      if (!known.some((k) => describes(m[1], m[2], k))) {
+        bad.push(`${doc}: 0x${m[1]}…${m[2]} matches nothing this repo deployed`);
+      }
+    }
+  }
+
+  bad.length === 0
+    ? pass("abbreviated addresses agree with what they point at",
+           `${docs.length} documents scanned`)
+    : fail("a document shows one address and points at another",
+           bad.slice(0, 6).join("\n         "));
+}
+
 /* ---- every relative link in the docs resolves ---- *
  *
  * A judge clicking a dead link learns something true about how carefully the
  * rest was checked. Cheap to verify, so there is no excuse for it.
  */
 {
-  const { existsSync } = await import("node:fs");
-  const { dirname, join, normalize } = await import("node:path");
-  const { fileURLToPath } = await import("node:url");
-  const root = dirname(dirname(fileURLToPath(import.meta.url)));
-  const docs = ["README.md", "RUBRIC_MAP.md", "DEPLOYMENTS.md", "contracts/README.md",
-                "packages/linkage/README.md", "app/DEPLOY.md", "archive/README.md"];
+  const docs = mdFiles();
   const broken = [];
   for (const doc of docs) {
-    const abs = join(root, doc);
-    if (!existsSync(abs)) continue;
+    const abs = join(ROOT, doc);
     const text = readFileSync(abs, "utf8");
     for (const m of text.matchAll(/\]\(([^)#\s]+)(?:#[^)]*)?\)/g)) {
       const target = m[1];
