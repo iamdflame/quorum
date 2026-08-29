@@ -18,6 +18,13 @@ export default function Create({ ctx }) {
   const nav = useNavigate();
   const [f, setF] = useState({
     name: "", statement: "", action: "", threshold: 2, days: 7, unit: "1",
+    // A window in days cannot express a campaign short enough to watch expire.
+    // The contract's floor is 530 blocks, about fifteen minutes.
+    windowUnit: "days",
+    policy: "RefundAll",
+    // Where a treasury campaign's money goes, fixed here and checked at fire
+    // time. One note id per line: "note-id 1.5".
+    payouts: "",
   });
   const [busy, setBusy] = useState(false);
   const [log, setLog] = useState([]);
@@ -25,7 +32,22 @@ export default function Create({ ctx }) {
   const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));
   const say = (t) => setLog((l) => [...l, t]);
 
-  const blocks = useMemo(() => blocksFor(Number(f.days || 0) * DAY), [f.days]);
+  const SPAN = { minutes: 60, hours: 3600, days: DAY };
+  const blocks = useMemo(
+    () => blocksFor(Number(f.days || 0) * (SPAN[f.windowUnit] ?? DAY)),
+    [f.days, f.windowUnit],
+  );
+
+  /* "note-id 1.5" per line -> the payout set, in wei. */
+  const payouts = useMemo(() => {
+    if (f.policy !== "BoundTreasury") return [];
+    return f.payouts.split("\n").map((l) => l.trim()).filter(Boolean).map((line) => {
+      const i = line.lastIndexOf(" ");
+      const noteId = (i < 0 ? line : line.slice(0, i)).trim();
+      const amount = Number(i < 0 ? 0 : line.slice(i + 1));
+      return { noteId, amount, token: STRK, valid: noteId.length > 0 && noteId.length <= 31 && amount > 0 };
+    });
+  }, [f.policy, f.payouts]);
   const nameTooLong = f.name.length > 31;
   const threshold = Math.max(0, Math.floor(Number(f.threshold) || 0));
   const unit = Number(f.unit) || 0;
@@ -41,7 +63,21 @@ export default function Create({ ctx }) {
   if (!f.statement.trim()) problems.push("Say what people are committing to.");
   if (threshold < 2) problems.push("A threshold below two fires on the first pledge.");
   if (unit <= 0) problems.push("Every pledge must be a positive, identical amount.");
-  if (blocks < 530) problems.push("The window is under fifteen minutes — almost always a units mistake.");
+  if (blocks < 530) problems.push("The contract's floor is 530 blocks — about fifteen minutes.");
+  if (f.policy === "BoundTreasury") {
+    if (payouts.length === 0) {
+      problems.push("A treasury campaign must name its destinations before anyone pledges.");
+    } else if (payouts.some((p) => !p.valid)) {
+      problems.push("Each payout line is a note id, a space, then an amount — \"strike-fund 2\".");
+    } else {
+      const total = payouts.reduce((s, p) => s + p.amount, 0);
+      // The contract refuses a payout set that does not equal the escrow, so
+      // catching it here saves a campaign that can reach quorum and never fire.
+      if (Math.abs(total - pledged) > 1e-9) {
+        problems.push(`Payouts total ${total} STRK but a quorum escrows exactly ${pledged}.`);
+      }
+    }
+  }
 
   async function onCreate() {
     if (!ctx.wallet) return say("Connect a wallet first.");
@@ -63,10 +99,17 @@ export default function Create({ ctx }) {
         unit: BigInt(Math.round(unit * 1e18)),
         threshold,
         expiryBlock: head + blocks,
-        // RefundAll is the only mode this form offers, deliberately: it is the
-        // one with no payout path at all, so there is nothing for anyone -
-        // including whoever fills in this form - to redirect.
-        policy: { kind: "RefundAll" },
+        // Either mode, but a treasury campaign's destinations are fixed here and
+        // checked against the committed root when it fires - so filling in this
+        // form is the only moment anyone chooses where the money goes.
+        policy: f.policy === "BoundTreasury"
+          ? {
+              kind: "BoundTreasury",
+              payouts: payouts.map((p) => ({
+                noteId: p.noteId, token: STRK, amount: BigInt(Math.round(p.amount * 1e18)),
+              })),
+            }
+          : { kind: "RefundAll" },
       };
       const { hash } = await createCampaign(ctx.wallet.account, spec, head, "SN_MAIN", say);
       setHash(hash);
@@ -119,10 +162,37 @@ export default function Create({ ctx }) {
                 <textarea rows={2} value={f.action} onChange={set("action")}
                   placeholder="Opens the set to the people in it. No value moves." />
                 <span className="field-hint">
-                  This form creates refund-all campaigns, so nothing can be paid anywhere —
-                  quorum only opens the set.
+                  {f.policy === "RefundAll"
+                    ? "Refund-all: nothing can be paid anywhere, so quorum only opens the set."
+                    : "Treasury: reaching quorum pays exactly the destinations below, and nothing else."}
                 </span>
               </label>
+
+              <label className="field">
+                <span className="field-label mono">What happens to the money</span>
+                <select value={f.policy} onChange={set("policy")}>
+                  <option value="RefundAll">Refund all — nothing moves, ever</option>
+                  <option value="BoundTreasury">Treasury — pay a set fixed now</option>
+                </select>
+                <span className="field-hint">
+                  Both are safe for the same reason: the destinations are decided here, before
+                  anyone pledges, and checked against a committed root when the campaign fires.
+                  Whoever fires it cannot change them — including you.
+                </span>
+              </label>
+
+              {f.policy === "BoundTreasury" && (
+                <label className="field">
+                  <span className="field-label mono">Where the money goes</span>
+                  <textarea rows={3} value={f.payouts} onChange={set("payouts")}
+                    placeholder={"strike-fund 2\nlegal-costs 2"} />
+                  <span className="field-hint">
+                    One per line: a note id, a space, an amount in STRK. They must total exactly{" "}
+                    <span className="mono">{pledged}</span> STRK — what a full quorum escrows — or
+                    the campaign could reach quorum and never be fireable.
+                  </span>
+                </label>
+              )}
 
               <div className="field-row">
                 <label className="field">
@@ -131,10 +201,18 @@ export default function Create({ ctx }) {
                   <span className="field-hint">Two is the minimum that is coordination.</span>
                 </label>
                 <label className="field">
-                  <span className="field-label mono">Open for (days)</span>
-                  <input type="number" min="1" value={f.days} onChange={set("days")} />
+                  <span className="field-label mono">Open for</span>
+                  <div className="field-pair">
+                    <input type="number" min="1" value={f.days} onChange={set("days")} />
+                    <select value={f.windowUnit} onChange={set("windowUnit")}>
+                      <option value="minutes">minutes</option>
+                      <option value="hours">hours</option>
+                      <option value="days">days</option>
+                    </select>
+                  </div>
                   <span className="field-hint">
-                    {blocks.toLocaleString()} blocks — {humanDuration(blocks)}
+                    {blocks.toLocaleString()} blocks — {humanDuration(blocks)}. Measured from the
+                    chain at 1.7s a block, not assumed.
                   </span>
                 </label>
                 <label className="field">

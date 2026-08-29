@@ -426,3 +426,26 @@ section.band { padding: clamp(80px, 11vw, 150px) 0; }
 .camp-after p { font-size: 14px; color: var(--muted); line-height: 1.7; margin: 0; max-width: 62ch; }
 .camp-after p strong { color: var(--text); }
 .camp-links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+
+.field select {
+  font-family: var(--mono); font-size: 14px; color: var(--text);
+  background: var(--ink-800); border: 1px solid var(--line);
+  padding: 13px 14px; width: 100%; appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--cold-500) 50%),
+                    linear-gradient(135deg, var(--cold-500) 50%, transparent 50%);
+  background-position: right 18px center, right 12px center;
+  background-size: 6px 6px, 6px 6px; background-repeat: no-repeat;
+}
+.field select:focus { outline: none; border-color: var(--fire-500); }
+
+/* A number and its unit are one control: reading as two invites exactly the
+ * units mistake this form exists to prevent.
+ *
+ * Declared after `.field select` on purpose. Both selectors have the same
+ * specificity, so the later one wins, and when these sat above it the select
+ * took the full width and collapsed the number input to nothing.
+ */
+.field-pair { display: flex; gap: 8px; align-items: stretch; }
+.field-pair input { flex: 1 1 auto; min-width: 3.5em; }
+.field-pair select { flex: 0 0 8.5em; width: 8.5em; }
+@media (max-width: 900px) { .field-pair select { flex-basis: 7em; width: 7em; } }
