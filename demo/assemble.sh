@@ -66,13 +66,15 @@ for entry in "${CLIPS[@]}"; do
   # Cards resolve out of and into black; live footage cuts hard, which keeps the
   # rhythm from turning into a slideshow.
   if [[ "$kind" == card ]]; then
-    vf="tpad=stop_mode=clone:stop_duration=60,trim=0:$d,setpts=PTS-STARTPTS,fade=t=in:st=0:d=0.4,fade=t=out:st=$(awk -v d="$d" 'BEGIN{printf "%.3f", d-0.4}'):d=0.4,fps=30,scale=1920:1080,setsar=1"
+    vf="tpad=stop_mode=clone:stop_duration=60,trim=0:$d,setpts=PTS-STARTPTS,fade=t=in:st=0:d=0.4,fade=t=out:st=$(awk -v d="$d" 'BEGIN{printf "%.3f", d-0.4}'):d=0.4,fps=30,scale=1920:1080:flags=lanczos,setsar=1,format=yuv420p"
   else
-    vf="tpad=stop_mode=clone:stop_duration=60,trim=0:$d,setpts=PTS-STARTPTS,fps=30,scale=1920:1080,setsar=1"
+    vf="tpad=stop_mode=clone:stop_duration=60,trim=0:$d,setpts=PTS-STARTPTS,fps=30,scale=1920:1080:flags=lanczos,setsar=1,format=yuv420p"
   fi
 
   ffmpeg -y -loglevel error -i "$clip" -filter_complex "[0:v]$vf[v]" -map "[v]" \
-    -an -c:v libx264 -preset slow -crf 17 -pix_fmt yuv420p "$WORK/v$n.mp4"
+    -an -c:v libx264 -preset slow -crf 17 -profile:v high -level 4.0 \
+    -pix_fmt yuv420p -color_range tv -colorspace bt709 \
+    -color_primaries bt709 -color_trc bt709 "$WORK/v$n.mp4"
 
   # Pad the narration to the same length so audio and picture cannot drift.
   ffmpeg -y -loglevel error -i "$a" \
@@ -98,7 +100,8 @@ ffmpeg -y -loglevel error -f concat -safe 0 -i "$alist" -c copy "$WORK/audio.m4a
 TOTAL=$(dur "$WORK/video.mp4")
 ffmpeg -y -loglevel error -i "$WORK/video.mp4" -i "$WORK/audio.m4a" \
   -filter_complex "[0:v]fade=t=in:st=0:d=0.6,fade=t=out:st=$(awk -v t="$TOTAL" 'BEGIN{printf "%.2f", t-0.8}'):d=0.8[v]" \
-  -map "[v]" -map 1:a -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p \
+  -map "[v]" -map 1:a -c:v libx264 -preset slow -crf 18 -profile:v high -level 4.0 \
+  -pix_fmt yuv420p -color_range tv -colorspace bt709 -color_primaries bt709 -color_trc bt709 \
   -c:a aac -b:a 192k -movflags +faststart out/quorum-demo.mp4
 
 echo

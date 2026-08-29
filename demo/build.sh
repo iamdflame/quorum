@@ -11,10 +11,29 @@ SCRATCH=/tmp/claude-1000/-home-dflame-Documents-strk/f873b594-8958-4e61-a4d6-8ca
 OUT=clips
 mkdir -p "$OUT"
 
-# Everything is encoded the same way so the editor never has to transcode:
-# yuv420p for universal playback, CRF 17 for visually lossless, 30fps throughout.
-enc() { ffmpeg -y -loglevel error -r 30 "$@" -c:v libx264 -preset slow -crf 17 \
-        -pix_fmt yuv420p -movflags +faststart; }
+# One encoder for everything, tuned for a phone rather than a workstation.
+#
+# The output path is passed explicitly as the last argument. It used to ride in
+# with "$@", which put every codec flag AFTER the output filename, where ffmpeg
+# silently ignores them - so nothing below was actually applied. The cards came
+# out High 4:4:4 Predictive, the screen recordings came out full-range yuvj420p,
+# and all of them carried a bogus 1080:941 pixel aspect inherited from the source
+# frames. A desktop player shrugs at all three. CapCut on iOS renders them blank.
+#
+#   setsar=1     square pixels, so 1920x1080 displays as 16:9 and not as a strip
+#   format=...   limited-range 4:2:0, the only thing a hardware decoder promises
+#   profile/lvl  High@4.0 - within every iPhone's decoder
+#   colour tags  stated rather than guessed at by the player
+enc() {
+  local out="${!#}"                      # last argument
+  local args=("${@:1:$#-1}")             # everything before it
+  ffmpeg -y -loglevel error -r 30 "${args[@]}" \
+    -vf "scale=1920:1080:flags=lanczos,setsar=1,format=yuv420p" \
+    -c:v libx264 -preset slow -crf 17 -profile:v high -level 4.0 \
+    -pix_fmt yuv420p -color_range tv -colorspace bt709 \
+    -color_primaries bt709 -color_trc bt709 \
+    -movflags +faststart "$out"
+}
 
 want() { [[ "${1:-all}" == "all" || "${1:-}" == "$2" ]]; }
 
@@ -22,7 +41,7 @@ want() { [[ "${1:-all}" == "all" || "${1:-}" == "$2" ]]; }
 if want "${1:-all}" cards; then
   for f in out/0*.png; do
     n=$(basename "$f" .png)
-    enc -loop 1 -i "$f" -t 5 -vf "scale=1920:1080" "$OUT/card-$n.mp4"
+    enc -loop 1 -i "$f" -t 5 "$OUT/card-$n.mp4"
     echo "  card-$n.mp4"
   done
 fi
@@ -49,9 +68,11 @@ term_clip() {
   # rate and override every `duration` line, collapsing the whole clip to a
   # fraction of a second. The output rate is set after the input instead.
   ffmpeg -y -loglevel error -f concat -safe 0 -i "$list" \
-    -vf "scale=1920:1080,fps=30" -r 30 \
-    -c:v libx264 -preset slow -crf 17 -pix_fmt yuv420p -movflags +faststart \
-    "$OUT/term-$name.mp4"
+    -vf "fps=30,scale=1920:1080:flags=lanczos,setsar=1,format=yuv420p" -r 30 \
+    -c:v libx264 -preset slow -crf 17 -profile:v high -level 4.0 \
+    -pix_fmt yuv420p -color_range tv -colorspace bt709 \
+    -color_primaries bt709 -color_trc bt709 \
+    -movflags +faststart "$OUT/term-$name.mp4"
   echo "  term-$name.mp4"
 }
 
@@ -69,7 +90,7 @@ if want "${1:-all}" app; then
   node capture.mjs C "https://starkscan.co/tx/0x01da6af3260615abebaa5d708c885d8017fb0de2f2001d8269203b5924bb5a8e" 22 1100 "$DISMISS"
 
   for n in A B C; do
-    enc -i "$SCRATCH/frames-$n/f%05d.jpg" -vf "scale=1920:1080" "$OUT/app-$n.mp4"
+    enc -i "$SCRATCH/frames-$n/f%05d.jpg" "$OUT/app-$n.mp4"
     echo "  app-$n.mp4"
   done
 fi

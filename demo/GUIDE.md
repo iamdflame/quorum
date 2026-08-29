@@ -12,10 +12,16 @@ one command**, **upload**. No video editor required.
 | `SCRIPT.md` | the narration, split into 11 blocks with timings |
 | `out/01-open.png` … `out/06-end.png` | the six cards, 1920×1080 |
 | `out/thumb.png` | the YouTube thumbnail, 1280×720 |
-| `clips/*.mp4` | every shot, already cut, 1920×1080 30fps |
+| `clips/*.mp4` | every shot, already cut, 1920×1080 30fps, square pixels, High@4.0 |
 | `assemble.sh` | joins the clips to your voiceover and outputs the finished film |
 | `out/verify.txt`, `out/linkage.txt` | the real command output the terminal shots show |
 | `out/preview-silent.mp4` | **watch this first** — the whole cut, no audio, 2:22 |
+
+> **Editing on a phone?** Every clip is High profile, level 4.0, `yuv420p`,
+> limited range, **1:1 pixel aspect**. That last one matters: an earlier build
+> tagged the screen recordings `1080:941`, which desktop players silently
+> corrected and CapCut on iOS rendered as blank frames. If a clip ever goes black
+> on a phone but plays on a laptop, check `sample_aspect_ratio` first.
 
 **Why the footage was rendered rather than screen-recorded.** This machine's
 display is 1366×768. A screen recording would be upscaled to 1080p and look
