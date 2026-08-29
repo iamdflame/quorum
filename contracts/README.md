@@ -68,7 +68,7 @@ One test pins the two implementations together: `poseidon_matches_the_typescript
 ```bash
 cd contracts
 scarb build
-snforge test        # 51 tests
+snforge test        # 58 tests
 ```
 
 Scarb 2.20.1, Cairo 2.20, Starknet Foundry 0.63.0.

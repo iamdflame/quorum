@@ -57,7 +57,7 @@ The campaign `demo-70414` reads back as `Fired`, 3 pledges against a threshold o
 
 | | |
 |---|---|
-| Tests | **125** — 51 Cairo, 74 TypeScript. `cd contracts && snforge test`, `npm test` |
+| Tests | **146** — 58 Cairo, 88 TypeScript. `cd contracts && snforge test`, `npm test` |
 | The tests are adversarial | every invariant runs against an organiser trying to steal, not a cooperative one |
 | The leak table | [README](README.md#what-is-public-stated-exactly) states exactly what is public, including the two real limits — timing, and a count readable through the view |
 | A withdrawn claim | [DEPLOYMENTS.md](DEPLOYMENTS.md#superseded) documents the superseded contract and the hole it had, rather than quietly redeploying |
@@ -83,7 +83,7 @@ poseidon_matches_the_typescript_client             drift here strands every refu
 ```bash
 npm install
 npm run build && npm test        # 74 TypeScript tests
-cd contracts && snforge test     # 51 Cairo tests
+cd contracts && snforge test     # 58 Cairo tests
 npm run verify                   # every on-chain claim in this repo
 node examples/linkage.mjs        # what the live pool already gives away
 ```

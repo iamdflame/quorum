@@ -521,3 +521,106 @@ fn an_unknown_campaign_reads_as_void() {
     let (m, _, _) = setup();
     assert(m.get_campaign('never-opened').phase == Phase::Void, 'void');
 }
+
+// ================================================ once is once
+
+#[test]
+#[should_panic(expected: 'QUORUM: campaign not open')]
+fn a_campaign_cannot_be_fired_twice() {
+    // Firing twice would pay the committed set twice out of an escrow that only
+    // ever held it once. The second call has nothing behind it, so the phase
+    // gate has to be the thing that stops it rather than the balance running out.
+    let (m, _, addr, agreed) = met_treasury();
+    fire(m, agreed);
+    fire(m, agreed);
+    let _ = addr;
+}
+
+#[test]
+#[should_panic(expected: 'QUORUM: campaign not open')]
+fn a_pledge_cannot_join_a_campaign_that_already_fired() {
+    // Money arriving after the decision has been made would be counted toward a
+    // threshold that has already been spent against, and could never be
+    // reclaimed under BoundTreasury.
+    let (m, t, _, agreed) = met_treasury();
+    fire(m, agreed);
+    commit(m, t, 'latecomer', UNIT);
+}
+
+#[test]
+#[should_panic(expected: 'QUORUM: campaign expired')]
+fn a_pledge_cannot_join_after_the_deadline() {
+    // The deadline is the promise that your money is not held indefinitely. A
+    // pledge accepted after it would have no refund window left.
+    let (m, t, addr) = setup();
+    start_cheat_caller_address(m.contract_address, POOL());
+    start_cheat_block_number_global(START);
+    create(m, t, addr, PayoutPolicy::RefundAll, 0);
+    start_cheat_block_number_global(EXPIRY + 1);
+    commit(m, t, 'a', UNIT);
+}
+
+// ============================================ composition, not just totals
+
+#[test]
+#[should_panic(expected: 'QUORUM: payouts not committed')]
+fn a_firer_cannot_drop_a_recipient_from_the_set() {
+    // Pay one of the two agreed destinations and keep the campaign's word about
+    // the other. The total is smaller, the fold is different, and the recipient
+    // who was dropped has no way to complain on chain.
+    let (m, t, addr) = setup();
+    let agreed = array![
+        OpenNoteDeposit { note_id: 'fund-a', token: addr, amount: 200 },
+        OpenNoteDeposit { note_id: 'fund-b', token: addr, amount: 300 },
+    ].span();
+    start_cheat_caller_address(m.contract_address, POOL());
+    start_cheat_block_number_global(START);
+    create(m, t, addr, PayoutPolicy::BoundTreasury, payout_root(agreed));
+    commit(m, t, 'a', UNIT); commit(m, t, 'b', UNIT); commit(m, t, 'c', UNIT);
+    commit(m, t, 'd', UNIT); commit(m, t, 'e', UNIT);
+    fire(m, array![OpenNoteDeposit { note_id: 'fund-a', token: addr, amount: 200 }].span());
+}
+
+#[test]
+#[should_panic(expected: 'QUORUM: payouts not committed')]
+fn a_firer_cannot_pad_the_set_with_a_worthless_note() {
+    // The totals match exactly and every agreed destination is paid in full. The
+    // only change is an extra entry worth nothing — which would let a firer
+    // establish a note of their own inside an otherwise honest payout, and the
+    // sum alone cannot see it. The fold can.
+    let (m, _, addr, _) = met_treasury();
+    fire(m, array![
+        OpenNoteDeposit { note_id: 'strike-fund', token: addr, amount: 500 },
+        OpenNoteDeposit { note_id: THIEF(), token: addr, amount: 0 },
+    ].span());
+}
+
+// ==================================================== reclaiming what is gone
+
+#[test]
+#[should_panic(expected: 'QUORUM: not expired yet')]
+fn a_treasury_pledge_cannot_be_reclaimed_after_it_fires() {
+    // Under BoundTreasury the money has gone where the campaign said it would.
+    // A reclaim here is a request to be paid out of an escrow that is empty, and
+    // the first pledger to try would be paid with someone else's stake.
+    //
+    // One guard refuses this: reclaiming needs either a campaign that failed, or
+    // one that fired under RefundAll and so never moved value. A fired treasury
+    // campaign is neither, and it is refused before the secret is even looked at.
+    let (m, _, _, agreed) = met_treasury();
+    fire(m, agreed);
+    let _ = reclaim(m, 'a', 'note-a');
+}
+
+#[test]
+#[should_panic(expected: 'QUORUM: not expired yet')]
+fn nothing_can_be_reclaimed_from_a_campaign_that_never_existed() {
+    // Phase::Void is neither failed nor fired, so the same guard catches it and
+    // the pledge lookup is never reached. Worth pinning: it means an unopened id
+    // cannot be probed for which secrets exist, because every secret gets the
+    // identical refusal.
+    let (m, _, _) = setup();
+    start_cheat_caller_address(m.contract_address, POOL());
+    start_cheat_block_number_global(START);
+    let _ = reclaim(m, 'nobody', 'note');
+}

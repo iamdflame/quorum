@@ -14,7 +14,7 @@
 
 [![CI](https://github.com/Highneighbour/quorum/actions/workflows/ci.yml/badge.svg)](https://github.com/Highneighbour/quorum/actions/workflows/ci.yml)
 ![Cairo](https://img.shields.io/badge/Cairo-2.20-E2661A?style=flat-square&labelColor=0B0A08)
-![Tests](https://img.shields.io/badge/tests-139%20passing-E2661A?style=flat-square&labelColor=0B0A08)
+![Tests](https://img.shields.io/badge/tests-146%20passing-E2661A?style=flat-square&labelColor=0B0A08)
 ![Mainnet](https://img.shields.io/badge/Starknet-mainnet-E2661A?style=flat-square&labelColor=0B0A08)
 ![STRK20](https://img.shields.io/badge/STRK20-anonymizer-E2661A?style=flat-square&labelColor=0B0A08)
 ![Licence](https://img.shields.io/badge/licence-Apache--2.0-6E6960?style=flat-square&labelColor=0B0A08)
@@ -216,7 +216,7 @@ a_stranger_cannot_reclaim_someone_elses_pledge              PASS
 the_pledge_root_depends_on_order_not_just_membership        PASS
 ```
 
-**125 tests — 51 Cairo, 74 TypeScript.**
+**146 tests — 58 Cairo, 88 TypeScript.**
 
 That last one earns its place. Commitments are computed in TypeScript and checked in Cairo. If those two Poseidon implementations ever disagree, *nothing throws* — pledges silently become unreclaimable and campaigns silently cannot fire. For a system whose entire promise is that you can always get your money back, that is the worst available failure. Both sides now assert fixed vectors.
 
@@ -309,7 +309,7 @@ running those commands.
 
 | | | |
 |---|---|---|
-| [`contracts/`](contracts/) | QuorumMachine, Cairo 2.20 — **[documented as a standalone primitive](contracts/README.md)** | 51 tests |
+| [`contracts/`](contracts/) | QuorumMachine, Cairo 2.20 — **[documented as a standalone primitive](contracts/README.md)** | 58 tests |
 | [`packages/protocol/`](packages/protocol) | commitments, key derivation, actions, verification | 57 tests |
 | [`packages/linkage/`](packages/linkage) | what the live pool already gives away — **[its own tool](packages/linkage/README.md)** | 27 tests |
 | [`packages/chain/`](packages/chain) | mainnet reader, infrastructure classification | 4 tests |
@@ -318,7 +318,7 @@ running those commands.
 
 ```bash
 npm install && npm run build && npm test    # 88 TypeScript tests
-cd contracts && snforge test                # 51 Cairo tests
+cd contracts && snforge test                # 58 Cairo tests
 npm run verify                              # every on-chain claim in this README
 ```
 
