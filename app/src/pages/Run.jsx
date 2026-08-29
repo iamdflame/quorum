@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Reveal from "../components/Reveal.jsx";
 import {
   createCampaign, pledge, fire, shield, derivePledgeKey, defaultSpec,
@@ -22,7 +22,7 @@ import { runProbes } from "../diagnose.js";
  */
 
 const STEPS = [
-  { key: "shield", label: "Shield 30 STRK", detail: "Its own transaction, and it has to be. Everything after spends notes this creates, and a note is only spendable ten blocks after it exists — so shielding cannot share a transaction with anything that uses it." },
+  { key: "shield", label: "Shield 30 STRK", detail: "Its own transaction, and it has to be: everything after spends notes this creates, and a note is only spendable ten blocks after it exists. Only needed once — if you already hold shielded STRK, skip it.", skippable: true },
   { key: "create", label: "Create the campaign", detail: "Opens it — and joins it. The pool refuses an invoke that moves no value, so the organiser's deposit is their own first pledge." },
   { key: "pledgeA", label: "Pledge (second)", detail: "One STRK into the pool, sealed behind a commitment. This reaches the quorum of two." },
   { key: "pledgeB", label: "Pledge (third, optional)", detail: "Past quorum. Still nothing is announced — no event carries a count." },
@@ -30,8 +30,23 @@ const STEPS = [
 ];
 
 export default function Run({ ctx }) {
-  const [id, setId] = useState(() => `demo-${Math.floor(Date.now() / 1000) % 100000}`);
-  const [state, setState] = useState({});
+  // Progress lives in localStorage, not just React state. A refresh used to
+  // lose it, which makes a completed shield look undone — and re-shielding is a
+  // real six STRK to discover that the page, not the chain, had forgotten.
+  const [id, setId] = useState(() => {
+    try { return localStorage.getItem("quorum.run.id")
+      ?? `demo-${Math.floor(Date.now() / 1000) % 100000}`; } catch { return "demo"; }
+  });
+  const [state, setState] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("quorum.run.state") ?? "{}"); } catch { return {}; }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("quorum.run.id", id);
+      localStorage.setItem("quorum.run.state", JSON.stringify(state));
+    } catch { /* private window, or storage disabled */ }
+  }, [id, state]);
   const [busy, setBusy] = useState(null);
   const [log, setLog] = useState([]);
   const [probes, setProbes] = useState([]);
@@ -131,7 +146,15 @@ export default function Run({ ctx }) {
                       <div>
                         <h3 className="sub">{s.label}</h3>
                         <p>{s.detail}</p>
-                        {state[s.key] ? (
+                        {!state[s.key] && s.skippable && (
+                          <button className="btn-ghost" style={{ marginTop: 12, marginRight: 10 }}
+                            onClick={() => setState((v) => ({ ...v, [s.key]: "skipped" }))}>
+                            Already shielded — skip
+                          </button>
+                        )}
+                        {state[s.key] === "skipped" ? (
+                          <span className="mono runstep-tx">skipped</span>
+                        ) : state[s.key] ? (
                           <a className="mono runstep-tx"
                             href={`https://voyager.online/tx/${state[s.key]}`}
                             target="_blank" rel="noreferrer">
@@ -155,6 +178,11 @@ export default function Run({ ctx }) {
           <Reveal delay={100}>
             <aside className="aside">
               <h3 className="sub">Log</h3>
+              <button className="btn-ghost" style={{ marginBottom: 12, marginRight: 8 }}
+                onClick={() => { setState({}); setLog([]); setProbes([]);
+                  setId(`demo-${Math.floor(Date.now() / 1000) % 100000}`); }}>
+                Start over
+              </button>
               <button className="btn-ghost" style={{ marginBottom: 12 }}
                 disabled={!wallet || busy !== null}
                 onClick={async () => {
@@ -190,9 +218,12 @@ export default function Run({ ctx }) {
               </p>
               <p className="aside-note">
                 <strong>The pool fee is paid from your shielded balance</strong>, not from public
-                STRK — which is why the first shield of 10 STRK left only 4. So each step deposits
-                its pledge <em>plus</em> the {POOL_FEE_STRK.toString()} STRK fee, and funds itself
-                rather than depending on what happens to be shielded already.
+                STRK — which is why a shield of 30 STRK leaves 24. Shield once, generously; every
+                step after it costs {POOL_FEE_STRK.toString()} STRK from that balance.
+              </p>
+              <p className="aside-note">
+                Progress is remembered across a refresh. If a step is already done on chain but the
+                page has forgotten it, skip it rather than paying for it twice.
               </p>
               <p className="aside-note">
                 Registration happens on your first shield <em>inside</em> Ready, not here. If a step
