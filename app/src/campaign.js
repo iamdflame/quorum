@@ -15,8 +15,27 @@ import {
  * exactly like a hang, so each step reports what it is waiting for.
  */
 
-export const MACHINE = "0x0079bab03056fd05dde50e921cf5ea8c3405aaaa2f05492a8a0e1fb6c811ff76";
-export const STRK = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
+/**
+ * Addresses, normalised for the Wallet API.
+ *
+ * `ADDRESS` is `FELT`, and FELT's pattern is
+ * `^0x(0|[a-fA-F1-9]{1}[a-fA-F0-9]{0,62})$` — which **forbids leading zeros**
+ * except for a bare `0x0`. Starknet addresses are conventionally written padded
+ * to 64 hex digits, so the canonical form of this contract, `0x0079bab0…`,
+ * is rejected by the wallet before it ever tries to prove: the payload never
+ * reaches the pool and the error is `INVALID_REQUEST_PAYLOAD`, which says
+ * nothing about which field was wrong.
+ *
+ * Calldata happened to be fine because it goes through a hex conversion that
+ * strips zeros. The address fields did not. Everything is normalised here so
+ * the difference cannot bite again.
+ */
+const unpad = (a) => "0x" + BigInt(a).toString(16);
+
+export const MACHINE = unpad("0x0079bab03056fd05dde50e921cf5ea8c3405aaaa2f05492a8a0e1fb6c811ff76");
+export const STRK = unpad("0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d");
+/** The padded form, for explorer links and anything shown to a person. */
+export const MACHINE_DISPLAY = "0x0079bab03056fd05dde50e921cf5ea8c3405aaaa2f05492a8a0e1fb6c811ff76";
 export const POOL_FEE_STRK = 6n;
 
 /** Errors from wallets arrive in shapes that `String()` flattens to nothing. */

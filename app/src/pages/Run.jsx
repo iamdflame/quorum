@@ -2,7 +2,7 @@ import { useState } from "react";
 import Reveal from "../components/Reveal.jsx";
 import {
   createCampaign, pledge, fire, derivePledgeKey, defaultSpec,
-  describeError, MACHINE, POOL_FEE_STRK,
+  describeError, MACHINE_DISPLAY, POOL_FEE_STRK,
 } from "../campaign.js";
 import { RPC } from "../wallet.js";
 
@@ -88,8 +88,8 @@ export default function Run({ ctx }) {
           </h1>
           <p className="lead" style={{ marginTop: 24, color: "var(--dim)" }}>
             Create, pledge, pledge, fire — against{" "}
-            <a className="mono" href={`https://voyager.online/contract/${MACHINE}`} target="_blank" rel="noreferrer">
-              {MACHINE.slice(0, 14)}…
+            <a className="mono" href={`https://voyager.online/contract/${MACHINE_DISPLAY}`} target="_blank" rel="noreferrer">
+              {MACHINE_DISPLAY.slice(0, 14)}…
             </a>{" "}
             on Starknet mainnet. Each costs {POOL_FEE_STRK.toString()} STRK in pool fees, and each is slow:
             the wallet is generating a STARK proof, not hanging.

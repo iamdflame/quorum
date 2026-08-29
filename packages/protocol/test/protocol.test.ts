@@ -366,3 +366,48 @@ test("time remaining reports in units an organiser can check", () => {
   assert.ok(timeRemaining(10 + blocksFor(7 * DAY), 10).human.includes("days"));
   assert.ok(timeRemaining(10 + blocksFor(600), 10).human.includes("minutes"));
 });
+
+// ------------------------------------------------------- wallet API shape
+
+/**
+ * `ADDRESS` is `FELT`, whose pattern forbids leading zeros except for a bare
+ * `0x0`. Starknet addresses are conventionally written padded to 64 hex digits,
+ * so the canonical form of a contract address is *rejected by the wallet* —
+ * before it proves anything, with `INVALID_REQUEST_PAYLOAD`, which names no
+ * field. Worth a test, because the failure gives no clue what it is about.
+ */
+const FELT_PATTERN = /^0x(0|[a-fA-F1-9]{1}[a-fA-F0-9]{0,62})$/;
+
+test("the wallet's FELT pattern rejects padded addresses", () => {
+  const padded = "0x0079bab03056fd05dde50e921cf5ea8c3405aaaa2f05492a8a0e1fb6c811ff76";
+  assert.ok(!FELT_PATTERN.test(padded), "a padded address must be recognised as invalid");
+  assert.ok(FELT_PATTERN.test("0x" + BigInt(padded).toString(16)));
+});
+
+test("every felt we emit in calldata is acceptable to the wallet", () => {
+  const spec = {
+    ...SPEC,
+    policy: { kind: "BoundTreasury" as const,
+      payouts: [{ noteId: "0x1", token: "0x111", amount: 500n }] },
+  };
+  const actions = [
+    ...createActions("0x79bab0", prepareCampaign(spec, 10)),
+    ...commitActions("0x79bab0", "walkout-2026", "0x4718f5a0", 100n, refundCommitment("0xa")),
+    ...fireActions("0x79bab0", "walkout-2026",
+      [{ noteId: "0x1", token: "0x4718f5a0", amount: 500n }]),
+    ...reclaimActions("0x79bab0", "walkout-2026", "0x4718f5a0", "0xsecret"),
+    ...unsealActions("0x79bab0", "walkout-2026", "0xsecret", "0xpayload"),
+  ];
+  for (const a of actions) {
+    for (const item of (a["calldata"] as string[] | undefined) ?? []) {
+      // Wallet placeholders are exempt: the wallet substitutes them itself.
+      if (item.startsWith("${")) continue;
+      assert.ok(FELT_PATTERN.test(item), `calldata item "${item}" would be rejected`);
+    }
+    for (const key of ["contract", "token", "recipient"]) {
+      const v = a[key] as string | undefined;
+      if (typeof v !== "string" || v.startsWith("${")) continue;
+      assert.ok(FELT_PATTERN.test(v), `${key} "${v}" would be rejected`);
+    }
+  }
+});
