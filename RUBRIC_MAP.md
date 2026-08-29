@@ -30,7 +30,16 @@ Where each judging criterion is satisfied, by file, test and transaction. Run `n
 | App | https://quorum-strk20.vercel.app |
 | Self-check | `npm run verify` |
 
-**Where this is incomplete, stated plainly.** One pool transaction is listed in [`strk20.json`](strk20.json), and it touched the pool but did not run through QuorumMachine. `npm run verify` prints that as a note rather than a pass, because the criterion is a campaign running end to end on mainnet and that has not happened yet. It is the largest open item in this repository and nothing else here compensates for it.
+**A campaign ran end to end on mainnet.** Four transactions, all through QuorumMachine, all verified by `npm run verify` against the panel's own criteria — exists, succeeded, touched the STRK20 pool, ran through this project's contract:
+
+| | | |
+|---|---|---|
+| Created | [`0x071d3220…`](https://voyager.online/tx/0x071d322075e75df9be35a46e36024b02c3f9c37fcaedd52a38a7391b0cf8e806) | 14,024,487 |
+| Committed | [`0x03c6bd55…`](https://voyager.online/tx/0x03c6bd55104d3b05254364f369689e648ec7af6e1f849f440fdcbd9792e0dbd1) | 14,024,550 |
+| Committed | [`0x018bb72d…`](https://voyager.online/tx/0x018bb72dc2b97bc028c3b22f633d2ac43e5432ae2be720652c809ef0d3ff8d22) | 14,024,626 |
+| Fired | [`0x01da6af3…`](https://voyager.online/tx/0x01da6af3260615abebaa5d708c885d8017fb0de2f2001d8269203b5924bb5a8e) | 14,024,923 |
+
+The campaign `demo-70414` reads back as `Fired`, 3 pledges against a threshold of 2, with the contract's accounting reconciling to its balance exactly.
 
 ## Innovation — 25%
 

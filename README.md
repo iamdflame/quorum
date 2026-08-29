@@ -133,6 +133,32 @@ That last one earns its place. Commitments are computed in TypeScript and checke
 
 <br>
 
+
+## A campaign that actually ran
+
+`demo-70414`, on Starknet mainnet, start to finish:
+
+| | | |
+|---|---|---|
+| **Created** | [`0x071d3220…`](https://voyager.online/tx/0x071d322075e75df9be35a46e36024b02c3f9c37fcaedd52a38a7391b0cf8e806) | block 14,024,487 — opening it is joining it, so this carries the organiser's own pledge |
+| **Committed** | [`0x03c6bd55…`](https://voyager.online/tx/0x03c6bd55104d3b05254364f369689e648ec7af6e1f849f440fdcbd9792e0dbd1) | block 14,024,550 — quorum reached, and no event says so |
+| **Committed** | [`0x018bb72d…`](https://voyager.online/tx/0x018bb72dc2b97bc028c3b22f633d2ac43e5432ae2be720652c809ef0d3ff8d22) | block 14,024,626 — past quorum |
+| **Fired** | [`0x01da6af3…`](https://voyager.online/tx/0x01da6af3260615abebaa5d708c885d8017fb0de2f2001d8269203b5924bb5a8e) | block 14,024,923 — permissionless, no secret |
+
+Read it back from the chain yourself:
+
+```
+phase     Fired
+policy    RefundAll
+pledges   3 of 2
+escrowed  3.0 STRK
+held      3.0 STRK      ← the contract's accounting reconciles to the wei
+```
+
+`held` is not zero and should not be: a `RefundAll` campaign holds its pledges until they are reclaimed. What matters is that what the contract *thinks* it holds is exactly what it *does* hold, and `npm run verify` checks that rather than checking for zero.
+
+Every pledge in that campaign is a note in the pool. The chain records that three pledges exist and that the quorum was honoured. It does not record who made them.
+
 ## Deployed
 
 | Network | Address |

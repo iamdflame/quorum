@@ -30,6 +30,7 @@ const SEL = {
   get_campaign: "0x333358710919613a34f18567332063b09711678bab1f50754e4f8f7fd637a8e",
   held: "0x34a3e3c6d5d516a635cba760af371241a4847b82058493c7447a286655255dc",
   get_fee_amount: "0x3d323cd692ad43935b81ce230c47bfc57f69656249c5a33fe5223c17dd32ed2",
+  balanceOf: "0x2e4263afad30923c891518314c3c95dbe830a16874e8abc5777a9a20b54c76e",
 };
 
 let failures = 0;
@@ -91,14 +92,28 @@ try {
   }
 } catch (e) { fail("get_campaign failed", String(e.message ?? e)); }
 
-/* ---- nothing is stranded in the contract ---- */
+/* ---- the contract's own accounting reconciles with its real balance ---- *
+ *
+ * `held` is not expected to be zero: a live RefundAll campaign holds its
+ * pledges until they are reclaimed. What must be true is that what the contract
+ * thinks it holds is exactly what it does hold. A gap either way is stranded
+ * value or a phantom balance, and both are silent.
+ */
 try {
-  const held = await mainnet("starknet_call", [
-    { contract_address: MACHINE, entry_point_selector: SEL.held, calldata: [STRK] }, "latest"]);
-  BigInt(held[0]) === 0n
-    ? pass("no STRK stranded in the machine", "held() = 0")
-    : fail("the machine is holding STRK it has not accounted for", `held() = ${BigInt(held[0])}`);
-} catch (e) { fail("held() failed", String(e.message ?? e)); }
+  const [held, balance] = await Promise.all([
+    mainnet("starknet_call", [
+      { contract_address: MACHINE, entry_point_selector: SEL.held, calldata: [STRK] }, "latest"]),
+    mainnet("starknet_call", [
+      { contract_address: STRK, entry_point_selector: SEL.balanceOf, calldata: [MACHINE] }, "latest"]),
+  ]);
+  const h = BigInt(held[0]);
+  const b = BigInt(balance[0]) + (BigInt(balance[1] ?? 0) << 128n);
+  h === b
+    ? pass("the machine's accounting reconciles with its balance",
+           `held = balance = ${Number(h) / 1e18} STRK`)
+    : fail("the machine's accounting does not match its balance",
+           `held() = ${h} but balanceOf = ${b}. The difference is stranded or phantom.`);
+} catch (e) { fail("could not reconcile the machine's balance", String(e.message ?? e)); }
 
 /* ---- block time is what the code assumes, not what old tooling assumes ---- */
 try {
