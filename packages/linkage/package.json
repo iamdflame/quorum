@@ -20,7 +20,7 @@
   "license": "Apache-2.0",
   "description": "What the STRK20 privacy pool already reveals, with no cryptography broken. Point it at your own address.",
   "bin": {
-    "quorum-linkage": "./dist/cli.js"
+    "quorum-linkage": "dist/cli.js"
   },
   "files": [
     "dist",

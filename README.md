@@ -14,6 +14,7 @@
 <br>
 
 [![CI](https://github.com/Highneighbour/quorum/actions/workflows/ci.yml/badge.svg)](https://github.com/Highneighbour/quorum/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/quorum-linkage?label=quorum-linkage&color=E2661A&style=flat-square&labelColor=0B0A08)](https://www.npmjs.com/package/quorum-linkage)
 ![Cairo](https://img.shields.io/badge/Cairo-2.20-E2661A?style=flat-square&labelColor=0B0A08)
 ![Tests](https://img.shields.io/badge/tests-173%20passing-E2661A?style=flat-square&labelColor=0B0A08)
 ![Mainnet](https://img.shields.io/badge/Starknet-mainnet-E2661A?style=flat-square&labelColor=0B0A08)
@@ -61,6 +62,13 @@ curl -s -X POST https://api.cartridge.gg/x/starknet/mainnet \
 Field 0 is the phase — `0x2` is `Fired`. Field 6 is the threshold, `0x2`. Field 7
 is the pledge count, `0x3`. Three people cleared a bar of two, and the chain does
 not say who they were.
+
+**Or point our published tool at the live pool**, with nothing installed and no
+wallet — it reads mainnet and names no address:
+
+```bash
+npx quorum-linkage --span 40000
+```
 
 **Or check every claim in this file at once**, against mainnet, in one command:
 

@@ -2,8 +2,11 @@
 
 **What the STRK20 privacy pool already reveals about you, with no cryptography broken.**
 
-```
-npx quorum-linkage --address 0xYOUR_ADDRESS
+[![npm](https://img.shields.io/npm/v/quorum-linkage?color=E2661A&style=flat-square&labelColor=0B0A08)](https://www.npmjs.com/package/quorum-linkage)
+
+```bash
+npx quorum-linkage                      # aggregate report, no address named
+npx quorum-linkage --address 0xYOURS    # what the chain already says about you
 ```
 
 ---

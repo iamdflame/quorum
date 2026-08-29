@@ -29,6 +29,7 @@ Where each judging criterion is satisfied, by file, test and transaction. Run `n
 | Class hash | `0x04a3ad94…e4d4f7` — **identical on both**, so production runs what the tests rehearsed |
 | App | https://quorum-strk20.vercel.app |
 | Self-check | `npm run verify` |
+| Published tools | [`quorum-linkage`](https://www.npmjs.com/package/quorum-linkage), [`quorum-oracle`](https://www.npmjs.com/package/quorum-oracle), [`quorum-chain`](https://www.npmjs.com/package/quorum-chain) — `npx quorum-linkage` |
 
 **A campaign ran end to end on mainnet.** Four transactions, all through QuorumMachine, all verified by `npm run verify` against the panel's own criteria — exists, succeeded, touched the STRK20 pool, ran through this project's contract:
 

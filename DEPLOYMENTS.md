@@ -29,6 +29,17 @@ An earlier `QuorumMachine` at [`0x06d3f070…8c08`](https://voyager.online/contr
 
 `ConclaveMachine` at [`0x0269fa8c…ecfc`](https://voyager.online/contract/0x0269fa8cd8a7a04f5cd5b2fda7139efebb99511e2dde4778ba9395948a62ecfc) is a general private state machine from earlier work in this repository. It is not part of the Quorum submission.
 
+## Published tools
+
+| Package | |
+|---|---|
+| [`quorum-linkage`](https://www.npmjs.com/package/quorum-linkage) | the CLI — `npx quorum-linkage` |
+| [`quorum-oracle`](https://www.npmjs.com/package/quorum-oracle) | effective anonymity set, as 2^H over the flow distribution |
+| [`quorum-chain`](https://www.npmjs.com/package/quorum-chain) | reads the pool, and separates infrastructure from people |
+
+All three at `0.1.0`, Apache-2.0. `npx quorum-linkage --span 40000` was run from
+an empty directory against the public registry before this was written.
+
 ## A campaign that ran
 
 `demo-70414` completed on mainnet: created at block 14,024,487, two further pledges, fired at 14,024,923. All four transactions ran through the machine, and `npm run verify` checks each against the panel's criteria.
