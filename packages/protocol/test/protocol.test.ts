@@ -187,6 +187,13 @@ test("create deposits the organiser's own pledge", () => {
   assert.deepEqual(a.map((x) => x.type), ["deposit", "withdraw", "invoke"]);
   assert.equal(a[1]!["recipient"], "0x79bab0", "the withdraw funds the machine");
   assert.equal(BigInt((a[2]!.calldata as string[])[0]!), BigInt(OP.Create));
+
+  // With a fee, the deposit covers the pledge and the fee; the withdraw still
+  // moves only the pledge. The pool takes its fee from the shielded balance.
+  const withFee = createActions("0x79bab0", prepareCampaign(SPEC, 10),
+    refundCommitment("0xorg"), { fee: 6n * 10n ** 18n });
+  assert.equal(BigInt(withFee[0]!["amount"] as string), SPEC.unit + 6n * 10n ** 18n);
+  assert.equal(BigInt(withFee[1]!["amount"] as string), SPEC.unit);
 });
 
 test("a refund-all fire is paired with a self-transfer", () => {

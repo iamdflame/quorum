@@ -180,8 +180,13 @@ export default function Run({ ctx }) {
               <p className="aside-note">
                 You need <strong>Ready</strong> — it implements the STRK20 wallet methods where
                 Braavos answers <span className="mono">not implemented</span> — with a registered
-                viewing key and about <strong>30 STRK</strong>. Four transactions is
-                {" "}{(POOL_FEE_STRK * 4n).toString()} STRK in fees; the two pledged STRK come back.
+                viewing key and about <strong>40 STRK</strong>.
+              </p>
+              <p className="aside-note">
+                <strong>The pool fee is paid from your shielded balance</strong>, not from public
+                STRK — which is why the first shield of 10 STRK left only 4. So each step deposits
+                its pledge <em>plus</em> the {POOL_FEE_STRK.toString()} STRK fee, and funds itself
+                rather than depending on what happens to be shielded already.
               </p>
               <p className="aside-note">
                 Registration happens on your first shield <em>inside</em> Ready, not here. If a step

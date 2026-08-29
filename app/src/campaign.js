@@ -94,18 +94,34 @@ export async function derivePledgeKey(account, campaignId, chainId, nonce = 0) {
   return pledgeKeyFromSignature(campaignId, sig, nonce);
 }
 
+/**
+ * Bring enough into the pool to cover both the pledge and the fee.
+ *
+ * The pool's 6 STRK fee is paid from the *shielded* balance, not from public
+ * STRK — the same way the first shield of 10 STRK left only 4. So a transaction
+ * that deposits exactly one unit and then owes six in fees fails on a balance
+ * the user did not know they were short of, and the wallet reports it only as
+ * a failed transaction.
+ *
+ * Depositing the unit plus the fee makes each operation self-funding, so it
+ * cannot depend on what happens to be shielded already.
+ */
+export const FEE_WEI = 6n * 10n ** 18n;
+
 export async function createCampaign(account, spec, currentBlock, chainId, say) {
   const calldata = prepareCampaign(spec, currentBlock);
   // Opening a campaign is joining it: the pool refuses an invoke that moves no
   // value, so the organiser's deposit is their own first pledge.
   say("Deriving your pledge key — sign the message. Nothing is stored.");
   const key = await derivePledgeKey(account, spec.id, chainId, 0);
-  const hash = await submit(account, createActions(MACHINE, calldata, key.commitment), say);
+  const hash = await submit(
+    account, createActions(MACHINE, calldata, key.commitment, { fee: FEE_WEI }), say);
   return { hash, calldata, key };
 }
 
 export async function pledge(account, campaignId, unit, commitment, say) {
-  return submit(account, commitActions(MACHINE, campaignId, STRK, unit, commitment), say);
+  return submit(
+    account, commitActions(MACHINE, campaignId, STRK, unit, commitment, { fee: FEE_WEI }), say);
 }
 
 /**

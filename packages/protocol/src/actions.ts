@@ -91,10 +91,16 @@ export interface Strk20Action {
  */
 export function createActions(
   machine: string, c: CampaignCalldata, commitment: string,
+  opts: { fee?: bigint } = {},
 ): Strk20Action[] {
+  // The pool's fee is paid from the shielded balance, so the deposit has to
+  // cover the pledge *and* the fee. Depositing only the pledge leaves the
+  // transaction short by the fee, and the wallet reports that as nothing more
+  // informative than a failed transaction.
+  const fee = opts.fee ?? 0n;
   return [
     // Public tokens into the pool, as the pledger's own note.
-    { type: "deposit", token: c.token, amount: felt(c.unit) },
+    { type: "deposit", token: c.token, amount: felt(c.unit + fee) },
     // And out of the pool to the machine. This is the step that actually funds
     // the helper: a deposit alone leaves the value sitting in the pledger's own
     // note, where the contract's balance-delta accounting correctly sees
@@ -130,9 +136,11 @@ export function createActions(
  */
 export function commitActions(
   machine: string, campaignId: string, token: string, unit: bigint, commitment: string,
+  opts: { fee?: bigint } = {},
 ): Strk20Action[] {
+  const fee = opts.fee ?? 0n;
   return [
-    { type: "deposit", token, amount: felt(unit) },
+    { type: "deposit", token, amount: felt(unit + fee) },
     // The withdraw is what funds the helper; see `createActions`.
     { type: "withdraw", token, amount: felt(unit), recipient: machine },
     { type: "invoke", contract: machine, calldata: invoke({ op: OP.Commit, campaignId, commitment }) },
