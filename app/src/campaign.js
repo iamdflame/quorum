@@ -54,10 +54,25 @@ export function describeError(err) {
 /** Submit a set of STRK20 actions, proving through the wallet. */
 async function submit(account, actions, say) {
   say("Building and proving. The wallet is generating a STARK proof — this is slow.");
-  const prepared = await account.strk20PrepareInvoke(actions);
+
+  // `simulate` must be passed explicitly as false. Left undefined, the wallet
+  // builds the call in simulate mode, where the spec says all three proof
+  // fields are "present but empty" — and an empty proof is submittable-looking
+  // right up until the pool rejects it on chain with EMPTY_PROOF_FACTS, after
+  // the fee has been spent.
+  const prepared = await account.strk20PrepareInvoke(actions, false);
   if (!prepared?.call) throw new Error("The wallet returned no call to submit.");
 
-  say("Proof ready. Submitting to Starknet…");
+  // Never spend a fee on a proof that cannot possibly verify.
+  const facts = prepared.proof?.proof_facts ?? prepared.proof?.proofFacts;
+  if (!facts?.length || !prepared.proof?.data) {
+    throw new Error(
+      "The wallet returned an empty proof, which the pool rejects as EMPTY_PROOF_FACTS. " +
+      "That is what a simulated call looks like — nothing was submitted and nothing was spent.",
+    );
+  }
+
+  say(`Proof ready (${facts.length} fact${facts.length === 1 ? "" : "s"}). Submitting…`);
   let res;
   try {
     res = await account.executeWithProof(prepared.call, prepared.proof);
@@ -66,7 +81,7 @@ async function submit(account, actions, say) {
     // alternative spreads the proof into execution options.
     console.warn("[quorum] executeWithProof refused, trying execute()", inner);
     res = await account.execute(prepared.call, {
-      proof: prepared.proof?.data, proofFacts: prepared.proof?.proof_facts,
+      proof: prepared.proof.data, proofFacts: facts,
     });
   }
   const hash = res?.transaction_hash;
