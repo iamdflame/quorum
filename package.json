@@ -5,7 +5,8 @@
   "description": "Threshold coordination on Starknet. Nobody is exposed until enough people commit.",
   "type": "module",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "archive/*"
   ],
   "engines": {
     "node": ">=24"
@@ -20,7 +21,9 @@
     "linkage": "npm run build && node examples/linkage.mjs",
     "entities": "npm run build && node examples/entities.mjs",
     "test:bridge": "node --test --experimental-strip-types packages/sdk-bridge/test/*.test.ts",
-    "test:contracts": "cd contracts && snforge test"
+    "test:contracts": "cd contracts && snforge test",
+    "build:archive": "tsc -b archive/oracle archive/router archive/execute archive/sdk-bridge",
+    "verify": "node scripts/verify.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

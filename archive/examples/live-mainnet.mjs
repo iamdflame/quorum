@@ -7,10 +7,10 @@
  * clear. No keys, no funds, no permission.
  */
 import { observePool, blockNumber, tokenLabel, formatAmount,
-         identifyInfrastructure, excludeInfrastructure } from "../packages/chain/dist/index.js";
-import { anonymitySets } from "../packages/oracle/dist/index.js";
+         identifyInfrastructure, excludeInfrastructure } from "../../packages/chain/dist/index.js";
+import { anonymitySets } from "../oracle/dist/index.js";
 
-const WINDOW = 720; // ~6h at 30s blocks
+const WINDOW = 12_700; // six hours at the measured ~1.7s per block
 
 const head = await blockNumber();
 // Scan in segments: public RPCs cap block spans, and the pool's history is long.
@@ -31,7 +31,7 @@ for (let i = 0; i < SEGMENTS; i++) {
 process.stderr.write("classifying infrastructure...\n");
 const infra = await identifyInfrastructure(all, from, head);
 const clean = excludeInfrastructure(all, infra);
-const observation = { head, notes: [], edges: clean, channels: [], blockTimeSeconds: 30 };
+const observation = { head, notes: [], edges: clean, channels: [], blockTimeSeconds: 1.7 };
 
 const operators = new Set(clean.map((e) => e.operator?.toString(16)));
 const tokens = new Set(clean.map((e) => e.token));

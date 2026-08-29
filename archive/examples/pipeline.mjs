@@ -6,12 +6,12 @@
  * measure the crowd  ->  route into it  ->  schedule it  ->  emit the SDK calls
  */
 import { observePool, blockNumber, identifyInfrastructure, excludeInfrastructure, tokenLabel }
-  from "../packages/chain/dist/index.js";
-import { anonymitySets, projectedSet } from "../packages/oracle/dist/index.js";
-import { route } from "../packages/router/dist/index.js";
-import { schedule, toOperations, MAINNET_CONSTANTS } from "../packages/execute/dist/index.js";
+  from "../../packages/chain/dist/index.js";
+import { anonymitySets, projectedSet } from "../oracle/dist/index.js";
+import { route } from "../router/dist/index.js";
+import { schedule, toOperations, MAINNET_CONSTANTS } from "../execute/dist/index.js";
 
-const WINDOW = 720;
+const WINDOW = 12_700; // six hours at the measured ~1.7s per block
 const STRK = 0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938dn;
 
 const head = await blockNumber();
@@ -25,7 +25,7 @@ for (let i = 0; i < 5; i++) {
 }
 const infra = await identifyInfrastructure(all, from, head);
 const obs = { head, notes: [], edges: excludeInfrastructure(all, infra),
-              channels: [], blockTimeSeconds: 30 };
+              channels: [], blockTimeSeconds: 1.7 };
 
 const AMOUNT = 3_000_000_000_000_000_000_000n; // 3,000 STRK
 

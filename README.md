@@ -5,6 +5,7 @@
 <br>
 
 **[Live app](https://quorum-alpha-drab.vercel.app)** &nbsp;·&nbsp;
+**[Rubric map](RUBRIC_MAP.md)** &nbsp;·&nbsp;
 **[Contract on mainnet](https://voyager.online/contract/0x0079bab03056fd05dde50e921cf5ea8c3405aaaa2f05492a8a0e1fb6c811ff76)** &nbsp;·&nbsp;
 **[The adversarial tests](contracts/tests/quorum_test.cairo)** &nbsp;·&nbsp;
 **[How it works](https://quorum-alpha-drab.vercel.app/how)**
@@ -217,6 +218,7 @@ archive/            Shoal — the earlier project in this repo
 ```bash
 npm install && npm run build && npm test    # 74 TypeScript tests
 cd contracts && snforge test                # 51 Cairo tests
+npm run verify                              # every on-chain claim in this README
 ```
 
 Node 24+ — the STRK20 SDK's `ohttp-ts` requires modern WebCrypto.

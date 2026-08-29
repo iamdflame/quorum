@@ -1,9 +1,20 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "./src", "outDir": "./dist",
-    "allowImportingTsExtensions": true, "rewriteRelativeImportExtensions": true
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true
   },
-  "include": ["src/**/*.ts"],
-  "references": [{ "path": "../oracle" }, { "path": "../router" }]
+  "include": [
+    "src/**/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../oracle"
+    },
+    {
+      "path": "../router"
+    }
+  ]
 }

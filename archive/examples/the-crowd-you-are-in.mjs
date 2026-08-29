@@ -6,12 +6,12 @@
  * A pool that looks busy from the outside, and the crowd you are actually
  * standing in once it fragments along asset, denomination and time.
  */
-import { anonymitySets } from "../packages/oracle/dist/index.js";
-import { route } from "../packages/router/dist/index.js";
+import { anonymitySets } from "../oracle/dist/index.js";
+import { route } from "../router/dist/index.js";
 
 const USDC = 0x555344n;
 const EXOTIC = 0x9911n;
-const WINDOW = 720;
+const WINDOW = 12_700; // six hours at the measured ~1.7s per block
 
 // A realistic pool. Traffic is bursty, not uniform: activity clusters in waking
 // hours, so some windows are genuinely crowded and others are nearly empty.
@@ -45,7 +45,7 @@ for (let i = 0; i < 6; i++) {
     block: i * 4_000, own: false, operator: BigInt(++op) });
 }
 
-const observation = { head: DAYS * WINDOWS_PER_DAY * WINDOW, notes: [], edges, channels: [], blockTimeSeconds: 30 };
+const observation = { head: DAYS * WINDOWS_PER_DAY * WINDOW, notes: [], edges, channels: [], blockTimeSeconds: 1.7 };
 
 const sets = [...anonymitySets(observation, WINDOW).values()];
 const effective = sets.map((s) => s.effective).sort((a, b) => a - b);
