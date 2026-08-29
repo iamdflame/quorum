@@ -21,7 +21,7 @@ import { hash, shortString, num } from "starknet";
 /** Domain tags, matching `contracts/src/quorum.cairo` exactly. */
 export const TAGS = {
   pledgeAcc: shortString.encodeShortString("QUORUM_PLEDGE_ACC"),
-  fire: shortString.encodeShortString("QUORUM_FIRE"),
+  payoutAcc: shortString.encodeShortString("QUORUM_PAYOUT_ACC"),
   refund: shortString.encodeShortString("QUORUM_REFUND"),
 } as const;
 
@@ -59,9 +59,23 @@ export function poseidon(...elements: (string | number | bigint)[]): string {
   return hash.computePoseidonHashOnElements(elements.map(toFelt));
 }
 
-/** `poseidon(FIRE_TAG, secret)` — who may fire a campaign. */
-export function fireCommitment(secret: string | number | bigint): string {
-  return poseidon(TAGS.fire, secret);
+/**
+ * Fold a payout set the way the contract does.
+ *
+ * This is what makes theft impossible rather than merely detectable. The root is
+ * committed at creation, before a single pledge exists, and fire must reproduce
+ * it exactly — so every pledger can see where the money can go before they put
+ * any in, and nobody can change it afterwards.
+ *
+ * The fold is order-dependent, so the same destinations in a different sequence
+ * are a different set.
+ */
+export function payoutRoot(
+  payouts: readonly { noteId: string | number | bigint; token: string | number | bigint; amount: bigint }[],
+): string {
+  let root: string | number | bigint = 0n;
+  for (const p of payouts) root = poseidon(TAGS.payoutAcc, root, p.noteId, p.token, p.amount);
+  return num.toHex(root);
 }
 
 /** `poseidon(REFUND_TAG, secret)` — the key a pledge is stored under. */
@@ -112,15 +126,25 @@ export function pledgeSecretMessage(campaignId: string, chainId: string) {
 }
 
 /**
- * Turn a wallet signature into a pledge secret.
+ * Turn a wallet signature into a pledge secret, bound to one campaign.
  *
- * The signature is hashed rather than used directly: signature encodings differ
- * between wallets and account classes, and a raw `r` would leak across any
- * context where the same message is ever signed again.
+ * Two things matter here and the first version had only one of them.
+ *
+ * The signature is hashed rather than used directly: encodings differ between
+ * wallets and account classes, and a raw `r` would leak anywhere the same
+ * message is signed again.
+ *
+ * It is also **bound to the campaign id**. Without that, one wallet derives the
+ * same secret everywhere, so a single leaked pledge — a screenshot, a support
+ * ticket, a seized laptop — unlocks that person's pledge in every campaign they
+ * ever joined, including ones nobody knew they were in. Domain separation here
+ * is the difference between losing one pledge and losing a history.
  */
-export function secretFromSignature(signature: readonly (string | number | bigint)[]): string {
+export function secretFromSignature(
+  signature: readonly (string | number | bigint)[], campaignId: string | number | bigint,
+): string {
   if (signature.length === 0) throw new Error("Empty signature: nothing to derive from.");
-  return poseidon(TAGS.refund, poseidon(...signature));
+  return poseidon(TAGS.refund, campaignId, poseidon(...signature));
 }
 
 /**
@@ -136,6 +160,6 @@ export interface PledgeKey {
 export function pledgeKeyFromSignature(
   campaignId: string, signature: readonly (string | number | bigint)[],
 ): PledgeKey {
-  const secret = secretFromSignature(signature);
+  const secret = secretFromSignature(signature, campaignId);
   return { campaignId, secret, commitment: refundCommitment(secret) };
 }

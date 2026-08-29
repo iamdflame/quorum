@@ -11,9 +11,9 @@
     "node": ">=24"
   },
   "scripts": {
-    "build": "tsc -b packages/protocol packages/oracle packages/router packages/chain packages/execute packages/linkage packages/sdk-bridge",
-    "test": "node --test --experimental-strip-types packages/protocol/test/*.test.ts packages/oracle/test/*.test.ts packages/router/test/*.test.ts packages/execute/test/*.test.ts packages/linkage/test/*.test.ts",
-    "typecheck": "tsc -b packages/protocol packages/oracle packages/router packages/chain packages/execute packages/linkage packages/sdk-bridge",
+    "build": "tsc -b packages/protocol packages/chain packages/linkage",
+    "test": "node --test --experimental-strip-types packages/protocol/test/*.test.ts packages/linkage/test/*.test.ts",
+    "typecheck": "tsc -b packages/protocol packages/chain packages/linkage",
     "demo": "npm run build && node examples/the-crowd-you-are-in.mjs",
     "live": "npm run build && node examples/live-mainnet.mjs",
     "pipeline": "npm run build && node examples/pipeline.mjs",

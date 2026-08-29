@@ -1,44 +1,50 @@
 # Deployments
 
-`ConclaveMachine` — the general private state machine, wired to the STRK20 privacy pool on each network. Same class hash on both, so the mainnet bytecode is the bytecode Sepolia rehearsed.
+`QuorumMachine` — threshold coordination, wired to the STRK20 privacy pool on each network.
 
 **Class hash (both networks)**
-`0x057a995318f0e0fe1379753d55975b4e1d02dcc1e02028b61dd0c44425039a20`
+`0x262f3f548d23f74ac7326f04d11d315623ca57a6be9af4aabfd7c1a24b66086`
+
+Same bytecode on testnet and mainnet, so production runs exactly what the tests rehearsed.
 
 ## Starknet mainnet
 
 | | |
 |---|---|
-| **ConclaveMachine** | [`0x0269fa8cd8a7a04f5cd5b2fda7139efebb99511e2dde4778ba9395948a62ecfc`](https://voyager.online/contract/0x0269fa8cd8a7a04f5cd5b2fda7139efebb99511e2dde4778ba9395948a62ecfc) |
-| constructor `pool` | [`0x040337b1af3c663e86e333bab5a4b28da8d4652a15a69beee2b677776ffe812a`](https://voyager.online/contract/0x040337b1af3c663e86e333bab5a4b28da8d4652a15a69beee2b677776ffe812a) (the live STRK20 pool) |
-| deploy tx | [`0x05cfd35a39512d132efea8767d5f69612b56af63480a4b9f426f97305fe35f0e`](https://voyager.online/tx/0x05cfd35a39512d132efea8767d5f69612b56af63480a4b9f426f97305fe35f0e) |
-| declare tx | [`0x07e3f10af9bf11b6ff98f922848f5c019d468b2fb86d646f1273ae10aa0ca8f7`](https://voyager.online/tx/0x07e3f10af9bf11b6ff98f922848f5c019d468b2fb86d646f1273ae10aa0ca8f7) |
-| deployer account | [`0x03cc11e53ab23e2e420dbf4149e0e5b185f6668eddb9d503eb6107e901aca566`](https://voyager.online/contract/0x03cc11e53ab23e2e420dbf4149e0e5b185f6668eddb9d503eb6107e901aca566) |
-| account deploy tx | [`0x07b2aa81caa83de9aa2944900653f8b6ea5472c97c180f306310673b69e84782`](https://voyager.online/tx/0x07b2aa81caa83de9aa2944900653f8b6ea5472c97c180f306310673b69e84782) |
+| **QuorumMachine** | [`0x0079bab03056fd05dde50e921cf5ea8c3405aaaa2f05492a8a0e1fb6c811ff76`](https://voyager.online/contract/0x0079bab03056fd05dde50e921cf5ea8c3405aaaa2f05492a8a0e1fb6c811ff76) |
+| constructor `pool` | [`0x040337b1af3c663e86e333bab5a4b28da8d4652a15a69beee2b677776ffe812a`](https://voyager.online/contract/0x040337b1af3c663e86e333bab5a4b28da8d4652a15a69beee2b677776ffe812a) — the live STRK20 pool |
+| deploy tx | [`0x0487c8b492361acdf48bf691ee61f56884734dc0e84980ffccc18b128ee3dd49`](https://voyager.online/tx/0x0487c8b492361acdf48bf691ee61f56884734dc0e84980ffccc18b128ee3dd49) |
 
 ## Starknet Sepolia
 
 | | |
 |---|---|
-| **ConclaveMachine** | [`0x0193e222869091a5b350d0a282c82f34c3554256a45b9ea631b66cdbd4d70309`](https://sepolia.voyager.online/contract/0x0193e222869091a5b350d0a282c82f34c3554256a45b9ea631b66cdbd4d70309) |
+| **QuorumMachine** | [`0x06e13e8e129b91085bcb6bde0f3bac7b8cf3ceb504ed4eb0149becc4c9b41736`](https://sepolia.voyager.online/contract/0x06e13e8e129b91085bcb6bde0f3bac7b8cf3ceb504ed4eb0149becc4c9b41736) |
 | constructor `pool` | `0x0254a6b2997ef52e9f830ce1f543f6b29768295e8d17e2267d672c552cfe0d91` |
-| deploy tx | [`0x00e9fd2a21c689b5db4a3e6ad844ff4cca02a5c99b554a976e242bee2fcad6a3`](https://sepolia.voyager.online/tx/0x00e9fd2a21c689b5db4a3e6ad844ff4cca02a5c99b554a976e242bee2fcad6a3) |
-| declare tx | [`0x002c39000aae92c7e53559fae3c3720a1995e45d9c9f310f844ec22b4ac4a586`](https://sepolia.voyager.online/tx/0x002c39000aae92c7e53559fae3c3720a1995e45d9c9f310f844ec22b4ac4a586) |
-| deployer account | [`0x027d8aef1f11e2964d0d00e731fad3c28d37a1ee4f7cb229f90aa48ce1effa4a`](https://sepolia.voyager.online/contract/0x027d8aef1f11e2964d0d00e731fad3c28d37a1ee4f7cb229f90aa48ce1effa4a) |
+| deploy tx | [`0x076032ab7a20ff0b7a324157e403062eba3a756421fa70a44514cdb0ee7d0c65`](https://sepolia.voyager.online/tx/0x076032ab7a20ff0b7a324157e403062eba3a756421fa70a44514cdb0ee7d0c65) |
 
-## Verify it yourself
+## Superseded
+
+An earlier `QuorumMachine` at [`0x06d3f070…8c08`](https://voyager.online/contract/0x06d3f070a8732b1272ac7e73527187ce08da502839b18fc30a481a79512b8c08) let whoever held a fire secret choose payout destinations at fire time. Conservation checked that the sums matched; nothing checked where the money went. It is left on chain rather than pretended away — it holds nothing and no campaign was ever opened on it — and it is superseded by the deployment above, where destinations are committed at creation and firing is permissionless.
+
+`ConclaveMachine` at [`0x0269fa8c…ecfc`](https://voyager.online/contract/0x0269fa8cd8a7a04f5cd5b2fda7139efebb99511e2dde4778ba9395948a62ecfc) is a general private state machine from earlier work in this repository. It is not part of the Quorum submission.
+
+## Verify
 
 ```bash
-# Phase::Void for an id nobody opened - all nine fields zero,
-# which is the `unknown_id_reads_as_void` test, run against mainnet.
+# Phase::Void for an id nobody opened — eleven fields, all zero.
 curl -s -X POST https://api.cartridge.gg/x/starknet/mainnet \
   -H 'Content-Type: application/json' -d '{
     "jsonrpc":"2.0","id":1,"method":"starknet_call","params":[{
-      "contract_address":"0x0269fa8cd8a7a04f5cd5b2fda7139efebb99511e2dde4778ba9395948a62ecfc",
-      "entry_point_selector":"0x2129de82bc00286baf85fb893e658f7635712519b0fa81fbb9e3f0f6ef700b5",
-      "calldata":["0x1"]},"latest"]}'
+      "contract_address":"0x0079bab03056fd05dde50e921cf5ea8c3405aaaa2f05492a8a0e1fb6c811ff76",
+      "entry_point_selector":"0x333358710919613a34f18567332063b09711678bab1f50754e4f8f7fd637a8e",
+      "calldata":["0x77616c6b6f75742d32303236"]},"latest"]}'
+
+# What the contract believes it holds of STRK. Stranded value would show here.
+curl -s -X POST https://api.cartridge.gg/x/starknet/mainnet \
+  -H 'Content-Type: application/json' -d '{
+    "jsonrpc":"2.0","id":1,"method":"starknet_call","params":[{
+      "contract_address":"0x0079bab03056fd05dde50e921cf5ea8c3405aaaa2f05492a8a0e1fb6c811ff76",
+      "entry_point_selector":"0x34a3e3c6d5d516a635cba760af371241a4847b82058493c7447a286655255dc",
+      "calldata":["0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d"]},"latest"]}'
 ```
-
-## Cost
-
-Three mainnet transactions — account deployment, class declaration, contract deployment — cost **10.74 STRK, about $0.28**. The pool charges 6 STRK per privacy transaction on top of that, so the remaining balance covers roughly forty more.

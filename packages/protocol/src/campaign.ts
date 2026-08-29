@@ -1,5 +1,5 @@
 import { hash, num, shortString } from "starknet";
-import { fireCommitment } from "./commit.ts";
+import { payoutRoot } from "./commit.ts";
 import { FALLBACK_CLOCK, humanDuration, blocksFor, DAY, type BlockClock } from "./blocktime.ts";
 
 /**
@@ -60,27 +60,44 @@ export function verifyTerms(terms: Terms, committed: string): boolean {
   return BigInt(hashTerms(terms)) === BigInt(committed);
 }
 
+/**
+ * Where value may go, decided before anyone pledges.
+ *
+ * There is no third option on purpose. Letting the destination be chosen at fire
+ * time is what turns an information escrow into a pot with a keyholder.
+ */
+export type Policy =
+  /** Value never moves; quorum only opens the set to the people in it. */
+  | { readonly kind: "RefundAll" }
+  /** Value goes exactly here, fixed before the first pledge. */
+  | { readonly kind: "BoundTreasury";
+      readonly payouts: readonly { noteId: string; token: string; amount: bigint }[] };
+
 export interface CampaignSpec {
   /** Chosen by the organiser; must be unused. */
   readonly id: string;
   readonly terms: Terms;
   /** ERC-20 pledged and settled in. */
   readonly token: string;
+  /** Exact size of every pledge. Identical pledges make the public transfer
+   *  uninformative and put a price on a sybil. */
+  readonly unit: bigint;
   /** Pledges required before the campaign may fire. */
   readonly threshold: number;
   /** Pledges close, and refunds open, at this block. */
   readonly expiryBlock: number;
-  /** Secret that will be needed to fire. Never leaves the organiser. */
-  readonly fireSecret: string;
+  readonly policy: Policy;
 }
 
 export interface CampaignCalldata {
   readonly id: string;
   readonly terms: string;
   readonly token: string;
+  readonly policy: 0 | 1;          // RefundAll | BoundTreasury
+  readonly payoutRoot: string;
+  readonly unit: bigint;
   readonly threshold: number;
   readonly expiryBlock: number;
-  readonly fireCommitment: string;
 }
 
 export { blocksFor, blocksPerDay, humanDuration, DAY, HOUR, MINUTE } from "./blocktime.ts";
@@ -128,13 +145,36 @@ export function prepareCampaign(
       "seconds, not every 30. Expiry cannot be changed once the campaign exists.",
     );
   }
+  if (spec.unit <= 0n) {
+    throw new CampaignError("Every pledge must be a positive, identical unit.");
+  }
+  if (spec.policy.kind === "BoundTreasury") {
+    if (spec.policy.payouts.length === 0) {
+      throw new CampaignError(
+        "A treasury campaign must name its destinations before anyone pledges. " +
+        "Choosing them at fire time is what makes an organiser a keyholder.",
+      );
+    }
+    const total = spec.policy.payouts.reduce((s, p) => s + p.amount, 0n);
+    const expected = spec.unit * BigInt(spec.threshold);
+    if (total !== expected) {
+      throw new CampaignError(
+        `Payouts total ${total} but a quorum escrows exactly ${expected} ` +
+        `(${spec.threshold} x ${spec.unit}). The contract requires them equal, so this ` +
+        "campaign could reach quorum and then never be fireable.",
+      );
+    }
+  }
+
   return {
     id: spec.id,
     terms: hashTerms(spec.terms),
     token: spec.token,
+    policy: spec.policy.kind === "RefundAll" ? 0 : 1,
+    payoutRoot: spec.policy.kind === "BoundTreasury" ? payoutRoot(spec.policy.payouts) : "0x0",
+    unit: spec.unit,
     threshold: spec.threshold,
     expiryBlock: spec.expiryBlock,
-    fireCommitment: fireCommitment(spec.fireSecret),
   };
 }
 

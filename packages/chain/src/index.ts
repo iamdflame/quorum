@@ -1,4 +1,5 @@
-import type { PublicEdge, PoolObservation, Address, BlockNumber } from "@shoal/oracle";
+import type { PublicEdge, PoolObservation, Address, BlockNumber } from "./types.ts";
+export * from "./types.ts";
 
 /**
  * Live STRK20 pool reader.

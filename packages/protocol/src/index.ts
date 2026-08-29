@@ -15,11 +15,11 @@ export * from "./blocktime.ts";
 /** QuorumMachine, live. */
 export const DEPLOYMENTS = {
   mainnet: {
-    machine: "0x06d3f070a8732b1272ac7e73527187ce08da502839b18fc30a481a79512b8c08",
+    machine: "0x0079bab03056fd05dde50e921cf5ea8c3405aaaa2f05492a8a0e1fb6c811ff76",
     pool: "0x040337b1af3c663e86e333bab5a4b28da8d4652a15a69beee2b677776ffe812a",
   },
   sepolia: {
-    machine: "0x01281b5f8e26c1ec0ab5fc439b1c23e1e37f183438a7b148b2894436f940da02",
+    machine: "0x06e13e8e129b91085bcb6bde0f3bac7b8cf3ceb504ed4eb0149becc4c9b41736",
     pool: "0x0254a6b2997ef52e9f830ce1f543f6b29768295e8d17e2267d672c552cfe0d91",
   },
 } as const;

@@ -1,13 +1,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  fireCommitment, refundCommitment, foldPledge, pledgeRoot, TAGS,
+  payoutRoot, refundCommitment, foldPledge, pledgeRoot, TAGS,
   secretFromSignature, pledgeKeyFromSignature,
 } from "../src/commit.ts";
 import {
   hashTerms, verifyTerms, prepareCampaign, timeRemaining, CampaignError, type Terms,
 } from "../src/campaign.ts";
-import { createActions, commitActions, fireActions, reclaimActions, OP } from "../src/actions.ts";
+import {
+  createActions, commitActions, fireActions, reclaimActions, unsealActions, OP, POLICY,
+} from "../src/actions.ts";
 import { verifyCampaign, replayRoots, type OnChainCampaign, type CommittedEvent } from "../src/verify.ts";
 
 const TERMS: Terms = {
@@ -20,8 +22,6 @@ const TERMS: Terms = {
 
 test("commitments match the values pinned in the Cairo test", () => {
   // If either side drifts, pledges become unreclaimable and nothing throws.
-  assert.equal(BigInt(fireCommitment("0x6f7267616e697365722d6b6579")),
-    0x5e4f5b6a2de88f499f97193a56c996146e4da86ecb5717efe43c96b99468470n);
   assert.equal(BigInt(refundCommitment("0x61")),
     0x723a1fdb89394b78490e7f0a5679b744121ae254f15a3877e886cd0cb09622cn);
   assert.equal(BigInt(foldPledge(0n, "0x61")),
@@ -29,11 +29,19 @@ test("commitments match the values pinned in the Cairo test", () => {
 });
 
 test("domain tags are disjoint, so a preimage is inert outside its context", () => {
-  const secret = "0x1234";
-  const f = BigInt(fireCommitment(secret));
-  const r = BigInt(refundCommitment(secret));
-  assert.notEqual(f, r, "the same secret must not open both a fire and a refund");
   assert.equal(new Set(Object.values(TAGS)).size, 3, "all three tags distinct");
+});
+
+test("the payout fold is order-dependent", () => {
+  // Same destinations, same amounts, different order is a different commitment —
+  // otherwise a firer could permute a set to change who is paid first.
+  const a = { noteId: "0x1", token: "0x111", amount: 200n };
+  const b = { noteId: "0x2", token: "0x111", amount: 300n };
+  assert.notEqual(BigInt(payoutRoot([a, b])), BigInt(payoutRoot([b, a])));
+});
+
+test("an empty payout set folds to zero", () => {
+  assert.equal(BigInt(payoutRoot([])), 0n);
 });
 
 test("the accumulator is order-dependent", () => {
@@ -51,22 +59,29 @@ test("an empty campaign has the zero root", () => {
 
 test("a pledge secret is reproducible from the same signature", () => {
   const sig = ["0xaaa", "0xbbb"];
-  assert.equal(secretFromSignature(sig), secretFromSignature([...sig]),
+  assert.equal(secretFromSignature(sig, "0xcamp"), secretFromSignature([...sig], "0xcamp"),
     "the same wallet on a new machine must derive the same secret");
 });
 
 test("different signatures give different secrets", () => {
-  assert.notEqual(secretFromSignature(["0xaaa", "0xbbb"]), secretFromSignature(["0xaaa", "0xccc"]));
+  assert.notEqual(secretFromSignature(["0xaaa", "0xbbb"], "0xcamp"),
+    secretFromSignature(["0xaaa", "0xccc"], "0xcamp"));
+});
+
+test("the same wallet derives a different secret per campaign", () => {
+  // Without this, one leaked pledge unlocks that person's pledge in every
+  // campaign they ever joined - including ones nobody knew they were in.
+  const sig = ["0xaaa", "0xbbb"];
+  assert.notEqual(secretFromSignature(sig, "0xcamp-a"), secretFromSignature(sig, "0xcamp-b"));
 });
 
 test("the secret is not the raw signature", () => {
-  // A raw r would leak anywhere the same message is ever signed again.
   const sig = ["0xaaa", "0xbbb"];
-  assert.notEqual(BigInt(secretFromSignature(sig)), BigInt(sig[0]!));
+  assert.notEqual(BigInt(secretFromSignature(sig, "0xcamp")), BigInt(sig[0]!));
 });
 
 test("an empty signature is refused rather than producing a guessable secret", () => {
-  assert.throws(() => secretFromSignature([]), /Empty signature/);
+  assert.throws(() => secretFromSignature([], "0xcamp"), /Empty signature/);
 });
 
 test("a pledge key carries its own commitment", () => {
@@ -100,15 +115,40 @@ test("optional fields do not change the hash when absent versus empty", () => {
 
 const WEEK_BLOCKS = 355_000;  // ~7 days at 1.7s
 const SPEC = {
-  id: "walkout-2026", terms: TERMS, token: "0x111",
-  threshold: 5, expiryBlock: 10 + WEEK_BLOCKS, fireSecret: "0xsecret",
+  id: "walkout-2026", terms: TERMS, token: "0x111", unit: 100n,
+  threshold: 5, expiryBlock: 10 + WEEK_BLOCKS,
+  policy: { kind: "RefundAll" } as const,
 };
 
 test("a valid campaign prepares cleanly", () => {
   const c = prepareCampaign(SPEC, 10);
   assert.equal(c.threshold, 5);
   assert.equal(BigInt(c.terms), BigInt(hashTerms(TERMS)));
-  assert.equal(BigInt(c.fireCommitment), BigInt(fireCommitment("0xsecret")));
+  assert.equal(c.policy, POLICY.RefundAll);
+  assert.equal(BigInt(c.payoutRoot), 0n, "refund-all commits no destinations");
+});
+
+test("a treasury campaign must name its destinations up front", () => {
+  assert.throws(() => prepareCampaign({ ...SPEC,
+    policy: { kind: "BoundTreasury", payouts: [] } }, 10), /before anyone pledges/);
+});
+
+test("treasury payouts must equal exactly what a quorum escrows", () => {
+  // Otherwise the campaign reaches quorum and can then never be fired, because
+  // the contract requires the sums equal. Better to refuse it at creation.
+  assert.throws(() => prepareCampaign({ ...SPEC,
+    policy: { kind: "BoundTreasury",
+      payouts: [{ noteId: "0x1", token: "0x111", amount: 499n }] } }, 10),
+    /never be fireable/);
+  const ok = prepareCampaign({ ...SPEC,
+    policy: { kind: "BoundTreasury",
+      payouts: [{ noteId: "0x1", token: "0x111", amount: 500n }] } }, 10);
+  assert.equal(ok.policy, POLICY.BoundTreasury);
+  assert.notEqual(BigInt(ok.payoutRoot), 0n);
+});
+
+test("a zero unit is refused", () => {
+  assert.throws(() => prepareCampaign({ ...SPEC, unit: 0n }, 10), /identical unit/);
 });
 
 test("a threshold below two is refused", () => {
@@ -145,16 +185,32 @@ test("create encodes the campaign, escrows nothing, and mints no note", () => {
   assert.equal(BigInt((a[0]!.calldata as string[])[0]!), BigInt(OP.Create));
 });
 
-test("commit deposits and parks, crediting nothing back", () => {
-  const a = commitActions("0xmachine", "0xcamp", "0x111", 100n, "0xcommit");
+test("commit deposits a unit and passes no amount at all", () => {
+  // The contract measures its own balance delta. Passing an amount would invite
+  // it to be believed.
+  const a = commitActions("0xmachine", "walkout-2026", "0x111", 100n, "0xcommit");
   assert.deepEqual(a.map((x) => x.type), ["deposit", "invoke"]);
   const cd = a[1]!.calldata as string[];
   assert.equal(BigInt(cd[0]!), BigInt(OP.Commit));
   assert.equal(BigInt(cd[cd.length - 1]!), 0n, "empty payout span: nothing is credited");
 });
 
+test("firing a refund-all campaign carries no payouts", () => {
+  const a = fireActions("0xmachine", "walkout-2026");
+  const cd = a[0]!.calldata as string[];
+  assert.equal(BigInt(cd[0]!), BigInt(OP.Fire));
+  assert.equal(BigInt(cd[cd.length - 1]!), 0n, "no destinations, so nothing can be redirected");
+});
+
+test("unseal carries a payload and no value", () => {
+  const a = unsealActions("0xmachine", "walkout-2026", "0xsecret", "0xpayload");
+  assert.equal(a.length, 1, "unsealing moves nothing");
+  const cd = a[0]!.calldata as string[];
+  assert.equal(BigInt(cd[0]!), BigInt(OP.Unseal));
+});
+
 test("reclaim mints an open note for the refund to land in", () => {
-  const a = reclaimActions("0xmachine", "0xcamp", "0x111", "0xsecret");
+  const a = reclaimActions("0xmachine", "walkout-2026", "0x111", "0xsecret");
   assert.deepEqual(a.map((x) => x.type), ["transfer", "invoke"]);
   assert.equal(a[0]!["amount"], "OPEN");
   const cd = a[1]!.calldata as string[];
@@ -163,15 +219,15 @@ test("reclaim mints an open note for the refund to land in", () => {
 });
 
 test("fire serialises a payout span correctly", () => {
-  const a = fireActions("0xmachine", "0xcamp", "0xsecret", "0xwon", [
+  const a = fireActions("0xmachine", "walkout-2026", [
     { noteId: "0x1", token: "0x111", amount: 300n },
     { noteId: "0x2", token: "0x111", amount: 200n },
   ]);
   const cd = a[0]!.calldata as string[];
-  // 12 fixed params, then length 2, then two flattened deposits of 3 felts each.
-  assert.equal(cd.length, 12 + 1 + 6);
-  assert.equal(BigInt(cd[12]!), 2n, "span length precedes the elements");
-  assert.equal(BigInt(cd[15]!), 300n);
+  // 13 fixed params, then length 2, then two flattened deposits of 3 felts each.
+  assert.equal(cd.length, 13 + 1 + 6);
+  assert.equal(BigInt(cd[13]!), 2n, "span length precedes the elements");
+  assert.equal(BigInt(cd[16]!), 300n);
 });
 
 // ---------------------------------------------------------- verification
