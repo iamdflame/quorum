@@ -230,6 +230,17 @@ Two of those are real limits rather than rounding errors.
 
 [`packages/linkage`](packages/linkage) measures what the live pool gives away in practice, including three classes of withdrawal that mean nobody actually left.
 
+## The demo
+
+`demo/` holds the whole video kit: the [narration](demo/SCRIPT.md), six title
+cards, a thumbnail, every shot pre-cut at 1920×1080, and `assemble.sh`, which
+times the picture to your voiceover and cuts the film in one command — there is
+no editing step.
+
+The terminal shots are not retyped. [`demo/out/verify.txt`](demo/out/verify.txt)
+and [`demo/out/linkage.txt`](demo/out/linkage.txt) are the real output of really
+running those commands.
+
 ## Repository
 
 | | | |

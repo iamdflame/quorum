@@ -15,6 +15,7 @@ one command**, **upload**. No video editor required.
 | `clips/*.mp4` | every shot, already cut, 1920×1080 30fps |
 | `assemble.sh` | joins the clips to your voiceover and outputs the finished film |
 | `out/verify.txt`, `out/linkage.txt` | the real command output the terminal shots show |
+| `out/preview-silent.mp4` | **watch this first** — the whole cut, no audio, 2:22 |
 
 **Why the footage was rendered rather than screen-recorded.** This machine's
 display is 1366×768. A screen recording would be upscaled to 1080p and look
@@ -25,6 +26,19 @@ genuine recordings of the live site at full resolution.
 Nothing in the terminal shots is typed or mocked. `out/verify.txt` and
 `out/linkage.txt` are the actual output of actually running those commands, ANSI
 colours included.
+
+---
+
+## Step 0 — watch the silent cut
+
+```
+demo/out/preview-silent.mp4
+```
+
+Two minutes twenty-two, no sound. This is every shot in order, so you can see
+what you are narrating before you record a word. With narration over it the
+finished film lands around **2:35–2:45**, because the cards stretch to fit the
+lines spoken over them.
 
 ---
 
