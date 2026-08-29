@@ -1,5 +1,10 @@
 # Making the demo video
 
+> **Published:** [https://youtu.be/5_VwUWlBYXs](https://youtu.be/5_VwUWlBYXs)
+>
+> This document is kept so the film can be rebuilt or recut — every clip, the
+> script and the assembler are still here.
+
 Everything is already built. You do three things: **generate the voice**, **run
 one command**, **upload**. No video editor required.
 
@@ -158,7 +163,7 @@ further pledges, fired — four transactions, every one of them through the
 QuorumMachine contract rather than merely touching the pool.
 
   Live app    https://quorum-strk20.vercel.app
-  Code        https://github.com/Highneighbour/quorum
+  Code        https://github.com/iamdflame/quorum
   Contract    0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7
 
 WHAT IS IN IT

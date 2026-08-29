@@ -29,11 +29,12 @@ export default function Home({ ctx }) {
             </p>
             <div className="hero-actions">
               <Link to="/create" className="btn-primary">Start a campaign</Link>
+              <a className="btn-line" href="https://youtu.be/5_VwUWlBYXs" target="_blank" rel="noreferrer">Watch the demo</a>
               <Link to="/how" className="btn-line">How it works</Link>
             </div>
             <p className="hero-foot mono">
               Live at <a href="https://voyager.online/contract/0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7"
-                target="_blank" rel="noreferrer">0x06d3f070…8c08</a>
+                target="_blank" rel="noreferrer">0x00dca84f…fcdaf7</a>
             </p>
           </div>
 

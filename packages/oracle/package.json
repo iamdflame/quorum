@@ -26,10 +26,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Highneighbour/quorum.git",
+    "url": "git+https://github.com/iamdflame/quorum.git",
     "directory": "packages/oracle"
   },
-  "homepage": "https://github.com/Highneighbour/quorum/tree/master/packages/oracle",
+  "homepage": "https://github.com/iamdflame/quorum/tree/master/packages/oracle",
   "publishConfig": {
     "access": "public"
   }

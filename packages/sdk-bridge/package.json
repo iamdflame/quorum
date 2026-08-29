@@ -23,7 +23,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Highneighbour/quorum.git",
+    "url": "git+https://github.com/iamdflame/quorum.git",
     "directory": "packages/sdk-bridge"
   },
   "publishConfig": {

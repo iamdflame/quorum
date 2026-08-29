@@ -28,6 +28,7 @@ Where each judging criterion is satisfied, by file, test and transaction. Run `n
 | QuorumMachine, Sepolia | [`0x07d639ca…75fc73`](https://sepolia.voyager.online/contract/0x07d639ca00289a59a6949a12f6470feadf74d905d01bcce331f6c9d1d775fc73) |
 | Class hash | `0x04a3ad94…e4d4f7` — **identical on both**, so production runs what the tests rehearsed |
 | App | https://quorum-strk20.vercel.app |
+| Demo | [https://youtu.be/5_VwUWlBYXs](https://youtu.be/5_VwUWlBYXs) — three minutes |
 | Self-check | `npm run verify` |
 | Published tools | [`quorum-linkage`](https://www.npmjs.com/package/quorum-linkage), [`quorum-oracle`](https://www.npmjs.com/package/quorum-oracle), [`quorum-chain`](https://www.npmjs.com/package/quorum-chain) — `npx quorum-linkage` |
 

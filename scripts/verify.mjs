@@ -38,17 +38,27 @@ const manifest = JSON.parse(readFileSync(join(ROOT, "strk20.json"), "utf8"));
  * document, and the document nobody remembered to add is exactly the one that
  * ends up carrying a wrong address.
  */
-const SKIP = new Set(["node_modules", ".git", "dist", "target", ".vercel", "clips"]);
-function mdFiles(dir = ROOT, rel = "") {
+const SKIP = new Set(["node_modules", ".git", "dist", "target", ".vercel", "clips", "out"]);
+function filesWith(exts, dir = ROOT, rel = "") {
   const out = [];
   for (const e of readdirSync(dir, { withFileTypes: true })) {
     if (SKIP.has(e.name)) continue;
     const r = rel ? `${rel}/${e.name}` : e.name;
-    if (e.isDirectory()) out.push(...mdFiles(join(dir, e.name), r));
-    else if (e.name.endsWith(".md")) out.push(r);
+    if (e.isDirectory()) out.push(...filesWith(exts, join(dir, e.name), r));
+    else if (exts.some((x) => e.name.endsWith(x))) out.push(r);
   }
   return out;
 }
+const mdFiles = () => filesWith([".md"]);
+
+/*
+ * The front end shows addresses too, and an address wrong there is worse than
+ * one in a document: it is on the page a judge is actually looking at. The
+ * hero read "Live at 0x06d3f070…8c08" - a superseded deployment - while linking
+ * correctly to the current contract, and no check saw it because every check
+ * only read markdown.
+ */
+const pageFiles = () => filesWith([".md", ".jsx", ".html"]);
 
 /* Selectors, from starknet_keccak of the entry point name. */
 const SEL = {
@@ -192,11 +202,22 @@ try {
   };
 
   const SHORT = /0x([0-9a-fA-F]{4,})(?:…|\.\.\.)([0-9a-fA-F]{3,})/g;
-  const docs = mdFiles();
+  const docs = pageFiles();
   const bad = [];
 
   for (const doc of docs) {
     const text = readFileSync(join(ROOT, doc), "utf8");
+
+    /* JSX and HTML: >0xabcd…ef01</a> beside an href carrying the full address. */
+    for (const m of text.matchAll(/href=["']([^"']*0x[0-9a-fA-F]{20,}[^"']*)["'][^>]*>([^<]{4,80})</g)) {
+      const target = (m[1].match(/0x[0-9a-fA-F]{20,}/) ?? [])[0];
+      if (!target) continue;
+      for (const [, prefix, suffix] of m[2].matchAll(SHORT)) {
+        if (!describes(prefix, suffix, target)) {
+          bad.push(`${doc}: shows 0x${prefix}…${suffix} but links to ${target.slice(0, 14)}…`);
+        }
+      }
+    }
 
     /* Linked: [`0xabcd…ef01`](https://…/0xFULL) must describe that exact target. */
     for (const m of text.matchAll(/\[([^\]]*?)\]\((https?:\/\/[^)\s]+)\)/g)) {
@@ -227,7 +248,7 @@ try {
 
   bad.length === 0
     ? pass("abbreviated addresses agree with what they point at",
-           `${docs.length} documents scanned`)
+           `${docs.length} documents and pages scanned`)
     : fail("a document shows one address and points at another",
            bad.slice(0, 6).join("\n         "));
 }

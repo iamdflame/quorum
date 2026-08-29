@@ -42,6 +42,7 @@ export default function Footer() {
           <div>
             <h4>Source</h4>
             <ul>
+              <li><a href="https://youtu.be/5_VwUWlBYXs" target="_blank" rel="noreferrer">Demo video</a></li>
               <li><a href="https://github.com/iamdflame/quorum" target="_blank" rel="noreferrer">Repository</a></li>
               <li><a href="https://github.com/iamdflame/quorum/blob/master/contracts/src/quorum.cairo" target="_blank" rel="noreferrer">The contract</a></li>
               <li><a href="https://github.com/iamdflame/quorum/blob/master/contracts/tests/quorum_test.cairo" target="_blank" rel="noreferrer">The adversarial tests</a></li>

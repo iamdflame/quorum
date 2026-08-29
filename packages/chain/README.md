@@ -34,4 +34,4 @@ The opposite error costs just as much: an EOA that receives a lot is a heavy *us
 
 ## Licence
 
-Apache-2.0. Part of [Quorum](https://github.com/Highneighbour/quorum).
+Apache-2.0. Part of [Quorum](https://github.com/iamdflame/quorum).

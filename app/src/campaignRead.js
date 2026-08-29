@@ -71,3 +71,47 @@ export function strk(wei) {
   const frac = (wei % 10n ** 18n).toString().padStart(18, "0").slice(0, 4).replace(/0+$/, "");
   return frac ? `${whole}.${frac}` : String(whole);
 }
+
+/**
+ * A campaign id, back into the name someone typed.
+ *
+ * Ids are short strings packed into a felt, so `0x64656d6f2d3730343134` is
+ * `demo-70414`. Showing the felt instead is technically honest and practically
+ * useless — nobody recognises their own campaign as a hex number.
+ */
+export function feltToName(felt) {
+  try {
+    const hex = BigInt(felt).toString(16);
+    const bytes = (hex.length % 2 ? "0" + hex : hex).match(/../g) ?? [];
+    const s = bytes.map((b) => String.fromCharCode(parseInt(b, 16))).join("");
+    return /^[\x20-\x7e]+$/.test(s) ? s : felt;
+  } catch { return felt; }
+}
+
+/**
+ * Every matching event in a range, following the node's pagination.
+ *
+ * `starknet_getEvents` paginates by *block span*, not by matches: a wide range
+ * returns an empty first page with a continuation token, and keeps returning
+ * empty pages until it reaches blocks that actually contain events. Reading the
+ * first page and stopping therefore reports "nothing here" for a chain that
+ * plainly has something — which is exactly what this page used to do about a
+ * campaign that had already run.
+ */
+export async function getEventsPaged(filter, { maxPages = 40 } = {}) {
+  const out = [];
+  let token;
+  for (let page = 0; page < maxPages; page++) {
+    const body = { ...filter, ...(token ? { continuation_token: token } : {}) };
+    const r = await fetch(RPC, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "starknet_getEvents", params: [body] }),
+    });
+    const j = await r.json();
+    if (j.error) throw new Error(j.error.message ?? JSON.stringify(j.error));
+    out.push(...(j.result.events ?? []));
+    token = j.result.continuation_token;
+    if (!token) break;
+  }
+  return out;
+}

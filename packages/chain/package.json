@@ -25,10 +25,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Highneighbour/quorum.git",
+    "url": "git+https://github.com/iamdflame/quorum.git",
     "directory": "packages/chain"
   },
-  "homepage": "https://github.com/Highneighbour/quorum/tree/master/packages/chain",
+  "homepage": "https://github.com/iamdflame/quorum/tree/master/packages/chain",
   "publishConfig": {
     "access": "public"
   }

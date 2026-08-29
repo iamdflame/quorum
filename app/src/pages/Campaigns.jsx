@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Reveal from "../components/Reveal.jsx";
 import { RPC } from "../wallet.js";
+import { getEventsPaged, feltToName, readCampaign, strk } from "../campaignRead.js";
 
 const MACHINE = "0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7";
 // starknet_keccak("Created")
@@ -23,20 +24,32 @@ export default function Campaigns() {
     (async () => {
       try {
         const head = await rpc("starknet_blockNumber", []);
-        const res = await rpc("starknet_getEvents", [{
+        const events = await getEventsPaged({
           from_block: { block_number: Math.max(0, head - 900_000) },
           to_block: { block_number: head },
           address: MACHINE,
           keys: [[CREATED]],
           chunk_size: 100,
-        }]);
-        if (cancelled) return;
-        setState({
-          loading: false, error: null,
-          campaigns: (res.events ?? []).map((e) => ({
-            id: e.keys[1], block: e.block_number, tx: e.transaction_hash,
-          })),
         });
+        if (cancelled) return;
+
+        // Newest first: a list of campaigns is read to find the live ones.
+        const seen = [...events].reverse();
+
+        // Each campaign's own answer, rather than what the creation event said
+        // it would be. Phase and count both move after creation.
+        const campaigns = await Promise.all(seen.map(async (e) => {
+          const id = feltToName(e.keys[1]);
+          const base = { id, raw: e.keys[1], block: e.block_number, tx: e.transaction_hash };
+          try {
+            const c = await readCampaign(e.keys[1]);
+            return { ...base, ...c, met: c.count >= c.threshold };
+          } catch {
+            // A campaign that cannot be read is still a campaign that exists.
+            return { ...base, phase: null };
+          }
+        }));
+        if (!cancelled) setState({ loading: false, error: null, campaigns });
       } catch (err) {
         if (!cancelled) setState({ loading: false, campaigns: [], error: String(err?.message ?? err) });
       }
@@ -75,19 +88,15 @@ export default function Campaigns() {
           {!state.loading && !state.error && state.campaigns.length === 0 && (
             <Reveal>
               <div className="empty">
-                <h2 className="section" style={{ maxWidth: "18ch" }}>No campaigns are open yet.</h2>
+                <h2 className="section" style={{ maxWidth: "18ch" }}>Nothing in the last 900,000 blocks.</h2>
                 <p>
-                  The contract is live on mainnet and has never been used. That is a true
-                  statement about a new protocol, and showing you an invented list of
-                  campaigns would be a false one.
-                </p>
-                <p>
-                  Every campaign that ever opens will appear here, read from
-                  <span className="mono"> Created</span> events, whether or not anyone
-                  wants it listed.
+                  Campaigns are read from <span className="mono">Created</span> events on the
+                  contract, so this is what the chain says rather than what an index remembers.
+                  Anything older than that window is still on chain and still readable by id
+                  from <Link to="/verify">Verify</Link>.
                 </p>
                 <Link to="/create" className="btn-primary" style={{ marginTop: 12, display: "inline-block" }}>
-                  Open the first one
+                  Open one
                 </Link>
               </div>
             </Reveal>
@@ -98,8 +107,22 @@ export default function Campaigns() {
               {state.campaigns.map((c, i) => (
                 <Reveal key={c.tx} delay={i * 70}>
                   <Link to={`/campaigns/${c.id}`} className="campaign-card">
-                    <span className="mono campaign-id">{c.id.slice(0, 22)}…</span>
-                    <span className="mono campaign-block">block {c.block.toLocaleString()}</span>
+                    <span className="mono campaign-id">{c.id}</span>
+
+                    {c.phase && (
+                      <span className="camp-state-top" style={{ margin: "4px 0 0" }}>
+                        <span className={`camp-badge${c.phase === "Fired" ? " on" : ""}`}>{c.phase}</span>
+                        <span className={`camp-badge${c.met ? " on" : ""}`}>
+                          {c.count} of {c.threshold}
+                        </span>
+                      </span>
+                    )}
+
+                    <span className="mono campaign-block">
+                      {c.phase
+                        ? `${strk(c.escrowed)} STRK escrowed · block ${c.block.toLocaleString()}`
+                        : `block ${c.block.toLocaleString()}`}
+                    </span>
                   </Link>
                 </Reveal>
               ))}

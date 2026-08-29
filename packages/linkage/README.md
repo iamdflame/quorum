@@ -87,4 +87,4 @@ There is no mode that ranks other people's exposure. That report would be useful
 
 ## Licence
 
-Apache-2.0. Part of [Quorum](https://github.com/Highneighbour/quorum), but it depends on nothing in it and is useful without it.
+Apache-2.0. Part of [Quorum](https://github.com/iamdflame/quorum), but it depends on nothing in it and is useful without it.

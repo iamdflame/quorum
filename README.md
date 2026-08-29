@@ -4,6 +4,7 @@
 
 <br>
 
+**[Watch the demo](https://youtu.be/5_VwUWlBYXs)** &nbsp;·&nbsp;
 **[Live app](https://quorum-strk20.vercel.app)** &nbsp;·&nbsp;
 **[Rubric map](RUBRIC_MAP.md)** &nbsp;·&nbsp;
 **[Contract on mainnet](https://voyager.online/contract/0x00dca84ff35ee793c69c983abfc29e3e1aa8790f7dcd7e0288b705f600fcdaf7)** &nbsp;·&nbsp;
@@ -13,7 +14,7 @@
 
 <br>
 
-[![CI](https://github.com/Highneighbour/quorum/actions/workflows/ci.yml/badge.svg)](https://github.com/Highneighbour/quorum/actions/workflows/ci.yml)
+[![CI](https://github.com/iamdflame/quorum/actions/workflows/ci.yml/badge.svg)](https://github.com/iamdflame/quorum/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/quorum-linkage?label=quorum-linkage&color=E2661A&style=flat-square&labelColor=0B0A08)](https://www.npmjs.com/package/quorum-linkage)
 ![Cairo](https://img.shields.io/badge/Cairo-2.20-E2661A?style=flat-square&labelColor=0B0A08)
 ![Tests](https://img.shields.io/badge/tests-173%20passing-E2661A?style=flat-square&labelColor=0B0A08)
@@ -27,6 +28,16 @@
 
 > **Pledge into a campaign and your pledge binds only once enough others have pledged too.**
 > If the quorum is never reached, you get your money back and you were never revealed.
+
+<br>
+
+<div align="center">
+
+[![Watch the demo](https://img.youtube.com/vi/5_VwUWlBYXs/maxresdefault.jpg)](https://youtu.be/5_VwUWlBYXs)
+
+**[Three minutes, on mainnet.](https://youtu.be/5_VwUWlBYXs)**
+
+</div>
 
 <br>
 
@@ -350,7 +361,7 @@ Node 24+ — the STRK20 SDK's `ohttp-ts` requires modern WebCrypto.
 
 > **On the history.** This repository began as a different project, Shoal. That
 > code is not deleted — it is reachable at the
-> [`shoal-archive`](https://github.com/Highneighbour/quorum/tree/shoal-archive)
+> [`shoal-archive`](https://github.com/iamdflame/quorum/tree/shoal-archive)
 > tag, along with the parts of it that were not carried forward. What survived
 > the pivot was promoted into `packages/` and is tested and supported; the rest
 > should not sit at the root of a tree it no longer describes.

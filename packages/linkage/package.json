@@ -37,10 +37,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Highneighbour/quorum.git",
+    "url": "git+https://github.com/iamdflame/quorum.git",
     "directory": "packages/linkage"
   },
-  "homepage": "https://github.com/Highneighbour/quorum/tree/master/packages/linkage",
+  "homepage": "https://github.com/iamdflame/quorum/tree/master/packages/linkage",
   "publishConfig": {
     "access": "public"
   }
