@@ -1,0 +1,18 @@
+
+Quorum — checking the repository's claims against the chain
+
+  [32mok[0m    mainnet class hash matches  0x04a3ad9409c4f4ac…
+  [32mok[0m    sepolia runs the same bytecode as mainnet
+  [32mok[0m    an unopened campaign reads as Phase::Void  11 fields, all zero
+  [32mok[0m    every address in the docs is one that exists  5 documents scanned
+  [32mok[0m    every relative link in the docs resolves  7 documents scanned
+  [32mok[0m    the machine's accounting reconciles with its balance  held = balance = 3 STRK
+  [32mok[0m    block time is ~1.7s as the code assumes  1.701 s/block over 200,000 blocks
+  [32mok[0m    pool fee is 6 STRK per transaction  as quoted in the app and README
+  [32mok[0m    transaction 0x071d322075e7… ran through QuorumMachine
+  [32mok[0m    transaction 0x03c6bd55104d… ran through QuorumMachine
+  [32mok[0m    transaction 0x018bb72dc2b9… ran through QuorumMachine
+  [32mok[0m    transaction 0x01da6af32606… ran through QuorumMachine
+
+[32mEverything this repository claims is true on chain.[0m
+

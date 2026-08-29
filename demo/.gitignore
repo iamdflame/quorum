@@ -1,0 +1,11 @@
+# The finished film and its raw clips are large and are rebuilt from source by
+# build.sh and assemble.sh. The cards, the thumbnail and the captured command
+# output are checked in, because those are the parts a person would otherwise
+# have to trust rather than regenerate.
+clips/
+out/quorum-demo.mp4
+voice/*.mp3
+voice/*.wav
+voice/*.m4a
+voice/*.aac
+voice/*.ogg

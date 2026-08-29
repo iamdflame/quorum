@@ -1,0 +1,25 @@
+
+STRK20 POOL — mainnet, block 14029283
+  146 pool transactions read over 60,000 blocks
+
+ALREADY LINKED, WITH NOTHING BROKEN
+  public addresses bound to private notes ... 40
+  private notes attributable to an address .. 68
+
+HOW                               people   via anonymizer
+  deposit bound to note creation      44              1
+  shield + unshield in ONE tx          0              0
+  registration alongside a move       23              0
+  nullifier + public withdrawal       17              0
+
+WHO IS ACTUALLY IN THE POOL
+  distinct addresses ....................... 40
+  parties they collapse into ............... 40
+  parties holding more than one address .... 0
+
+  The anonymity set is the second number, not the first. Addresses are
+  free; being a different person is not.
+
+  No address is named in this report. To see what is known about your own:
+    npx @quorum/linkage --address 0xYOURS
+
