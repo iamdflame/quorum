@@ -340,6 +340,15 @@ Node 24+ — the STRK20 SDK's `ohttp-ts` requires modern WebCrypto.
 
 <br>
 
+> **On the history.** This repository began as a different project, Shoal. That
+> code is not deleted — it is reachable at the
+> [`shoal-archive`](https://github.com/Highneighbour/quorum/tree/shoal-archive)
+> tag, along with the parts of it that were not carried forward. What survived
+> the pivot was promoted into `packages/` and is tested and supported; the rest
+> should not sit at the root of a tree it no longer describes.
+
+<br>
+
 ## Contributed upstream
 
 - [**#121**](https://github.com/starkience/strk20-hackathon/issues/121) — a way past the SDK's unexported `ContractDiscoveryProvider`, packaged as [`@quorum/sdk-bridge`](packages/sdk-bridge); confirmation that **Ready X implements the STRK20 wallet methods** where Braavos answers *not implemented*; and the finding that a shield with no exit still emits a `Withdrawal`, because the fee is settled by paying the collector.
@@ -355,12 +364,3 @@ Node 24+ — the STRK20 SDK's `ohttp-ts` requires modern WebCrypto.
 *Somebody has to go first. Make it cost nothing.*
 
 </div>
-
-<br>
-
-> **On the history.** This repository began as a different project, Shoal. That
-> code is not deleted — it is reachable at the
-> [`shoal-archive`](https://github.com/Highneighbour/quorum/tree/shoal-archive)
-> tag, along with the parts of it that were not carried forward. What survived
-> the pivot was promoted into `packages/` and is tested and supported; the rest
-> should not sit at the root of a tree it no longer describes.
