@@ -390,3 +390,10 @@ section.band { padding: clamp(80px, 11vw, 150px) 0; }
 .problems { list-style: none; margin: 0; padding: 14px 16px; border-left: 2px solid var(--fire-600);
             background: var(--ember); display: flex; flex-direction: column; gap: 7px; }
 .problems li { font-size: 14px; color: var(--dim); }
+
+.chainstate { border:1px solid var(--fire-600); background:var(--ember); padding:14px 16px;
+              margin-bottom:18px; display:flex; flex-direction:column; gap:7px; font-size:12px }
+.chainstate > div { display:flex; justify-content:space-between; gap:12px }
+.chainstate span { color:var(--muted) }
+.chainstate b { font-weight:500; color:var(--text) }
+.chainstate b.ok { color:var(--fire-400) }

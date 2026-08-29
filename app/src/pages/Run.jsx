@@ -50,10 +50,60 @@ export default function Run({ ctx }) {
   const [busy, setBusy] = useState(null);
   const [log, setLog] = useState([]);
   const [probes, setProbes] = useState([]);
+  const [chain, setChain] = useState(null);
 
   const wallet = ctx.wallet;
   const say = (t) => setLog((l) => [...l, t]);
   const done = (k) => Boolean(state[k]);
+
+  /**
+   * Reconcile the page against the chain.
+   *
+   * The wallet's reply is not the source of truth — a transaction can land and
+   * the reply never arrive, which leaves a completed step looking undone and
+   * invites paying for it twice. The campaign itself says what happened.
+   */
+  async function sync() {
+    if (!id.trim()) return;
+    try {
+      const felt = "0x" + [...id.trim()].map((c) => c.charCodeAt(0).toString(16).padStart(2, "0")).join("");
+      const r = await fetch(RPC, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "starknet_call", params: [{
+          contract_address: MACHINE_DISPLAY,
+          entry_point_selector: "0x333358710919613a34f18567332063b09711678bab1f50754e4f8f7fd637a8e",
+          calldata: [felt] }, "latest"] }),
+      });
+      const v = (await r.json()).result;
+      if (!v) return;
+      const phase = Number(BigInt(v[0]));
+      if (phase === 0) { setChain(null); return; }
+      const info = {
+        phase: ["Void", "Open", "Fired", "Refunding"][phase],
+        threshold: Number(BigInt(v[6])),
+        pledges: Number(BigInt(v[7])),
+        escrowed: Number(BigInt(v[9])) / 1e18,
+      };
+      setChain(info);
+      // Mark steps done from what the chain shows, not from what came back.
+      setState((prev) => {
+        const next = { ...prev };
+        if (!next.create) next.create = "on-chain";
+        if (info.pledges >= 2 && !next.pledgeA) next.pledgeA = "on-chain";
+        if (info.pledges >= 3 && !next.pledgeB) next.pledgeB = "on-chain";
+        if (info.phase === "Fired" && !next.fire) next.fire = "on-chain";
+        return next;
+      });
+    } catch (err) {
+      console.warn("[quorum] sync failed", err);
+    }
+  }
+
+  useEffect(() => {
+    sync();
+    const t = setInterval(sync, 15_000);
+    return () => clearInterval(t);
+  }, [id]);
 
   async function head() {
     const r = await fetch(RPC, {
@@ -154,6 +204,8 @@ export default function Run({ ctx }) {
                         )}
                         {state[s.key] === "skipped" ? (
                           <span className="mono runstep-tx">skipped</span>
+                        ) : state[s.key] === "on-chain" ? (
+                          <span className="mono runstep-tx">already done on chain</span>
                         ) : state[s.key] ? (
                           <a className="mono runstep-tx"
                             href={`https://voyager.online/tx/${state[s.key]}`}
@@ -177,6 +229,15 @@ export default function Run({ ctx }) {
 
           <Reveal delay={100}>
             <aside className="aside">
+              {chain && (
+                <div className="chainstate mono">
+                  <div><span>on chain</span><b>{chain.phase}</b></div>
+                  <div><span>pledges</span><b>{chain.pledges} of {chain.threshold}</b></div>
+                  <div><span>escrowed</span><b>{chain.escrowed} STRK</b></div>
+                  <div><span>quorum</span><b className={chain.pledges >= chain.threshold ? "ok" : ""}>
+                    {chain.pledges >= chain.threshold ? "reached" : "not yet"}</b></div>
+                </div>
+              )}
               <h3 className="sub">Log</h3>
               <button className="btn-ghost" style={{ marginBottom: 12, marginRight: 8 }}
                 onClick={() => { setState({}); setLog([]); setProbes([]);
